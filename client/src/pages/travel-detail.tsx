@@ -179,7 +179,6 @@ export default function TravelDetail() {
   return (
     <div className="min-h-screen bg-muted/30">
       <NavigationHeader />
-      
       {/* Travel Detail Header */}
       <div className="bg-background border-b border-border sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -218,7 +217,6 @@ export default function TravelDetail() {
           </div>
         </div>
       </div>
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
@@ -316,7 +314,7 @@ export default function TravelDetail() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Precio Total</p>
-                              <p className="text-accent font-semibold">{accommodation.price || "No especificado"}</p>
+                              <p className="font-semibold text-[#040424]">{accommodation.price || "No especificado"}</p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-foreground">Confirmación</p>
@@ -578,7 +576,6 @@ export default function TravelDetail() {
           </div>
         </div>
       </div>
-
       {/* Accommodation Form Modal */}
       <AccommodationFormModal
         isOpen={showAccommodationModal}
