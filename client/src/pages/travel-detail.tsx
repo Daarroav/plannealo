@@ -8,6 +8,7 @@ import { NavigationHeader } from "@/components/ui/navigation-header";
 import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal";
 import { ActivityFormModal } from "@/components/ui/activity-form-modal";
 import { FlightFormModal } from "@/components/ui/flight-form-modal";
+import { TransportFormModal } from "@/components/ui/transport-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Bed, MapPin, Plane, Car, Plus, Edit } from "lucide-react";
@@ -21,6 +22,7 @@ export default function TravelDetail() {
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showFlightModal, setShowFlightModal] = useState(false);
+  const [showTransportModal, setShowTransportModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -152,6 +154,28 @@ export default function TravelDetail() {
       toast({
         title: "Vuelo agregado",
         description: "El vuelo ha sido agregado exitosamente al viaje.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createTransportMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", `/api/travels/${travelId}/transports`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
+      setShowTransportModal(false);
+      toast({
+        title: "Transporte agregado",
+        description: "El transporte ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -577,7 +601,10 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Transporte Local</h2>
-                  <Button className="bg-accent hover:bg-accent/90">
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowTransportModal(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Transporte
                   </Button>
@@ -590,7 +617,10 @@ export default function TravelDetail() {
                         <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay transportes</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer transporte para este viaje</p>
-                        <Button className="bg-accent hover:bg-accent/90">
+                        <Button 
+                          className="bg-accent hover:bg-accent/90"
+                          onClick={() => setShowTransportModal(true)}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Transporte
                         </Button>
@@ -618,8 +648,8 @@ export default function TravelDetail() {
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <p className="text-sm font-medium text-foreground">Fecha Inicio</p>
-                              <p className="text-muted-foreground">{formatDateTime(transport.startDate)}</p>
+                              <p className="text-sm font-medium text-foreground">Fecha Recogida</p>
+                              <p className="text-muted-foreground">{formatDateTime(transport.pickupDate)}</p>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-foreground">Fecha Fin</p>
@@ -681,6 +711,15 @@ export default function TravelDetail() {
         onClose={() => setShowFlightModal(false)}
         onSubmit={createFlightMutation.mutate}
         isLoading={createFlightMutation.isPending}
+        travelId={travelId!}
+      />
+
+      {/* Transport Form Modal */}
+      <TransportFormModal
+        isOpen={showTransportModal}
+        onClose={() => setShowTransportModal(false)}
+        onSubmit={createTransportMutation.mutate}
+        isLoading={createTransportMutation.isPending}
         travelId={travelId!}
       />
     </div>

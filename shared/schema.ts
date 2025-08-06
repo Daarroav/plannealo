@@ -72,12 +72,14 @@ export const flights = pgTable("flights", {
 export const transports = pgTable("transports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   travelId: varchar("travel_id").notNull(),
-  type: text("type").notNull(), // bus, car_rental, train, taxi, private
+  type: text("type").notNull(), // autobus, alquiler_auto, uber, taxi, transporte_publico, tren, embarcacion
   name: text("name").notNull(),
   provider: text("provider"),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date"),
+  contactName: text("contact_name"),
+  contactNumber: text("contact_number"),
+  pickupDate: timestamp("pickup_date").notNull(),
   pickupLocation: text("pickup_location").notNull(),
+  endDate: timestamp("end_date"),
   dropoffLocation: text("dropoff_location"),
   confirmationNumber: text("confirmation_number"),
   notes: text("notes"),
