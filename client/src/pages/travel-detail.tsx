@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal";
 import { ActivityFormModal } from "@/components/ui/activity-form-modal";
-import { FlightFormModal } from "@/components/ui/flight-form-modal";
+import { TransportFormModal } from "@/components/ui/transport-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Bed, MapPin, Plane, Car, Plus, Edit } from "lucide-react";
@@ -20,7 +20,7 @@ export default function TravelDetail() {
   const [activeSection, setActiveSection] = useState("accommodations");
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
-  const [showFlightModal, setShowFlightModal] = useState(false);
+  const [showTransportModal, setShowTransportModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -141,17 +141,17 @@ export default function TravelDetail() {
     },
   });
 
-  const createFlightMutation = useMutation({
+  const createTransportMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/travels/${travelId}/flights`, data);
+      const response = await apiRequest("POST", `/api/travels/${travelId}/transports`, data);
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
-      setShowFlightModal(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
+      setShowTransportModal(false);
       toast({
-        title: "Vuelo agregado",
-        description: "El vuelo ha sido agregado exitosamente al viaje.",
+        title: "Transporte agregado",
+        description: "El transporte ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -492,13 +492,13 @@ export default function TravelDetail() {
             {activeSection === "flights" && (
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-foreground">Vuelos</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Transporte</h2>
                   <Button 
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowFlightModal(true)}
+                    onClick={() => setShowTransportModal(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Agregar Vuelo
+                    Agregar Transporte
                   </Button>
                 </div>
 
@@ -507,14 +507,14 @@ export default function TravelDetail() {
                     <Card>
                       <CardContent className="p-8 text-center">
                         <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-foreground mb-2">No hay vuelos</h3>
-                        <p className="text-muted-foreground mb-6">Agrega el primer vuelo para este viaje</p>
+                        <h3 className="text-lg font-medium text-foreground mb-2">No hay transportes</h3>
+                        <p className="text-muted-foreground mb-6">Agrega el primer transporte para este viaje</p>
                         <Button 
                           className="bg-accent hover:bg-accent/90"
-                          onClick={() => setShowFlightModal(true)}
+                          onClick={() => setShowTransportModal(true)}
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Agregar Vuelo
+                          Agregar Transporte
                         </Button>
                       </CardContent>
                     </Card>
@@ -675,12 +675,12 @@ export default function TravelDetail() {
         travelId={travelId!}
       />
 
-      {/* Flight Form Modal */}
-      <FlightFormModal
-        isOpen={showFlightModal}
-        onClose={() => setShowFlightModal(false)}
-        onSubmit={createFlightMutation.mutate}
-        isLoading={createFlightMutation.isPending}
+      {/* Transport Form Modal */}
+      <TransportFormModal
+        isOpen={showTransportModal}
+        onClose={() => setShowTransportModal(false)}
+        onSubmit={createTransportMutation.mutate}
+        isLoading={createTransportMutation.isPending}
         travelId={travelId!}
       />
     </div>
