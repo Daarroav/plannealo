@@ -32,6 +32,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertTravelSchema.parse({
         ...req.body,
         createdBy: req.user!.id,
+        startDate: new Date(req.body.startDate),
+        endDate: new Date(req.body.endDate),
       });
       
       const travel = await storage.createTravel(validated);
@@ -108,6 +110,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertAccommodationSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
+        checkIn: new Date(req.body.checkIn),
+        checkOut: new Date(req.body.checkOut),
       });
       
       const accommodation = await storage.createAccommodation(validated);
@@ -142,6 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertActivitySchema.parse({
         ...req.body,
         travelId: req.params.travelId,
+        date: new Date(req.body.date),
       });
       
       const activity = await storage.createActivity(validated);
@@ -176,6 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertFlightSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
+        departureDate: new Date(req.body.departureDate),
+        arrivalDate: new Date(req.body.arrivalDate),
       });
       
       const flight = await storage.createFlight(validated);
@@ -210,6 +217,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertTransportSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
+        startDate: new Date(req.body.startDate),
+        ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
       });
       
       const transport = await storage.createTransport(validated);

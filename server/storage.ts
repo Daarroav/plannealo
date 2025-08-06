@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import session from "express-session";
+import { Store } from "express-session";
 import createMemoryStore from "memorystore";
 import { 
   User, 
@@ -55,7 +56,7 @@ export interface IStorage {
   updateTransport(id: string, transport: Partial<Transport>): Promise<Transport>;
   deleteTransport(id: string): Promise<void>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 }
 
 export class MemStorage implements IStorage {
@@ -65,7 +66,7 @@ export class MemStorage implements IStorage {
   private activities: Map<string, Activity>;
   private flights: Map<string, Flight>;
   private transports: Map<string, Transport>;
-  public sessionStore: session.SessionStore;
+  public sessionStore: Store;
 
   constructor() {
     this.users = new Map();
@@ -104,6 +105,8 @@ export class MemStorage implements IStorage {
     const travel: Travel = {
       ...insertTravel,
       id,
+      status: insertTravel.status || "draft",
+      coverImage: insertTravel.coverImage || null,
       createdAt: now,
       updatedAt: now,
     };
@@ -159,7 +162,14 @@ export class MemStorage implements IStorage {
   // Accommodation methods
   async createAccommodation(insertAccommodation: InsertAccommodation): Promise<Accommodation> {
     const id = randomUUID();
-    const accommodation: Accommodation = { ...insertAccommodation, id };
+    const accommodation: Accommodation = {
+      ...insertAccommodation,
+      id,
+      price: insertAccommodation.price || null,
+      confirmationNumber: insertAccommodation.confirmationNumber || null,
+      policies: insertAccommodation.policies || null,
+      notes: insertAccommodation.notes || null,
+    };
     this.accommodations.set(id, accommodation);
     return accommodation;
   }
@@ -187,7 +197,16 @@ export class MemStorage implements IStorage {
   // Activity methods
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = randomUUID();
-    const activity: Activity = { ...insertActivity, id };
+    const activity: Activity = {
+      ...insertActivity,
+      id,
+      confirmationNumber: insertActivity.confirmationNumber || null,
+      notes: insertActivity.notes || null,
+      provider: insertActivity.provider || null,
+      startTime: insertActivity.startTime || null,
+      endTime: insertActivity.endTime || null,
+      conditions: insertActivity.conditions || null,
+    };
     this.activities.set(id, activity);
     return activity;
   }
@@ -215,7 +234,12 @@ export class MemStorage implements IStorage {
   // Flight methods
   async createFlight(insertFlight: InsertFlight): Promise<Flight> {
     const id = randomUUID();
-    const flight: Flight = { ...insertFlight, id };
+    const flight: Flight = {
+      ...insertFlight,
+      id,
+      departureTerminal: insertFlight.departureTerminal || null,
+      arrivalTerminal: insertFlight.arrivalTerminal || null,
+    };
     this.flights.set(id, flight);
     return flight;
   }
@@ -243,7 +267,15 @@ export class MemStorage implements IStorage {
   // Transport methods
   async createTransport(insertTransport: InsertTransport): Promise<Transport> {
     const id = randomUUID();
-    const transport: Transport = { ...insertTransport, id };
+    const transport: Transport = {
+      ...insertTransport,
+      id,
+      endDate: insertTransport.endDate || null,
+      confirmationNumber: insertTransport.confirmationNumber || null,
+      notes: insertTransport.notes || null,
+      provider: insertTransport.provider || null,
+      dropoffLocation: insertTransport.dropoffLocation || null,
+    };
     this.transports.set(id, transport);
     return transport;
   }
