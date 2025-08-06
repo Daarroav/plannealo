@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal";
 import { ActivityFormModal } from "@/components/ui/activity-form-modal";
+import { FlightFormModal } from "@/components/ui/flight-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Bed, MapPin, Plane, Car, Plus, Edit } from "lucide-react";
@@ -19,6 +20,7 @@ export default function TravelDetail() {
   const [activeSection, setActiveSection] = useState("accommodations");
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showFlightModal, setShowFlightModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -128,6 +130,28 @@ export default function TravelDetail() {
       toast({
         title: "Actividad agregada",
         description: "La actividad ha sido agregada exitosamente al viaje.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createFlightMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", `/api/travels/${travelId}/flights`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
+      setShowFlightModal(false);
+      toast({
+        title: "Vuelo agregado",
+        description: "El vuelo ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -469,7 +493,10 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Vuelos</h2>
-                  <Button className="bg-accent hover:bg-accent/90">
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowFlightModal(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Vuelo
                   </Button>
@@ -482,7 +509,10 @@ export default function TravelDetail() {
                         <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay vuelos</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer vuelo para este viaje</p>
-                        <Button className="bg-accent hover:bg-accent/90">
+                        <Button 
+                          className="bg-accent hover:bg-accent/90"
+                          onClick={() => setShowFlightModal(true)}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Vuelo
                         </Button>
@@ -642,6 +672,15 @@ export default function TravelDetail() {
         onClose={() => setShowActivityModal(false)}
         onSubmit={createActivityMutation.mutate}
         isLoading={createActivityMutation.isPending}
+        travelId={travelId!}
+      />
+
+      {/* Flight Form Modal */}
+      <FlightFormModal
+        isOpen={showFlightModal}
+        onClose={() => setShowFlightModal(false)}
+        onSubmit={createFlightMutation.mutate}
+        isLoading={createFlightMutation.isPending}
         travelId={travelId!}
       />
     </div>
