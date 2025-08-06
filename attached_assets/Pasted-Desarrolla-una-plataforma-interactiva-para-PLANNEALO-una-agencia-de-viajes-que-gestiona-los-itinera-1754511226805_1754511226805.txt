@@ -1,0 +1,62 @@
+Desarrolla una plataforma interactiva para PLANNEALO, una agencia de viajes que gestiona los itinerarios de viaje de sus clientes. Que permita a la agencia ingresar, visualizar y gestionar las reservas de sus clientes. Debe seguir las mejores prácticas comprobadas de UX/UI y desarrollo web moderno.
+
+
+DATOS GENERALES:
+Proyecto: Plataforma para gestión de agencia de viajes PLANNEALO.
+Formato: Modern web app (React + Node.js + Tailwind CSS).
+Restricciones: No utilizar Replit Auth, utilizar autenticación nativa desarrollada en el mismo sistema.
+Adicional: Utilizar place holders para las imágenes.
+Colores: Gris y Blanco, con Rojo como acentos máximo al 10%
+Idioma del contenido de la página: Español
+
+
+Debe estar dividido por prioridad en 3 fases de desarrollo, de acuerdo con el siguiente user journey:
+
+
+FASE 1-  RESERVA INICIAL
+El usuario debe ingresar a la pantalla principal para revisar todos los viajes y agregar uno nuevo.
+Seleccionará la imagen de portada del viaje junto con el nombre para empezar a crear el viaje del cliente.
+Agregará alojamientos, actividades, vuelos y transportes locales.
+
+
+Gestión de Alojamientos: Agregar información de hoteles, hostales, resorts con detalles como fechas, ubicación, habitación del cliente, precios y políticas, archivos adjuntos y espacio de detalles para notas especiales.
+Actividades y Tours: Registro de experiencias, horarios, proveedores, número de confirmación y condiciones. Experiencias como eventos, restaurantes, spa, teatro, excursión en tierra, clases de esquí, paseos, recorridos.
+Vuelos: Itinerarios, aerolíneas, clases, números de reserva, horarios.
+Transportes Locales: Lista desplegable de tipos de traslados como Autobús, Alquiler de coches, Tren, Transporte público, Taxi. Además de poder agregar números de confirmación, fechas de inicio, lugar de recogida, fecha final, horarios y notas.
+
+
+Puede decidir si publicar el viaje o dejarlo pendiente en edición.
+
+
+
+
+FASE 2- AGREGAR MÁS DETALLES
+El usuario podrá ingresar a su panel de administración para elegir el viaje a editar y agregar más detalles.
+
+
+Cruceros: Rutas, camarotes, servicios, escalas, cabinas y navieras. Políticas de cancelación, espacio de archivos adjuntos y detalles para notas especiales.
+Seguros de Viaje: Tipos de cobertura, fechas, aseguradora, números de emergencia y contacto. Además de información importante o descripción de la política.
+Notas y Documentación: Espacio para observaciones, requerimientos especiales y documentos adjuntos. Posibilidad de ocultar la nota si es que no se desea que sea visible para los viajeros al seleccionar un checkbox.
+
+
+FASE 3- PUBLICAR Y AGREGAR VIAJEROS
+
+
+Una vez que el viaje esté listo, el usuario podrá decidir “publicar” el viaje para hacerlo visible en el calendario general de viajes.
+Además podrá agregar a los viajeros mediante su correo electrónico para que ellos reciban un correo de confirmación con liga directa a visualizar su itinerario. Debe tener la opción de enviar correo, o copiar link directo. 
+El usuario recibirá el correo o ingresará al link y será redirigido a una pantalla con la portada de su viaje y el formulario para ingresar el correo electrónico. Esto lo llevará a su itinerario personal.
+Debe ser posible el exportar el itinerario del viaje completo en PDF con opción de pre-visualizar antes de exportar.
+Gestión Multi-Pasajeros: Permitir la vinculación de múltiples viajeros a un mismo itinerario. Que el cliente pueda contar con su vista personalizada de los detalles de su viaje.
+
+
+
+
+
+
+BUENAS PRÁCTICAS QUE DEBEN SEGUIRSE (OBLIGATORIO)
+UX-first: flujo claro, navegación fácil, CTAs visibles, carga rápida.
+Mobile-first: diseño centrado en móviles, luego expandido a escritorio.
+Atomic Design: componentes reutilizables, jerarquía visual clara.
+Diseño responsivo: todo debe adaptarse de forma fluida entre tamaños de pantalla.
+Velocidad optimizada: carga rápida sin librerías externas innecesarias.
+Accesibilidad (WCAG): etiquetas ARIA, contraste adecuado, navegación con teclado.
