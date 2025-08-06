@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { NavigationHeader } from "@/components/ui/navigation-header";
+import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Bed, MapPin, Plane, Car, Plus, Edit } from "lucide-react";
@@ -15,6 +16,7 @@ import type { Travel, Accommodation, Activity, Flight, Transport } from "@shared
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
   const [activeSection, setActiveSection] = useState("accommodations");
+  const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const { toast } = useToast();
   
   const travelId = params?.id;
@@ -80,6 +82,28 @@ export default function TravelDetail() {
       toast({
         title: "Borrador guardado",
         description: "Los cambios han sido guardados como borrador.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const createAccommodationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
+      setShowAccommodationModal(false);
+      toast({
+        title: "Alojamiento agregado",
+        description: "El alojamiento ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -229,7 +253,10 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Alojamientos</h2>
-                  <Button className="bg-accent hover:bg-accent/90">
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowAccommodationModal(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Alojamiento
                   </Button>
@@ -242,7 +269,10 @@ export default function TravelDetail() {
                         <Bed className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay alojamientos</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer alojamiento para este viaje</p>
-                        <Button className="bg-accent hover:bg-accent/90">
+                        <Button 
+                          className="bg-accent hover:bg-accent/90"
+                          onClick={() => setShowAccommodationModal(true)}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Alojamiento
                         </Button>
@@ -548,6 +578,15 @@ export default function TravelDetail() {
           </div>
         </div>
       </div>
+
+      {/* Accommodation Form Modal */}
+      <AccommodationFormModal
+        isOpen={showAccommodationModal}
+        onClose={() => setShowAccommodationModal(false)}
+        onSubmit={createAccommodationMutation.mutate}
+        isLoading={createAccommodationMutation.isPending}
+        travelId={travelId!}
+      />
     </div>
   );
 }
