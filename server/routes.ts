@@ -122,6 +122,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/accommodations/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const accommodation = await storage.updateAccommodation(req.params.id, {
+        ...req.body,
+        checkIn: req.body.checkIn ? new Date(req.body.checkIn) : undefined,
+        checkOut: req.body.checkOut ? new Date(req.body.checkOut) : undefined,
+      });
+      res.json(accommodation);
+    } catch (error) {
+      console.error("Error updating accommodation:", error);
+      res.status(400).json({ message: "Error updating accommodation" });
+    }
+  });
+
   // Activity routes
   app.get("/api/travels/:travelId/activities", async (req, res) => {
     if (!req.isAuthenticated()) {
@@ -154,6 +172,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating activity:", error);
       res.status(400).json({ message: "Error creating activity" });
+    }
+  });
+
+  app.put("/api/activities/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const activity = await storage.updateActivity(req.params.id, {
+        ...req.body,
+        date: req.body.date ? new Date(req.body.date) : undefined,
+      });
+      res.json(activity);
+    } catch (error) {
+      console.error("Error updating activity:", error);
+      res.status(400).json({ message: "Error updating activity" });
     }
   });
 

@@ -20,7 +20,7 @@ export default function TravelDetail() {
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const { toast } = useToast();
-  
+
   const travelId = params?.id;
 
   const { data: travel, isLoading: travelLoading } = useQuery<Travel>({
@@ -148,6 +148,19 @@ export default function TravelDetail() {
     return format(dateObj, "dd MMM yyyy", { locale: es });
   };
 
+  // Handlers for editing
+  const handleEditAccommodation = (accommodation: Accommodation) => {
+    // Logic to open modal and pre-fill form with accommodation data
+    console.log("Editing accommodation:", accommodation);
+    // For now, just logging. In a real app, you'd open a modal and set state for editing.
+  };
+
+  const handleEditActivity = (activity: Activity) => {
+    // Logic to open modal and pre-fill form with activity data
+    console.log("Editing activity:", activity);
+    // For now, just logging. In a real app, you'd open a modal and set state for editing.
+  };
+
   if (travelLoading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -216,12 +229,12 @@ export default function TravelDetail() {
                 <p className="text-sm text-muted-foreground">Cliente: {travel.clientName}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
                 {travel.status === "published" ? "Publicado" : "Borrador"}
               </Badge>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => saveDraftMutation.mutate()}
                 disabled={saveDraftMutation.isPending}
@@ -229,7 +242,7 @@ export default function TravelDetail() {
                 {saveDraftMutation.isPending ? "Guardando..." : "Guardar Borrador"}
               </Button>
               {travel.status !== "published" && (
-                <Button 
+                <Button
                   className="bg-accent hover:bg-accent/90"
                   onClick={() => publishTravelMutation.mutate()}
                   disabled={publishTravelMutation.isPending}
@@ -267,7 +280,7 @@ export default function TravelDetail() {
               ))}
             </nav>
           </div>
-          
+
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Accommodations Section */}
@@ -275,7 +288,7 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Alojamientos</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
                     onClick={() => setShowAccommodationModal(true)}
                   >
@@ -283,7 +296,7 @@ export default function TravelDetail() {
                     Agregar Alojamiento
                   </Button>
                 </div>
-                
+
                 <div className="space-y-6">
                   {accommodations.length === 0 ? (
                     <Card>
@@ -291,7 +304,7 @@ export default function TravelDetail() {
                         <Bed className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay alojamientos</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer alojamiento para este viaje</p>
-                        <Button 
+                        <Button
                           className="bg-accent hover:bg-accent/90"
                           onClick={() => setShowAccommodationModal(true)}
                         >
@@ -315,11 +328,15 @@ export default function TravelDetail() {
                                 <p className="text-sm text-muted-foreground">{accommodation.location}</p>
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditAccommodation(accommodation)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Check-in</p>
@@ -334,7 +351,7 @@ export default function TravelDetail() {
                               <p className="text-muted-foreground">{accommodation.roomType}</p>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Precio Total</p>
@@ -345,7 +362,7 @@ export default function TravelDetail() {
                               <p className="text-muted-foreground">{accommodation.confirmationNumber || "Pendiente"}</p>
                             </div>
                           </div>
-                          
+
                           {accommodation.notes && (
                             <div className="border-t border-border pt-4">
                               <p className="text-sm font-medium text-foreground mb-2">Notas Especiales</p>
@@ -365,7 +382,7 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Actividades y Tours</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
                     onClick={() => setShowActivityModal(true)}
                   >
@@ -373,7 +390,7 @@ export default function TravelDetail() {
                     Agregar Actividad
                   </Button>
                 </div>
-                
+
                 <div className="space-y-6">
                   {activities.length === 0 ? (
                     <Card>
@@ -381,7 +398,7 @@ export default function TravelDetail() {
                         <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay actividades</h3>
                         <p className="text-muted-foreground mb-6">Agrega la primera actividad para este viaje</p>
-                        <Button 
+                        <Button
                           className="bg-accent hover:bg-accent/90"
                           onClick={() => setShowActivityModal(true)}
                         >
@@ -405,11 +422,15 @@ export default function TravelDetail() {
                                 {activity.provider && <p className="text-sm text-muted-foreground">Proveedor: {activity.provider}</p>}
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditActivity(activity)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Fecha</p>
@@ -418,8 +439,8 @@ export default function TravelDetail() {
                             <div>
                               <p className="text-sm font-medium text-foreground">Horario</p>
                               <p className="text-muted-foreground">
-                                {activity.startTime && activity.endTime 
-                                  ? `${activity.startTime} - ${activity.endTime}` 
+                                {activity.startTime && activity.endTime
+                                  ? `${activity.startTime} - ${activity.endTime}`
                                   : "No especificado"}
                               </p>
                             </div>
@@ -428,7 +449,7 @@ export default function TravelDetail() {
                               <p className="text-muted-foreground">{activity.confirmationNumber || "Pendiente"}</p>
                             </div>
                           </div>
-                          
+
                           {activity.conditions && (
                             <div className="border-t border-border pt-4">
                               <p className="text-sm font-medium text-foreground mb-2">Condiciones</p>
@@ -453,7 +474,7 @@ export default function TravelDetail() {
                     Agregar Vuelo
                   </Button>
                 </div>
-                
+
                 <div className="space-y-6">
                   {flights.length === 0 ? (
                     <Card>
@@ -488,7 +509,7 @@ export default function TravelDetail() {
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Salida</p>
@@ -531,7 +552,7 @@ export default function TravelDetail() {
                     Agregar Transporte
                   </Button>
                 </div>
-                
+
                 <div className="space-y-6">
                   {transports.length === 0 ? (
                     <Card>
@@ -564,7 +585,7 @@ export default function TravelDetail() {
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                               <p className="text-sm font-medium text-foreground">Fecha Inicio</p>
@@ -579,7 +600,7 @@ export default function TravelDetail() {
                               <p className="text-muted-foreground">{transport.confirmationNumber || "Pendiente"}</p>
                             </div>
                           </div>
-                          
+
                           <div className="border-t border-border pt-4">
                             <p className="text-sm font-medium text-foreground mb-2">Lugar de Recogida</p>
                             <p className="text-muted-foreground text-sm">{transport.pickupLocation}</p>

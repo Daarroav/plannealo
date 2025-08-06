@@ -14,7 +14,7 @@ import { CalendarIcon, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { insertAccommodationSchema } from "@shared/schema";
+import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -36,9 +36,10 @@ interface AccommodationFormModalProps {
   onSubmit: (data: any) => void;
   isLoading?: boolean;
   travelId: string;
+  editingAccommodation?: Accommodation | null;
 }
 
-export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, travelId }: AccommodationFormModalProps) {
+export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingAccommodation }: AccommodationFormModalProps) {
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -47,19 +48,19 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     resolver: zodResolver(accommodationFormSchema),
     defaultValues: {
       travelId,
-      name: "",
-      type: "",
-      location: "",
-      checkInDate: "",
-      checkInTime: "15:00",
-      checkOutDate: "",
-      checkOutTime: "11:00",
-      roomType: "",
-      roomCount: 1,
-      price: "",
-      confirmationNumber: "",
-      policies: "",
-      notes: "",
+      name: editingAccommodation?.name || "",
+      type: editingAccommodation?.type || "",
+      location: editingAccommodation?.location || "",
+      checkInDate: editingAccommodation?.checkIn ? format(new Date(editingAccommodation.checkIn), "yyyy-MM-dd") : "",
+      checkInTime: editingAccommodation?.checkIn ? format(new Date(editingAccommodation.checkIn), "HH:mm") : "15:00",
+      checkOutDate: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "yyyy-MM-dd") : "",
+      checkOutTime: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "HH:mm") : "11:00",
+      roomType: editingAccommodation?.roomType?.replace(/^\d+\s/, "") || "",
+      roomCount: editingAccommodation?.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
+      price: editingAccommodation?.price || "",
+      confirmationNumber: editingAccommodation?.confirmationNumber || "",
+      policies: editingAccommodation?.policies || "",
+      notes: editingAccommodation?.notes || "",
     },
   });
 
@@ -106,11 +107,37 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     onClose();
   };
 
+  // Update form when editing accommodation changes
+  useState(() => {
+    if (editingAccommodation) {
+      setCheckInDate(editingAccommodation.checkIn ? new Date(editingAccommodation.checkIn) : undefined);
+      setCheckOutDate(editingAccommodation.checkOut ? new Date(editingAccommodation.checkOut) : undefined);
+      form.reset({
+        travelId,
+        name: editingAccommodation.name,
+        type: editingAccommodation.type,
+        location: editingAccommodation.location,
+        checkInDate: format(new Date(editingAccommodation.checkIn), "yyyy-MM-dd"),
+        checkInTime: format(new Date(editingAccommodation.checkIn), "HH:mm"),
+        checkOutDate: format(new Date(editingAccommodation.checkOut), "yyyy-MM-dd"),
+        checkOutTime: format(new Date(editingAccommodation.checkOut), "HH:mm"),
+        roomType: editingAccommodation.roomType?.replace(/^\d+\s/, "") || "",
+        roomCount: editingAccommodation.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
+        price: editingAccommodation.price || "",
+        confirmationNumber: editingAccommodation.confirmationNumber || "",
+        policies: editingAccommodation.policies || "",
+        notes: editingAccommodation.notes || "",
+      });
+    }
+  });
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">Agregar Alojamiento</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-foreground">
+            {editingAccommodation ? "Editar Alojamiento" : "Agregar Alojamiento"}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -376,7 +403,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               className="bg-accent hover:bg-accent/90"
               disabled={isLoading}
             >
-              {isLoading ? "Guardando..." : "Guardar Alojamiento"}
+              {isLoading ? "Guardando..." : editingAccommodation ? "Actualizar Alojamiento" : "Guardar Alojamiento"}
             </Button>
           </div>
         </form>
