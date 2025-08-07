@@ -16,7 +16,9 @@ import {
   Transport,
   InsertTransport,
   Cruise,
-  InsertCruise
+  InsertCruise,
+  Insurance,
+  InsertInsurance
 } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
@@ -64,6 +66,12 @@ export interface IStorage {
   updateCruise(id: string, cruise: Partial<Cruise>): Promise<Cruise>;
   deleteCruise(id: string): Promise<void>;
   
+  // Insurance methods
+  createInsurance(insurance: InsertInsurance): Promise<Insurance>;
+  getInsurancesByTravel(travelId: string): Promise<Insurance[]>;
+  updateInsurance(id: string, insurance: Partial<Insurance>): Promise<Insurance>;
+  deleteInsurance(id: string): Promise<void>;
+  
   sessionStore: Store;
 }
 
@@ -75,6 +83,7 @@ export class MemStorage implements IStorage {
   private flights: Map<string, Flight>;
   private transports: Map<string, Transport>;
   private cruises: Map<string, Cruise>;
+  private insurances: Map<string, Insurance>;
   public sessionStore: Store;
 
   constructor() {
@@ -85,6 +94,7 @@ export class MemStorage implements IStorage {
     this.flights = new Map();
     this.transports = new Map();
     this.cruises = new Map();
+    this.insurances = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -343,6 +353,42 @@ export class MemStorage implements IStorage {
 
   async deleteCruise(id: string): Promise<void> {
     this.cruises.delete(id);
+  }
+
+  // Insurance methods
+  async createInsurance(insertInsurance: InsertInsurance): Promise<Insurance> {
+    const id = randomUUID();
+    const insurance: Insurance = {
+      ...insertInsurance,
+      id,
+      emergencyNumber: insertInsurance.emergencyNumber || null,
+      importantInfo: insertInsurance.importantInfo || null,
+      policyDescription: insertInsurance.policyDescription || null,
+      attachments: insertInsurance.attachments || null,
+      notes: insertInsurance.notes || null,
+    };
+    this.insurances.set(id, insurance);
+    return insurance;
+  }
+
+  async getInsurancesByTravel(travelId: string): Promise<Insurance[]> {
+    return Array.from(this.insurances.values()).filter(
+      (insurance) => insurance.travelId === travelId
+    );
+  }
+
+  async updateInsurance(id: string, updates: Partial<Insurance>): Promise<Insurance> {
+    const insurance = this.insurances.get(id);
+    if (!insurance) {
+      throw new Error("Insurance not found");
+    }
+    const updated = { ...insurance, ...updates };
+    this.insurances.set(id, updated);
+    return updated;
+  }
+
+  async deleteInsurance(id: string): Promise<void> {
+    this.insurances.delete(id);
   }
 }
 

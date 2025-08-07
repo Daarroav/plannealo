@@ -10,12 +10,13 @@ import { ActivityFormModal } from "@/components/ui/activity-form-modal";
 import { FlightFormModal } from "@/components/ui/flight-form-modal";
 import { TransportFormModal } from "@/components/ui/transport-form-modal";
 import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
+import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Plus, Edit } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, Plus, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import type { Travel, Accommodation, Activity, Flight, Transport, Cruise } from "@shared/schema";
+import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance } from "@shared/schema";
 
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
@@ -26,6 +27,7 @@ export default function TravelDetail() {
   const [showFlightModal, setShowFlightModal] = useState(false);
   const [showTransportModal, setShowTransportModal] = useState(false);
   const [showCruiseModal, setShowCruiseModal] = useState(false);
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -57,6 +59,11 @@ export default function TravelDetail() {
 
   const { data: cruises = [] } = useQuery<Cruise[]>({
     queryKey: ["/api/travels", travelId, "cruises"],
+    enabled: !!travelId,
+  });
+
+  const { data: insurances = [] } = useQuery<Insurance[]>({
+    queryKey: ["/api/travels", travelId, "insurances"],
     enabled: !!travelId,
   });
 
@@ -218,6 +225,29 @@ export default function TravelDetail() {
     },
   });
 
+  const createInsuranceMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Sending insurance data:", data);
+      const response = await apiRequest("POST", `/api/travels/${travelId}/insurances`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "insurances"] });
+      setShowInsuranceModal(false);
+      toast({
+        title: "Seguro agregado",
+        description: "Las notas del seguro han sido agregadas exitosamente al viaje.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const formatDateTime = (date: Date | string | null, includeTime = false) => {
     if (!date) return "";
     const dateObj = new Date(date);
@@ -291,6 +321,7 @@ export default function TravelDetail() {
     { id: "flights", label: "Vuelos", icon: Plane, count: flights.length },
     { id: "transport", label: "Transporte", icon: Car, count: transports.length },
     { id: "cruises", label: "Cruceros", icon: Ship, count: cruises.length },
+    { id: "insurances", label: "Notas de Seguro", icon: Shield, count: insurances.length },
   ];
 
   return (
@@ -807,6 +838,115 @@ export default function TravelDetail() {
                 </div>
               </section>
             )}
+
+            {/* Insurance Section */}
+            {activeSection === "insurances" && (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">Notas de Seguro</h2>
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowInsuranceModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Seguro
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {insurances.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <Shield className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                          No hay seguros registrados
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          Agrega información sobre los seguros de viaje.
+                        </p>
+                        <Button onClick={() => setShowInsuranceModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Agregar Primer Seguro
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    insurances.map((insurance) => (
+                      <Card key={insurance.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
+                                <Shield className="w-6 h-6 text-green-600" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground">{insurance.provider}</h3>
+                                <p className="text-muted-foreground">{insurance.policyType}</p>
+                                <p className="text-sm text-muted-foreground">#{insurance.policyNumber}</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Vigencia</p>
+                              <p className="text-muted-foreground">{formatDateTime(insurance.effectiveDate, true)}</p>
+                            </div>
+                            {insurance.emergencyNumber && (
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Número de Emergencia</p>
+                                <p className="text-muted-foreground">{insurance.emergencyNumber}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {(insurance.importantInfo || insurance.policyDescription) && (
+                            <div className="border-t border-border pt-4 space-y-3">
+                              {insurance.importantInfo && (
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">Información Importante</p>
+                                  <p className="text-muted-foreground text-sm">{insurance.importantInfo}</p>
+                                </div>
+                              )}
+                              {insurance.policyDescription && (
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">Descripción de la Política</p>
+                                  <p className="text-muted-foreground text-sm">{insurance.policyDescription}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {insurance.attachments && insurance.attachments.length > 0 && (
+                            <div className="border-t border-border pt-4">
+                              <p className="text-sm font-medium text-foreground mb-2">Archivos Adjuntos</p>
+                              <div className="space-y-1">
+                                {insurance.attachments.map((fileName, index) => (
+                                  <div key={index} className="flex items-center space-x-2 text-sm">
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{fileName}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {insurance.notes && (
+                            <div className="border-t border-border pt-4 mt-4">
+                              <p className="text-sm font-medium text-foreground mb-2">Notas</p>
+                              <p className="text-muted-foreground text-sm">{insurance.notes}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>
@@ -852,6 +992,14 @@ export default function TravelDetail() {
         onOpenChange={setShowCruiseModal}
         onSubmit={createCruiseMutation.mutate}
         isPending={createCruiseMutation.isPending}
+      />
+
+      {/* Insurance Form Modal */}
+      <InsuranceFormModal
+        open={showInsuranceModal}
+        onOpenChange={setShowInsuranceModal}
+        onSubmit={createInsuranceMutation.mutate}
+        isPending={createInsuranceMutation.isPending}
       />
     </div>
   );

@@ -97,6 +97,20 @@ export const cruises = pgTable("cruises", {
   notes: text("notes"),
 });
 
+export const insurances = pgTable("insurances", {
+  id: text("id").primaryKey(),
+  travelId: text("travel_id").references(() => travels.id, { onDelete: "cascade" }).notNull(),
+  provider: text("provider").notNull(), // Proveedor
+  policyNumber: text("policy_number").notNull(), // Número de política
+  policyType: text("policy_type").notNull(), // Tipo de política
+  emergencyNumber: text("emergency_number"), // Número de emergencia
+  effectiveDate: timestamp("effective_date").notNull(), // Fecha y hora
+  importantInfo: text("important_info"), // Información importante
+  policyDescription: text("policy_description"), // Descripción de la política
+  attachments: text("attachments").array(), // Archivos adjuntos (URLs o nombres)
+  notes: text("notes"), // Notas adicionales
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -128,6 +142,10 @@ export const insertCruiseSchema = createInsertSchema(cruises).omit({
   id: true,
 });
 
+export const insertInsuranceSchema = createInsertSchema(insurances).omit({
+  id: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -143,3 +161,5 @@ export type InsertTransport = z.infer<typeof insertTransportSchema>;
 export type Transport = typeof transports.$inferSelect;
 export type InsertCruise = z.infer<typeof insertCruiseSchema>;
 export type Cruise = typeof cruises.$inferSelect;
+export type InsertInsurance = z.infer<typeof insertInsuranceSchema>;
+export type Insurance = typeof insurances.$inferSelect;

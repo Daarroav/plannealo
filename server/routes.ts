@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema } from "@shared/schema";
+import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -297,6 +297,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating cruise:", error);
       res.status(400).json({ message: "Error creating cruise" });
+    }
+  });
+
+  // Insurance routes
+  app.get("/api/travels/:travelId/insurances", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const insurances = await storage.getInsurancesByTravel(req.params.travelId);
+      res.json(insurances);
+    } catch (error) {
+      console.error("Error fetching insurances:", error);
+      res.status(500).json({ message: "Error fetching insurances" });
+    }
+  });
+
+  app.post("/api/travels/:travelId/insurances", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const validated = insertInsuranceSchema.parse({
+        ...req.body,
+        travelId: req.params.travelId,
+        effectiveDate: new Date(req.body.effectiveDate),
+      });
+      
+      const insurance = await storage.createInsurance(validated);
+      res.status(201).json(insurance);
+    } catch (error) {
+      console.error("Error creating insurance:", error);
+      res.status(400).json({ message: "Error creating insurance" });
     }
   });
 
