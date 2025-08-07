@@ -252,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validated = insertTransportSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
-        startDate: new Date(req.body.startDate),
+        pickupDate: new Date(req.body.pickupDate),
         ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
       });
       

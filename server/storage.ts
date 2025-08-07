@@ -231,20 +231,6 @@ export class MemStorage implements IStorage {
     this.activities.delete(id);
   }
 
-  async updateActivity(id: string, updates: Partial<Activity>): Promise<Activity> {
-    const activity = this.activities.get(id);
-    if (!activity) {
-      throw new Error("Activity not found");
-    }
-    const updated = { ...activity, ...updates };
-    this.activities.set(id, updated);
-    return updated;
-  }
-
-  async deleteActivity(id: string): Promise<void> {
-    this.activities.delete(id);
-  }
-
   // Flight methods
   async createFlight(insertFlight: InsertFlight): Promise<Flight> {
     const id = randomUUID();
@@ -288,6 +274,8 @@ export class MemStorage implements IStorage {
       confirmationNumber: insertTransport.confirmationNumber || null,
       notes: insertTransport.notes || null,
       provider: insertTransport.provider || null,
+      contactName: insertTransport.contactName || null,
+      contactNumber: insertTransport.contactNumber || null,
       dropoffLocation: insertTransport.dropoffLocation || null,
     };
     this.transports.set(id, transport);

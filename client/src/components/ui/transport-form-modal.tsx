@@ -74,15 +74,15 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       travelId: data.travelId,
       type: data.type,
       name: data.name,
-      provider: data.provider,
-      contactName: data.contactName,
-      contactNumber: data.contactNumber,
-      pickupDate: pickupDateTime.toISOString(),
+      provider: data.provider || undefined,
+      contactName: data.contactName || undefined,
+      contactNumber: data.contactNumber || undefined,
+      pickupDate: pickupDateTime,
       pickupLocation: data.pickupLocation,
-      endDate: endDateTime ? endDateTime.toISOString() : null,
-      dropoffLocation: data.dropoffLocation,
-      confirmationNumber: data.confirmationNumber,
-      notes: data.notes,
+      endDate: endDateTime || undefined,
+      dropoffLocation: data.dropoffLocation || undefined,
+      confirmationNumber: data.confirmationNumber || undefined,
+      notes: data.notes || undefined,
     };
 
     onSubmit(submitData);
