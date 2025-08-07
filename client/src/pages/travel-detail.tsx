@@ -9,12 +9,13 @@ import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal
 import { ActivityFormModal } from "@/components/ui/activity-form-modal";
 import { FlightFormModal } from "@/components/ui/flight-form-modal";
 import { TransportFormModal } from "@/components/ui/transport-form-modal";
+import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Plus, Edit } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Plus, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import type { Travel, Accommodation, Activity, Flight, Transport } from "@shared/schema";
+import type { Travel, Accommodation, Activity, Flight, Transport, Cruise } from "@shared/schema";
 
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
@@ -24,6 +25,7 @@ export default function TravelDetail() {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showFlightModal, setShowFlightModal] = useState(false);
   const [showTransportModal, setShowTransportModal] = useState(false);
+  const [showCruiseModal, setShowCruiseModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -50,6 +52,11 @@ export default function TravelDetail() {
 
   const { data: transports = [] } = useQuery<Transport[]>({
     queryKey: ["/api/travels", travelId, "transports"],
+    enabled: !!travelId,
+  });
+
+  const { data: cruises = [] } = useQuery<Cruise[]>({
+    queryKey: ["/api/travels", travelId, "cruises"],
     enabled: !!travelId,
   });
 
@@ -188,6 +195,29 @@ export default function TravelDetail() {
     },
   });
 
+  const createCruiseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Sending cruise data:", data);
+      const response = await apiRequest("POST", `/api/travels/${travelId}/cruises`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "cruises"] });
+      setShowCruiseModal(false);
+      toast({
+        title: "Crucero agregado",
+        description: "El crucero ha sido agregado exitosamente al viaje.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const formatDateTime = (date: Date | string | null, includeTime = false) => {
     if (!date) return "";
     const dateObj = new Date(date);
@@ -260,6 +290,7 @@ export default function TravelDetail() {
     { id: "activities", label: "Actividades", icon: MapPin, count: activities.length },
     { id: "flights", label: "Vuelos", icon: Plane, count: flights.length },
     { id: "transport", label: "Transporte", icon: Car, count: transports.length },
+    { id: "cruises", label: "Cruceros", icon: Ship, count: cruises.length },
   ];
 
   return (
@@ -685,6 +716,97 @@ export default function TravelDetail() {
                 </div>
               </section>
             )}
+
+            {/* Cruises Section */}
+            {activeSection === "cruises" && (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">Cruceros</h2>
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowCruiseModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Crucero
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {cruises.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <Ship className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                          No hay cruceros planificados
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          Agrega información sobre cruceros para este viaje.
+                        </p>
+                        <Button onClick={() => setShowCruiseModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Agregar Primer Crucero
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    cruises.map((cruise) => (
+                      <Card key={cruise.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Ship className="w-6 h-6 text-blue-600" />
+                              </div>
+                              <div>
+                                <h3 className="text-lg font-semibold text-foreground">{cruise.cruiseLine}</h3>
+                                <p className="text-muted-foreground">Crucero</p>
+                                {cruise.confirmationNumber && <p className="text-sm text-muted-foreground">#{cruise.confirmationNumber}</p>}
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-medium text-foreground">Salida</h4>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Fecha y Hora</p>
+                                <p className="font-medium">{formatDateTime(cruise.departureDate, true)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Puerto</p>
+                                <p className="font-medium">{cruise.departurePort}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-medium text-foreground">Llegada</h4>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Fecha y Hora</p>
+                                <p className="font-medium">{formatDateTime(cruise.arrivalDate, true)}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Puerto</p>
+                                <p className="font-medium">{cruise.arrivalPort}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {cruise.notes && (
+                            <div className="border-t border-border pt-4">
+                              <p className="text-sm font-medium text-foreground mb-2">Notas</p>
+                              <p className="text-muted-foreground text-sm">{cruise.notes}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>
@@ -722,6 +844,14 @@ export default function TravelDetail() {
         onSubmit={createTransportMutation.mutate}
         isLoading={createTransportMutation.isPending}
         travelId={travelId!}
+      />
+
+      {/* Cruise Form Modal */}
+      <CruiseFormModal
+        open={showCruiseModal}
+        onOpenChange={setShowCruiseModal}
+        onSubmit={createCruiseMutation.mutate}
+        isPending={createCruiseMutation.isPending}
       />
     </div>
   );

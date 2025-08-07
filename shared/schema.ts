@@ -85,6 +85,18 @@ export const transports = pgTable("transports", {
   notes: text("notes"),
 });
 
+export const cruises = pgTable("cruises", {
+  id: text("id").primaryKey(),
+  travelId: text("travel_id").references(() => travels.id, { onDelete: "cascade" }).notNull(),
+  cruiseLine: text("cruise_line").notNull(), // Barco o línea de cruceros
+  confirmationNumber: text("confirmation_number"),
+  departureDate: timestamp("departure_date").notNull(), // fecha y horario de vela
+  departurePort: text("departure_port").notNull(), // puerto
+  arrivalDate: timestamp("arrival_date").notNull(), // fecha y horario de desembarque
+  arrivalPort: text("arrival_port").notNull(), // puerto de desembarque
+  notes: text("notes"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -112,6 +124,10 @@ export const insertTransportSchema = createInsertSchema(transports).omit({
   id: true,
 });
 
+export const insertCruiseSchema = createInsertSchema(cruises).omit({
+  id: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -125,3 +141,5 @@ export type InsertFlight = z.infer<typeof insertFlightSchema>;
 export type Flight = typeof flights.$inferSelect;
 export type InsertTransport = z.infer<typeof insertTransportSchema>;
 export type Transport = typeof transports.$inferSelect;
+export type InsertCruise = z.infer<typeof insertCruiseSchema>;
+export type Cruise = typeof cruises.$inferSelect;

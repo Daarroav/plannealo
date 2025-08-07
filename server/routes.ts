@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema } from "@shared/schema";
+import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -261,6 +261,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating transport:", error);
       res.status(400).json({ message: "Error creating transport" });
+    }
+  });
+
+  // Cruise routes
+  app.get("/api/travels/:travelId/cruises", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const cruises = await storage.getCruisesByTravel(req.params.travelId);
+      res.json(cruises);
+    } catch (error) {
+      console.error("Error fetching cruises:", error);
+      res.status(500).json({ message: "Error fetching cruises" });
+    }
+  });
+
+  app.post("/api/travels/:travelId/cruises", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const validated = insertCruiseSchema.parse({
+        ...req.body,
+        travelId: req.params.travelId,
+        departureDate: new Date(req.body.departureDate),
+        arrivalDate: new Date(req.body.arrivalDate),
+      });
+      
+      const cruise = await storage.createCruise(validated);
+      res.status(201).json(cruise);
+    } catch (error) {
+      console.error("Error creating cruise:", error);
+      res.status(400).json({ message: "Error creating cruise" });
     }
   });
 

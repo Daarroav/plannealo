@@ -14,7 +14,9 @@ import {
   Flight,
   InsertFlight,
   Transport,
-  InsertTransport
+  InsertTransport,
+  Cruise,
+  InsertCruise
 } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
@@ -56,6 +58,12 @@ export interface IStorage {
   updateTransport(id: string, transport: Partial<Transport>): Promise<Transport>;
   deleteTransport(id: string): Promise<void>;
   
+  // Cruise methods
+  createCruise(cruise: InsertCruise): Promise<Cruise>;
+  getCruisesByTravel(travelId: string): Promise<Cruise[]>;
+  updateCruise(id: string, cruise: Partial<Cruise>): Promise<Cruise>;
+  deleteCruise(id: string): Promise<void>;
+  
   sessionStore: Store;
 }
 
@@ -66,6 +74,7 @@ export class MemStorage implements IStorage {
   private activities: Map<string, Activity>;
   private flights: Map<string, Flight>;
   private transports: Map<string, Transport>;
+  private cruises: Map<string, Cruise>;
   public sessionStore: Store;
 
   constructor() {
@@ -75,6 +84,7 @@ export class MemStorage implements IStorage {
     this.activities = new Map();
     this.flights = new Map();
     this.transports = new Map();
+    this.cruises = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -300,6 +310,39 @@ export class MemStorage implements IStorage {
 
   async deleteTransport(id: string): Promise<void> {
     this.transports.delete(id);
+  }
+
+  // Cruise methods
+  async createCruise(insertCruise: InsertCruise): Promise<Cruise> {
+    const id = randomUUID();
+    const cruise: Cruise = {
+      ...insertCruise,
+      id,
+      confirmationNumber: insertCruise.confirmationNumber || null,
+      notes: insertCruise.notes || null,
+    };
+    this.cruises.set(id, cruise);
+    return cruise;
+  }
+
+  async getCruisesByTravel(travelId: string): Promise<Cruise[]> {
+    return Array.from(this.cruises.values()).filter(
+      (cruise) => cruise.travelId === travelId
+    );
+  }
+
+  async updateCruise(id: string, updates: Partial<Cruise>): Promise<Cruise> {
+    const cruise = this.cruises.get(id);
+    if (!cruise) {
+      throw new Error("Cruise not found");
+    }
+    const updated = { ...cruise, ...updates };
+    this.cruises.set(id, updated);
+    return updated;
+  }
+
+  async deleteCruise(id: string): Promise<void> {
+    this.cruises.delete(id);
   }
 }
 
