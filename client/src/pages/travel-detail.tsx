@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import type { Travel, Accommodation, Activity, Flight, Transport } from "@shared
 
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
+  const [, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState("accommodations");
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
@@ -244,7 +245,7 @@ export default function TravelDetail() {
             <p className="text-muted-foreground mb-6">
               El viaje que buscas no existe o no tienes permisos para verlo.
             </p>
-            <Button onClick={() => window.history.back()}>
+            <Button onClick={() => setLocation("/")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Volver
             </Button>
@@ -269,7 +270,7 @@ export default function TravelDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
+              <Button variant="ghost" size="icon" onClick={() => setLocation("/")}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <div>
