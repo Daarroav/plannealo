@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,11 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Upload, FileText, X } from "lucide-react";
 import { insertNoteSchema } from "@shared/schema";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
   noteDate: z.string().min(1, "La fecha es requerida"),
+  attachments: z.array(z.string()).optional(),
 }).omit({
   travelId: true,
 });
@@ -31,6 +34,8 @@ export function NoteFormModal({
   onSubmit, 
   isPending = false 
 }: NoteFormModalProps) {
+  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+
   const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
     defaultValues: {
@@ -38,8 +43,25 @@ export function NoteFormModal({
       noteDate: "",
       content: "",
       visibleToTravelers: true,
+      attachments: [],
     },
   });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileNames = Array.from(files).map(file => file.name);
+      const updatedFiles = [...attachedFiles, ...fileNames];
+      setAttachedFiles(updatedFiles);
+      form.setValue("attachments", updatedFiles);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    const updatedFiles = attachedFiles.filter((_, i) => i !== index);
+    setAttachedFiles(updatedFiles);
+    form.setValue("attachments", updatedFiles);
+  };
 
   const handleSubmit = (data: NoteFormData) => {
     console.log("Form data before processing:", data);
@@ -49,15 +71,18 @@ export function NoteFormModal({
       noteDate: new Date(data.noteDate),
       content: data.content,
       visibleToTravelers: data.visibleToTravelers,
+      attachments: attachedFiles.length > 0 ? attachedFiles : undefined,
     };
 
     console.log("Processed data to send:", processedData);
     onSubmit(processedData);
     form.reset();
+    setAttachedFiles([]);
   };
 
   const handleClose = () => {
     form.reset();
+    setAttachedFiles([]);
     onOpenChange(false);
   };
 
@@ -140,6 +165,58 @@ export function NoteFormModal({
                   : "Esta nota solo será visible para agentes de la agencia"
                 }
               </p>
+            </div>
+          </div>
+
+          {/* Documentos Adjuntos */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">Documentos</h3>
+            
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload" className="cursor-pointer">
+                    <span className="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-md inline-block">
+                      Seleccionar Documentos
+                    </span>
+                  </Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    PDF, Word, imágenes (JPG, PNG), texto - Máximo 10 archivos
+                  </p>
+                </div>
+              </div>
+
+              {/* Lista de archivos seleccionados */}
+              {attachedFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Documentos seleccionados:</h4>
+                  {attachedFiles.map((fileName, index) => (
+                    <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-foreground">{fileName}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

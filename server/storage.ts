@@ -408,6 +408,7 @@ export class MemStorage implements IStorage {
       ...insertNote,
       id,
       visibleToTravelers: insertNote.visibleToTravelers ?? true,
+      attachments: insertNote.attachments || null,
     };
     this.notes.set(id, note);
     return note;

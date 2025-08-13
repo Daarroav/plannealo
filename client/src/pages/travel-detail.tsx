@@ -1052,6 +1052,21 @@ export default function TravelDetail() {
                           <div className="mt-4 p-4 bg-muted/20 rounded-lg border-l-4 border-accent">
                             <p className="text-foreground whitespace-pre-wrap">{note.content}</p>
                           </div>
+
+                          {/* Documentos adjuntos */}
+                          {note.attachments && note.attachments.length > 0 && (
+                            <div className="mt-4 border-t border-border pt-4">
+                              <p className="text-sm font-medium text-foreground mb-2">Documentos Adjuntos</p>
+                              <div className="space-y-1">
+                                {note.attachments.map((fileName, index) => (
+                                  <div key={index} className="flex items-center space-x-2 text-sm">
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{fileName}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))

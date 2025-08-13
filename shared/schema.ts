@@ -118,6 +118,7 @@ export const notes = pgTable("notes", {
   noteDate: timestamp("note_date").notNull(), // Fecha
   content: text("content").notNull(), // Texto con notas
   visibleToTravelers: boolean("visible_to_travelers").notNull().default(true), // Visible para viajeros
+  attachments: text("attachments").array(), // Documentos adjuntos (URLs o nombres)
 });
 
 // Insert schemas
