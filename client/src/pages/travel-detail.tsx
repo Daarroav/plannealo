@@ -12,9 +12,10 @@ import { TransportFormModal } from "@/components/ui/transport-form-modal";
 import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { NoteFormModal } from "@/components/ui/note-form-modal";
+import { ShareTravelModal } from "@/components/ui/share-travel-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
@@ -30,6 +31,7 @@ export default function TravelDetail() {
   const [showCruiseModal, setShowCruiseModal] = useState(false);
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -376,6 +378,13 @@ export default function TravelDetail() {
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
                 {travel.status === "published" ? "Publicado" : "Borrador"}
               </Badge>
+              <Button
+                variant="outline"
+                onClick={() => setShowShareModal(true)}
+              >
+                <Share className="w-4 h-4 mr-2" />
+                Compartir
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => saveDraftMutation.mutate()}
@@ -1135,6 +1144,14 @@ export default function TravelDetail() {
         onOpenChange={setShowNoteModal}
         onSubmit={createNoteMutation.mutate}
         isPending={createNoteMutation.isPending}
+      />
+
+      {/* Share Travel Modal */}
+      <ShareTravelModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        travelId={travelId!}
+        travelTitle={travel?.name || ""}
       />
     </div>
   );

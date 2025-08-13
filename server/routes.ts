@@ -395,6 +395,298 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get full travel data (for preview and PDF generation)
+  app.get("/api/travels/:id/full", async (req, res) => {
+    try {
+      const travel = await storage.getTravel(req.params.id);
+      if (!travel) {
+        return res.status(404).json({ error: "Travel not found" });
+      }
+
+      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
+        storage.getAccommodationsByTravel(req.params.id),
+        storage.getActivitiesByTravel(req.params.id),
+        storage.getFlightsByTravel(req.params.id),
+        storage.getTransportsByTravel(req.params.id),
+        storage.getCruisesByTravel(req.params.id),
+        storage.getInsurancesByTravel(req.params.id),
+        storage.getNotesByTravel(req.params.id)
+      ]);
+
+      res.json({
+        travel,
+        accommodations,
+        activities,
+        flights,
+        transports,
+        cruises,
+        insurances,
+        notes
+      });
+    } catch (error) {
+      console.error("Error fetching full travel data:", error);
+      res.status(500).json({ error: "Error fetching travel data" });
+    }
+  });
+
+  // Share travel via email (placeholder - not connected to SendGrid)
+  app.post("/api/travels/:id/share/email", async (req, res) => {
+    try {
+      const { clientEmail, clientName, message } = req.body;
+      
+      if (!clientEmail || !clientName) {
+        return res.status(400).json({ error: "Client email and name are required" });
+      }
+
+      const travel = await storage.getTravel(req.params.id);
+      if (!travel) {
+        return res.status(404).json({ error: "Travel not found" });
+      }
+
+      // TODO: Integrate with SendGrid when API key is available
+      // For now, just simulate success
+      console.log(`Email would be sent to: ${clientEmail}`);
+      console.log(`Client name: ${clientName}`);
+      console.log(`Travel: ${travel.title}`);
+      console.log(`Message: ${message || 'No message'}`);
+
+      // Simulate email sending delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      res.json({ 
+        success: true, 
+        message: "Itinerario enviado exitosamente" 
+      });
+    } catch (error) {
+      console.error("Error sharing travel:", error);
+      res.status(500).json({ error: "Error sharing travel" });
+    }
+  });
+
+  // Generate PDF for travel (returns HTML for now, can be converted to PDF on client)
+  app.get("/api/travels/:id/generate-pdf", async (req, res) => {
+    try {
+      const travel = await storage.getTravel(req.params.id);
+      if (!travel) {
+        return res.status(404).json({ error: "Travel not found" });
+      }
+
+      // Get all travel data
+      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
+        storage.getAccommodationsByTravel(req.params.id),
+        storage.getActivitiesByTravel(req.params.id),
+        storage.getFlightsByTravel(req.params.id),
+        storage.getTransportsByTravel(req.params.id),
+        storage.getCruisesByTravel(req.params.id),
+        storage.getInsurancesByTravel(req.params.id),
+        storage.getNotesByTravel(req.params.id)
+      ]);
+
+      // Filter notes to only show those visible to travelers
+      const visibleNotes = notes.filter(note => note.visibleToTravelers);
+
+      // Create a simple HTML content for PDF generation
+      const formatDate = (date: Date) => {
+        return new Date(date).toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      };
+
+      const formatDateTime = (dateTime: Date) => {
+        return new Date(dateTime).toLocaleString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      let htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Itinerario - ${travel.title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
+            .section { margin-bottom: 25px; page-break-inside: avoid; }
+            .section h2 { color: #dc2626; border-bottom: 1px solid #dc2626; padding-bottom: 5px; margin-bottom: 15px; }
+            .item { margin-bottom: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
+            .item h3 { margin-top: 0; color: #374151; font-size: 18px; }
+            .details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+            .detail { font-size: 14px; color: #6b7280; }
+            .badge { background: #dc2626; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+            @media print {
+              body { margin: 0; font-size: 12px; }
+              .item { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${travel.title}</h1>
+            <p><strong>Destino:</strong> ${travel.destination}</p>
+            <p><strong>Cliente:</strong> ${travel.clientName}</p>
+            <p><strong>Fechas:</strong> ${formatDate(travel.startDate)} - ${formatDate(travel.endDate)}</p>
+            ${travel.description ? `<p style="font-style: italic;">${travel.description}</p>` : ''}
+          </div>
+      `;
+
+      if (accommodations.length > 0) {
+        htmlContent += `<div class="section"><h2>🏨 Alojamientos</h2>`;
+        accommodations.forEach(acc => {
+          htmlContent += `
+            <div class="item">
+              <h3>${acc.name} <span class="badge">${acc.type}</span></h3>
+              <div class="details">
+                <div class="detail">📍 ${acc.location}</div>
+                <div class="detail">📅 ${formatDate(acc.checkIn)} - ${formatDate(acc.checkOut)}</div>
+                <div class="detail">🛏️ ${acc.roomType}</div>
+                ${acc.confirmationNumber ? `<div class="detail">🎫 ${acc.confirmationNumber}</div>` : ''}
+              </div>
+              ${acc.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${acc.notes}</p>` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (activities.length > 0) {
+        htmlContent += `<div class="section"><h2>🎯 Actividades</h2>`;
+        activities.forEach(activity => {
+          htmlContent += `
+            <div class="item">
+              <h3>${activity.name} <span class="badge">${activity.type}</span></h3>
+              <div class="details">
+                <div class="detail">📅 ${formatDate(activity.date)}</div>
+                ${activity.startTime ? `<div class="detail">⏰ ${activity.startTime} - ${activity.endTime}</div>` : ''}
+                ${activity.confirmationNumber ? `<div class="detail">🎫 ${activity.confirmationNumber}</div>` : ''}
+              </div>
+              ${activity.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${activity.notes}</p>` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (flights.length > 0) {
+        htmlContent += `<div class="section"><h2>✈️ Vuelos</h2>`;
+        flights.forEach(flight => {
+          htmlContent += `
+            <div class="item">
+              <h3>${flight.airline} ${flight.flightNumber} <span class="badge">${flight.class}</span></h3>
+              <div class="details">
+                <div class="detail">🛫 ${flight.departureCity} → ${flight.arrivalCity}</div>
+                <div class="detail">📅 Salida: ${formatDate(flight.departureDate)}</div>
+                <div class="detail">🕐 Llegada: ${formatDate(flight.arrivalDate)}</div>
+                ${flight.reservationNumber ? `<div class="detail">🎫 ${flight.reservationNumber}</div>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (transports.length > 0) {
+        htmlContent += `<div class="section"><h2>🚗 Transporte</h2>`;
+        transports.forEach(transport => {
+          htmlContent += `
+            <div class="item">
+              <h3>${transport.name} <span class="badge">${transport.type}</span></h3>
+              <div class="details">
+                <div class="detail">📍 ${transport.pickupLocation} → ${transport.dropoffLocation || 'Destino'}</div>
+                <div class="detail">📅 ${formatDate(transport.pickupDate)}</div>
+                ${transport.confirmationNumber ? `<div class="detail">🎫 ${transport.confirmationNumber}</div>` : ''}
+              </div>
+              ${transport.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${transport.notes}</p>` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (cruises.length > 0) {
+        htmlContent += `<div class="section"><h2>🚢 Cruceros</h2>`;
+        cruises.forEach(cruise => {
+          htmlContent += `
+            <div class="item">
+              <h3>${cruise.cruiseLine}</h3>
+              <div class="details">
+                <div class="detail">📅 ${formatDate(cruise.departureDate)} - ${formatDate(cruise.arrivalDate)}</div>
+                <div class="detail">🏃 ${cruise.departurePort} → ${cruise.arrivalPort}</div>
+                ${cruise.confirmationNumber ? `<div class="detail">🎫 ${cruise.confirmationNumber}</div>` : ''}
+              </div>
+              ${cruise.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${cruise.notes}</p>` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (insurances.length > 0) {
+        htmlContent += `<div class="section"><h2>🛡️ Seguros</h2>`;
+        insurances.forEach(insurance => {
+          htmlContent += `
+            <div class="item">
+              <h3>${insurance.provider} <span class="badge">${insurance.policyType}</span></h3>
+              <div class="details">
+                <div class="detail">📋 ${insurance.policyNumber}</div>
+                <div class="detail">📅 ${formatDate(insurance.effectiveDate)}</div>
+                ${insurance.emergencyNumber ? `<div class="detail">📞 ${insurance.emergencyNumber}</div>` : ''}
+              </div>
+              ${insurance.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${insurance.notes}</p>` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      if (visibleNotes.length > 0) {
+        htmlContent += `<div class="section"><h2>📝 Notas Importantes</h2>`;
+        visibleNotes.forEach(note => {
+          htmlContent += `
+            <div class="item">
+              <h3>${note.title}</h3>
+              <div class="detail" style="margin-bottom: 10px;">📅 ${formatDateTime(note.noteDate)}</div>
+              <p style="white-space: pre-wrap; margin: 10px 0; color: #374151;">${note.content}</p>
+              ${note.attachments && note.attachments.length > 0 ? `
+                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                  <strong>Documentos Adjuntos:</strong>
+                  <ul style="margin: 5px 0 0 20px; color: #6b7280;">
+                    ${note.attachments.map((fileName: string) => `<li>📄 ${fileName}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
+
+      htmlContent += `
+          <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+            <p><strong>Itinerario generado por PLANNEALO - Agencia de Viajes</strong></p>
+            <p>Fecha de generación: ${formatDate(new Date())}</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Set headers for HTML download (users can save as PDF)
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.title.replace(/\s+/g, '-').toLowerCase()}.html"`);
+      
+      res.send(htmlContent);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ error: "Error generating PDF" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -2,6 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Print Styles for Travel Preview and PDF Generation */
+@media print {
+  @page {
+    size: A4;
+    margin: 1cm;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Hide navigation and buttons for print */
+  .no-print,
+  nav,
+  button,
+  .print-hidden {
+    display: none !important;
+  }
+  
+  /* Optimize travel preview layout for print */
+  .travel-preview-print {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  
+  .travel-section {
+    page-break-inside: avoid;
+    margin-bottom: 20px !important;
+  }
+  
+  .travel-section h2 {
+    color: #dc2626 !important;
+    font-size: 16pt !important;
+    margin-bottom: 12px !important;
+    border-bottom: 2px solid #dc2626 !important;
+    padding-bottom: 4px !important;
+  }
+  
+  .travel-item {
+    page-break-inside: avoid;
+    margin-bottom: 15px !important;
+    padding: 10px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+  }
+  
+  .travel-item h3 {
+    color: #374151 !important;
+    font-size: 14pt !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .travel-details {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .travel-detail {
+    font-size: 11pt !important;
+    color: #6b7280 !important;
+  }
+  
+  .travel-notes {
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #e5e7eb !important;
+    font-size: 11pt !important;
+    color: #374151 !important;
+    font-style: italic !important;
+  }
+  
+  /* Ensure proper spacing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(210, 10%, 20%);
