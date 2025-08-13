@@ -11,12 +11,13 @@ import { FlightFormModal } from "@/components/ui/flight-form-modal";
 import { TransportFormModal } from "@/components/ui/transport-form-modal";
 import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
+import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, Plus, Edit } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance } from "@shared/schema";
+import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
@@ -28,6 +29,7 @@ export default function TravelDetail() {
   const [showTransportModal, setShowTransportModal] = useState(false);
   const [showCruiseModal, setShowCruiseModal] = useState(false);
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -64,6 +66,11 @@ export default function TravelDetail() {
 
   const { data: insurances = [] } = useQuery<Insurance[]>({
     queryKey: ["/api/travels", travelId, "insurances"],
+    enabled: !!travelId,
+  });
+
+  const { data: notes = [] } = useQuery<Note[]>({
+    queryKey: ["/api/travels", travelId, "notes"],
     enabled: !!travelId,
   });
 
@@ -248,6 +255,29 @@ export default function TravelDetail() {
     },
   });
 
+  const createNoteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Sending note data:", data);
+      const response = await apiRequest("POST", `/api/travels/${travelId}/notes`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "notes"] });
+      setShowNoteModal(false);
+      toast({
+        title: "Nota agregada",
+        description: "La nota ha sido agregada exitosamente al viaje.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const formatDateTime = (date: Date | string | null, includeTime = false) => {
     if (!date) return "";
     const dateObj = new Date(date);
@@ -322,6 +352,7 @@ export default function TravelDetail() {
     { id: "transport", label: "Transporte", icon: Car, count: transports.length },
     { id: "cruises", label: "Cruceros", icon: Ship, count: cruises.length },
     { id: "insurances", label: "Notas de Seguro", icon: Shield, count: insurances.length },
+    { id: "notes", label: "Notas", icon: StickyNote, count: notes.length },
   ];
 
   return (
@@ -947,6 +978,87 @@ export default function TravelDetail() {
                 </div>
               </section>
             )}
+
+            {/* Notes Section */}
+            {activeSection === "notes" && (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">Notas</h2>
+                  <Button 
+                    className="bg-accent hover:bg-accent/90"
+                    onClick={() => setShowNoteModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Nota
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {notes.length === 0 ? (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <StickyNote className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">
+                          No hay notas registradas
+                        </h3>
+                        <p className="text-muted-foreground mb-6">
+                          Agrega notas importantes sobre el viaje.
+                        </p>
+                        <Button onClick={() => setShowNoteModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Agregar Primera Nota
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    notes.map((note) => (
+                      <Card key={note.id}>
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <StickyNote className="w-6 h-6 text-yellow-600" />
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-foreground">{note.title}</h3>
+                                <p className="text-muted-foreground">{formatDateTime(note.noteDate)}</p>
+                                
+                                {/* Indicador de visibilidad */}
+                                <div className="flex items-center space-x-2 mt-2">
+                                  {note.visibleToTravelers ? (
+                                    <>
+                                      <Eye className="w-4 h-4 text-green-600" />
+                                      <span className="text-sm font-medium text-green-600">
+                                        Visible para viajeros
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeOff className="w-4 h-4 text-gray-600" />
+                                      <span className="text-sm font-medium text-gray-600">
+                                        Solo para agentes
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+
+                          {/* Contenido de la nota */}
+                          <div className="mt-4 p-4 bg-muted/20 rounded-lg border-l-4 border-accent">
+                            <p className="text-foreground whitespace-pre-wrap">{note.content}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </section>
+            )}
           </div>
         </div>
       </div>
@@ -1000,6 +1112,14 @@ export default function TravelDetail() {
         onOpenChange={setShowInsuranceModal}
         onSubmit={createInsuranceMutation.mutate}
         isPending={createInsuranceMutation.isPending}
+      />
+
+      {/* Note Form Modal */}
+      <NoteFormModal
+        open={showNoteModal}
+        onOpenChange={setShowNoteModal}
+        onSubmit={createNoteMutation.mutate}
+        isPending={createNoteMutation.isPending}
       />
     </div>
   );

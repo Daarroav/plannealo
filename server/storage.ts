@@ -18,7 +18,9 @@ import {
   Cruise,
   InsertCruise,
   Insurance,
-  InsertInsurance
+  InsertInsurance,
+  Note,
+  InsertNote
 } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
@@ -72,6 +74,12 @@ export interface IStorage {
   updateInsurance(id: string, insurance: Partial<Insurance>): Promise<Insurance>;
   deleteInsurance(id: string): Promise<void>;
   
+  // Note methods
+  createNote(note: InsertNote): Promise<Note>;
+  getNotesByTravel(travelId: string): Promise<Note[]>;
+  updateNote(id: string, note: Partial<Note>): Promise<Note>;
+  deleteNote(id: string): Promise<void>;
+  
   sessionStore: Store;
 }
 
@@ -84,6 +92,7 @@ export class MemStorage implements IStorage {
   private transports: Map<string, Transport>;
   private cruises: Map<string, Cruise>;
   private insurances: Map<string, Insurance>;
+  private notes: Map<string, Note>;
   public sessionStore: Store;
 
   constructor() {
@@ -95,6 +104,7 @@ export class MemStorage implements IStorage {
     this.transports = new Map();
     this.cruises = new Map();
     this.insurances = new Map();
+    this.notes = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -389,6 +399,38 @@ export class MemStorage implements IStorage {
 
   async deleteInsurance(id: string): Promise<void> {
     this.insurances.delete(id);
+  }
+
+  // Note methods
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const id = randomUUID();
+    const note: Note = {
+      ...insertNote,
+      id,
+      visibleToTravelers: insertNote.visibleToTravelers ?? true,
+    };
+    this.notes.set(id, note);
+    return note;
+  }
+
+  async getNotesByTravel(travelId: string): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(
+      (note) => note.travelId === travelId
+    );
+  }
+
+  async updateNote(id: string, updates: Partial<Note>): Promise<Note> {
+    const note = this.notes.get(id);
+    if (!note) {
+      throw new Error("Note not found");
+    }
+    const updated = { ...note, ...updates };
+    this.notes.set(id, updated);
+    return updated;
+  }
+
+  async deleteNote(id: string): Promise<void> {
+    this.notes.delete(id);
   }
 }
 
