@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
+import { ObjectStorageService } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -447,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, just simulate success
       console.log(`Email would be sent to: ${clientEmail}`);
       console.log(`Client name: ${clientName}`);
-      console.log(`Travel: ${travel.title}`);
+      console.log(`Travel: ${travel.name}`);
       console.log(`Message: ${message || 'No message'}`);
 
       // Simulate email sending delay
@@ -509,7 +510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>Itinerario - ${travel.title}</title>
+          <title>Itinerario - ${travel.name}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
@@ -528,11 +529,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </head>
         <body>
           <div class="header">
-            <h1>${travel.title}</h1>
-            <p><strong>Destino:</strong> ${travel.destination}</p>
+            <h1>${travel.name}</h1>
             <p><strong>Cliente:</strong> ${travel.clientName}</p>
             <p><strong>Fechas:</strong> ${formatDate(travel.startDate)} - ${formatDate(travel.endDate)}</p>
-            ${travel.description ? `<p style="font-style: italic;">${travel.description}</p>` : ''}
           </div>
       `;
 
@@ -678,12 +677,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set headers for HTML download (users can save as PDF)
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.title.replace(/\s+/g, '-').toLowerCase()}.html"`);
+      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
       
       res.send(htmlContent);
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ error: "Error generating PDF" });
+    }
+  });
+
+  // Object Storage endpoints for travel cover images
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Error getting upload URL" });
+    }
+  });
+
+  // Update travel with cover image
+  app.put("/api/travels/:id/cover-image", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { coverImageURL } = req.body;
+      if (!coverImageURL) {
+        return res.status(400).json({ error: "coverImageURL is required" });
+      }
+
+      const travel = await storage.getTravel(req.params.id);
+      if (!travel) {
+        return res.status(404).json({ error: "Travel not found" });
+      }
+      if (travel.createdBy !== req.user!.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(coverImageURL);
+
+      // Update travel with cover image path
+      await storage.updateTravel(req.params.id, { coverImage: objectPath });
+
+      res.json({ objectPath });
+    } catch (error) {
+      console.error("Error updating travel cover image:", error);
+      res.status(500).json({ error: "Error updating cover image" });
+    }
+  });
+
+  // Serve objects
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      res.sendStatus(404);
     }
   });
 

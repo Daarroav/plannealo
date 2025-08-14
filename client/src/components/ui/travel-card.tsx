@@ -22,9 +22,12 @@ export function TravelCard({ travel, onEdit }: TravelCardProps) {
   return (
     <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
       <img 
-        src={travel.coverImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"} 
+        src={travel.coverImage ? `${travel.coverImage}` : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"} 
         alt={travel.name}
         className="w-full h-48 object-cover"
+        onError={(e) => {
+          e.currentTarget.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250";
+        }}
       />
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">

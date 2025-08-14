@@ -13,9 +13,10 @@ import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
@@ -122,6 +123,46 @@ export default function TravelDetail() {
       });
     },
   });
+
+  const updateCoverImageMutation = useMutation({
+    mutationFn: async (coverImageURL: string) => {
+      const response = await apiRequest("PUT", `/api/travels/${travelId}/cover-image`, {
+        coverImageURL
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      toast({
+        title: "Imagen actualizada",
+        description: "La imagen de portada ha sido actualizada exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const getUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleImageUploadComplete = (result: any) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL;
+      updateCoverImageMutation.mutate(uploadURL);
+    }
+  };
 
   const createAccommodationMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -405,6 +446,45 @@ export default function TravelDetail() {
           </div>
         </div>
       </div>
+
+      {/* Travel Cover Image Section */}
+      <div className="bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Imagen de Portada</h2>
+            <ObjectUploader
+              maxNumberOfFiles={1}
+              maxFileSize={10485760} // 10MB
+              onGetUploadParameters={getUploadParameters}
+              onComplete={handleImageUploadComplete}
+              buttonClassName="bg-accent hover:bg-accent/90 text-white"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Cambiar Imagen
+            </ObjectUploader>
+          </div>
+          <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden bg-muted">
+            <img
+              src={travel.coverImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400"}
+              alt={`Portada de ${travel.name}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400";
+              }}
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end">
+              <div className="p-6 text-white">
+                <h3 className="text-2xl font-bold mb-2">{travel.name}</h3>
+                <p className="text-lg opacity-90">Cliente: {travel.clientName}</p>
+                <p className="text-sm opacity-75 mt-1">
+                  {formatDateTime(travel.startDate)} - {formatDateTime(travel.endDate)} • {travel.travelers} viajero{travel.travelers !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}

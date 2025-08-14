@@ -22,7 +22,7 @@ type NewTravelForm = z.infer<typeof newTravelSchema>;
 interface NewTravelModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: NewTravelForm) => void;
+  onSubmit: (data: NewTravelForm & { _selectedImage?: File }) => void;
   isLoading?: boolean;
 }
 
@@ -81,8 +81,11 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
   };
 
   const handleSubmit = (data: NewTravelForm) => {
-    // En el futuro, aquí se podría incluir la imagen seleccionada
-    onSubmit(data);
+    // Pass the selected image separately for handling after travel creation
+    onSubmit({ 
+      ...data, 
+      _selectedImage: selectedImage || undefined 
+    });
     form.reset();
     setSelectedImage(null);
     setImagePreview(null);

@@ -37,13 +37,47 @@ export default function HomePage() {
     mutationFn: async (data: any) => {
       const startDate = new Date(data.startDate);
       const endDate = new Date(data.endDate);
+      const selectedImage = data._selectedImage;
       
+      // First create the travel
       const response = await apiRequest("POST", "/api/travels", {
-        ...data,
+        name: data.name,
+        clientName: data.clientName,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
+        travelers: data.travelers,
       });
-      return await response.json();
+      const travel = await response.json();
+
+      // If there's a selected image, upload it
+      if (selectedImage) {
+        try {
+          // Get upload URL
+          const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
+          const { uploadURL } = await uploadResponse.json();
+          
+          // Upload the image to object storage
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: selectedImage,
+            headers: {
+              'Content-Type': selectedImage.type,
+            },
+          });
+
+          if (uploadResult.ok) {
+            // Update travel with cover image
+            await apiRequest("PUT", `/api/travels/${travel.id}/cover-image`, {
+              coverImageURL: uploadURL,
+            });
+          }
+        } catch (error) {
+          console.error("Error uploading cover image:", error);
+          // Don't fail the whole operation if image upload fails
+        }
+      }
+
+      return travel;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
