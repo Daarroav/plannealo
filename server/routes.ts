@@ -514,6 +514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
             .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
+            .cover-image { width: 100%; max-width: 600px; height: 300px; object-fit: cover; border-radius: 8px; margin: 20px auto; display: block; }
             .section { margin-bottom: 25px; page-break-inside: avoid; }
             .section h2 { color: #dc2626; border-bottom: 1px solid #dc2626; padding-bottom: 5px; margin-bottom: 15px; }
             .item { margin-bottom: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
@@ -524,12 +525,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             @media print {
               body { margin: 0; font-size: 12px; }
               .item { break-inside: avoid; }
+              .cover-image { height: 250px; }
             }
           </style>
         </head>
         <body>
           <div class="header">
             <h1>${travel.name}</h1>
+            ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada de ${travel.name}" class="cover-image" />` : ''}
             <p><strong>Cliente:</strong> ${travel.clientName}</p>
             <p><strong>Fechas:</strong> ${formatDate(travel.startDate)} - ${formatDate(travel.endDate)}</p>
           </div>
