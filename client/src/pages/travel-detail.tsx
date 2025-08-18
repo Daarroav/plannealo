@@ -394,7 +394,7 @@ export default function TravelDetail() {
     { id: "flights", label: "Vuelos", icon: Plane, count: flights.length },
     { id: "transport", label: "Transporte", icon: Car, count: transports.length },
     { id: "cruises", label: "Cruceros", icon: Ship, count: cruises.length },
-    { id: "insurances", label: "Notas de Seguro", icon: Shield, count: insurances.length },
+    { id: "insurances", label: "Seguro de Asistencia", icon: Shield, count: insurances.length },
     { id: "notes", label: "Notas", icon: StickyNote, count: notes.length },
   ];
 
@@ -963,7 +963,7 @@ export default function TravelDetail() {
             {activeSection === "insurances" && (
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-foreground">Notas de Seguro</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Seguro de Asistencia</h2>
                   <Button 
                     className="bg-accent hover:bg-accent/90"
                     onClick={() => setShowInsuranceModal(true)}
