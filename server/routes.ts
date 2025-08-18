@@ -819,14 +819,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       // Update travel with cover image URL
-      const travel = storage.getTravelById(travelId);
+      const travel = await storage.getTravel(travelId);
       if (!travel) {
         return res.status(404).json({ error: "Travel not found" });
       }
 
       // Update the travel object with the cover image path
-      const updatedTravel = { ...travel, coverImage: objectPath };
-      storage.updateTravel(travelId, updatedTravel);
+      await storage.updateTravel(travelId, { ...travel, coverImage: objectPath });
 
       res.json({ objectPath });
     } catch (error) {
