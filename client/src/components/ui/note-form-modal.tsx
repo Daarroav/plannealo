@@ -14,6 +14,7 @@ import { insertNoteSchema } from "@shared/schema";
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
   noteDate: z.string().min(1, "La fecha es requerida"),
+  noteTime: z.string().optional(),
   attachments: z.array(z.string()).optional(),
 }).omit({
   travelId: true,
@@ -41,6 +42,7 @@ export function NoteFormModal({
     defaultValues: {
       title: "",
       noteDate: "",
+      noteTime: "",
       content: "",
       visibleToTravelers: true,
       attachments: [],
@@ -69,6 +71,7 @@ export function NoteFormModal({
     const processedData = {
       title: data.title,
       noteDate: new Date(data.noteDate),
+      noteTime: data.noteTime || undefined,
       content: data.content,
       visibleToTravelers: data.visibleToTravelers,
       attachments: attachedFiles.length > 0 ? attachedFiles : undefined,
@@ -109,17 +112,28 @@ export function NoteFormModal({
             )}
           </div>
 
-          {/* Fecha */}
-          <div className="space-y-2">
-            <Label htmlFor="noteDate">Fecha *</Label>
-            <Input
-              type="date"
-              {...form.register("noteDate")}
-              className={form.formState.errors.noteDate ? "border-red-500" : ""}
-            />
-            {form.formState.errors.noteDate && (
-              <p className="text-sm text-red-500">{form.formState.errors.noteDate.message}</p>
-            )}
+          {/* Fecha y Hora */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="noteDate">Fecha *</Label>
+              <Input
+                type="date"
+                {...form.register("noteDate")}
+                className={form.formState.errors.noteDate ? "border-red-500" : ""}
+              />
+              {form.formState.errors.noteDate && (
+                <p className="text-sm text-red-500">{form.formState.errors.noteDate.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="noteTime">Hora</Label>
+              <Input
+                type="time"
+                {...form.register("noteTime")}
+                placeholder="12:00"
+              />
+            </div>
           </div>
 
           {/* Contenido de la Nota */}
