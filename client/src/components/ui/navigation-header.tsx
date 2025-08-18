@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Bell, User } from "lucide-react";
+import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
@@ -10,9 +11,12 @@ export function NavigationHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-foreground">PLANNEALO</h1>
-              <p className="text-xs text-muted-foreground">Gestión de Viajes</p>
+            <div className="flex items-center space-x-3">
+              <img src={logoPng} alt="PLANNEALO Logo" className="h-10 w-auto" />
+              <div className="flex-shrink-0">
+                <h1 className="text-2xl font-bold text-foreground">PLANNEALO</h1>
+                <p className="text-xs text-muted-foreground">Gestión de Viajes</p>
+              </div>
             </div>
           </div>
           

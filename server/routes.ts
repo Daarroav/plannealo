@@ -525,6 +525,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               text-align: center; 
               margin-bottom: 40px; 
               padding-bottom: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              position: relative;
+            }
+            .logo {
+              font-size: 24px;
+              font-weight: bold;
+              color: #dc2626;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+            }
+            .header-center {
+              flex: 1;
+              text-align: center;
             }
             .client-title {
               font-size: 18px;
@@ -637,9 +652,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         </head>
         <body>
           <div class="header">
-            <div class="client-title">${travel.clientName}</div>
-            <div class="dates">Start: ${formatDate(travel.startDate)} &nbsp;&nbsp;&nbsp;&nbsp; End: ${formatDate(travel.endDate)}</div>
-            ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada" class="cover-image" />` : ''}
+            <div class="logo">PLANNEALO</div>
+            <div class="header-center">
+              <div class="client-title">${travel.clientName}</div>
+              <div class="dates">Start: ${formatDate(travel.startDate)} &nbsp;&nbsp;&nbsp;&nbsp; End: ${formatDate(travel.endDate)}</div>
+              ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada" class="cover-image" />` : ''}
+            </div>
             <div class="agency-info">
               <div style="font-weight: bold;">PLANNEALO</div>
               <div>e: plannealo@gmail.com</div>
