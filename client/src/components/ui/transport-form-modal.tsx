@@ -106,6 +106,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     { value: "transporte_publico", label: "Transporte Público" },
     { value: "tren", label: "Tren" },
     { value: "embarcacion", label: "Embarcación" },
+    { value: "traslado_privado", label: "Traslado Privado" },
   ];
 
   return (
