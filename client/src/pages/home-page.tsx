@@ -4,13 +4,15 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { StatsCard } from "@/components/ui/stats-card";
 import { TravelCard } from "@/components/ui/travel-card";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
+import { CalendarView } from "@/components/ui/calendar-view";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Plane, Users, Clock, Plus, Search } from "lucide-react";
+import { Plane, Users, Clock, Plus, Search, Grid3X3, Calendar } from "lucide-react";
 import type { Travel } from "@shared/schema";
 
 interface Stats {
@@ -23,6 +25,7 @@ export default function HomePage() {
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("list");
   const { toast } = useToast();
 
   const { data: travels = [], isLoading: travelsLoading } = useQuery<Travel[]>({
@@ -157,80 +160,103 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Travels Grid */}
-        <div className="bg-background rounded-lg border border-border">
-          <div className="p-6 border-b border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-lg font-semibold text-foreground mb-4 sm:mb-0">Itinerarios Recientes</h3>
-              <div className="flex space-x-3">
-                <div className="relative">
-                  <Input
-                    placeholder="Buscar viajes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2"
-                  />
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        {/* Travels Content with Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="bg-background rounded-lg border border-border">
+            <div className="p-6 border-b border-border">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+                  <h3 className="text-lg font-semibold text-foreground">Gestión de Itinerarios</h3>
+                  <TabsList className="grid w-fit grid-cols-2">
+                    <TabsTrigger value="list" className="flex items-center gap-2">
+                      <Grid3X3 className="h-4 w-4" />
+                      Lista
+                    </TabsTrigger>
+                    <TabsTrigger value="calendar" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Calendario
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="published">Publicados</SelectItem>
-                    <SelectItem value="draft">Borradores</SelectItem>
-                  </SelectContent>
-                </Select>
+                
+                {activeTab === "list" && (
+                  <div className="flex space-x-3">
+                    <div className="relative">
+                      <Input
+                        placeholder="Buscar viajes..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4 py-2"
+                      />
+                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="published">Publicados</SelectItem>
+                        <SelectItem value="draft">Borradores</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-          
-          <div className="p-6">
-            {travelsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="border border-border rounded-lg overflow-hidden animate-pulse">
-                    <div className="w-full h-48 bg-muted" />
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                      <div className="h-3 bg-muted rounded w-2/3" />
-                      <div className="h-8 bg-muted rounded" />
-                    </div>
+            
+            <div className="p-6">
+              <TabsContent value="list" className="mt-0">
+                {travelsLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="border border-border rounded-lg overflow-hidden animate-pulse">
+                        <div className="w-full h-48 bg-muted" />
+                        <div className="p-4 space-y-3">
+                          <div className="h-4 bg-muted rounded w-3/4" />
+                          <div className="h-3 bg-muted rounded w-1/2" />
+                          <div className="h-3 bg-muted rounded w-2/3" />
+                          <div className="h-8 bg-muted rounded" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : filteredTravels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredTravels.map((travel) => (
-                  <TravelCard
-                    key={travel.id}
-                    travel={travel}
-                    onEdit={handleEditTravel}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
-                <p className="text-muted-foreground mb-6">
-                  {searchTerm || statusFilter !== "all" 
-                    ? "Prueba con diferentes filtros de búsqueda" 
-                    : "Comienza creando tu primer itinerario de viaje"}
-                </p>
-                <Button 
-                  onClick={() => setIsNewTravelModalOpen(true)}
-                  className="bg-accent hover:bg-accent/90"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Crear Primer Viaje
-                </Button>
-              </div>
-            )}
+                ) : filteredTravels.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredTravels.map((travel) => (
+                      <TravelCard
+                        key={travel.id}
+                        travel={travel}
+                        onEdit={handleEditTravel}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
+                    <p className="text-muted-foreground mb-6">
+                      {searchTerm || statusFilter !== "all" 
+                        ? "Prueba con diferentes filtros de búsqueda" 
+                        : "Comienza creando tu primer itinerario de viaje"}
+                    </p>
+                    <Button 
+                      onClick={() => setIsNewTravelModalOpen(true)}
+                      className="bg-accent hover:bg-accent/90"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Crear Primer Viaje
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="calendar" className="mt-0">
+                <CalendarView travels={travels} />
+              </TabsContent>
+            </div>
           </div>
-        </div>
+        </Tabs>
       </div>
 
       <NewTravelModal
