@@ -512,171 +512,274 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <meta charset="UTF-8">
           <title>Itinerario - ${travel.name}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
-            .cover-image { width: 100%; max-width: 600px; height: 300px; object-fit: cover; border-radius: 8px; margin: 20px auto; display: block; }
-            .section { margin-bottom: 25px; page-break-inside: avoid; }
-            .section h2 { color: #dc2626; border-bottom: 1px solid #dc2626; padding-bottom: 5px; margin-bottom: 15px; }
-            .item { margin-bottom: 15px; padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa; }
-            .item h3 { margin-top: 0; color: #374151; font-size: 18px; }
-            .details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-            .detail { font-size: 14px; color: #6b7280; }
-            .badge { background: #dc2626; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-            @media print {
-              body { margin: 0; font-size: 12px; }
-              .item { break-inside: avoid; }
-              .cover-image { height: 250px; }
+            @page { margin: 40px; }
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 0; 
+              line-height: 1.4;
+              font-size: 11px;
+              color: #333;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 40px; 
+              padding-bottom: 20px;
+            }
+            .client-title {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            .dates {
+              font-size: 14px;
+              margin: 15px 0;
+              color: #666;
+            }
+            .cover-image { 
+              width: 100%; 
+              max-width: 500px; 
+              height: 250px; 
+              object-fit: cover; 
+              margin: 20px auto; 
+              display: block;
+              border: 1px solid #ddd;
+            }
+            .agency-info {
+              margin-top: 30px;
+              text-align: right;
+              font-size: 12px;
+              color: #666;
+            }
+            .day-section {
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            .day-header {
+              display: flex;
+              align-items: center;
+              margin-bottom: 15px;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 10px;
+            }
+            .day-box {
+              background: #f8f9fa;
+              border: 1px solid #ddd;
+              padding: 8px 12px;
+              margin-right: 15px;
+              text-align: center;
+              min-width: 50px;
+              font-weight: bold;
+            }
+            .day-month {
+              font-size: 10px;
+              text-transform: uppercase;
+              display: block;
+            }
+            .day-number {
+              font-size: 16px;
+              display: block;
+            }
+            .activity-item {
+              margin-bottom: 20px;
+              padding: 15px;
+              border-left: 3px solid #dc2626;
+              background: #fafafa;
+            }
+            .activity-title {
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              text-transform: uppercase;
+            }
+            .activity-details {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 15px;
+              margin-bottom: 10px;
+            }
+            .detail-item {
+              font-size: 10px;
+            }
+            .detail-label {
+              font-weight: bold;
+              text-transform: uppercase;
+              margin-bottom: 2px;
+            }
+            .detail-value {
+              color: #666;
+            }
+            .notes {
+              margin-top: 10px;
+              font-style: italic;
+              color: #666;
+              font-size: 10px;
+            }
+            .footer {
+              position: fixed;
+              bottom: 20px;
+              left: 40px;
+              right: 40px;
+              text-align: center;
+              font-size: 9px;
+              color: #999;
+              border-top: 1px solid #eee;
+              padding-top: 10px;
+            }
+            .time-label {
+              font-weight: bold;
+              color: #dc2626;
+              margin-right: 10px;
             }
           </style>
         </head>
         <body>
           <div class="header">
-            <h1>${travel.name}</h1>
-            ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada de ${travel.name}" class="cover-image" />` : ''}
-            <p><strong>Cliente:</strong> ${travel.clientName}</p>
-            <p><strong>Fechas:</strong> ${formatDate(travel.startDate)} - ${formatDate(travel.endDate)}</p>
+            <div class="client-title">${travel.clientName}</div>
+            <div class="dates">Start: ${formatDate(travel.startDate)} &nbsp;&nbsp;&nbsp;&nbsp; End: ${formatDate(travel.endDate)}</div>
+            ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada" class="cover-image" />` : ''}
+            <div class="agency-info">
+              <div style="font-weight: bold;">PLANNEALO</div>
+              <div>e: plannealo@gmail.com</div>
+            </div>
           </div>
       `;
 
-      if (accommodations.length > 0) {
-        htmlContent += `<div class="section"><h2>🏨 Alojamientos</h2>`;
-        accommodations.forEach(acc => {
-          htmlContent += `
-            <div class="item">
-              <h3>${acc.name} <span class="badge">${acc.type}</span></h3>
-              <div class="details">
-                <div class="detail">📍 ${acc.location}</div>
-                <div class="detail">📅 ${formatDate(acc.checkIn)} - ${formatDate(acc.checkOut)}</div>
-                <div class="detail">🛏️ ${acc.roomType}</div>
-                ${acc.confirmationNumber ? `<div class="detail">🎫 ${acc.confirmationNumber}</div>` : ''}
+      // Group all activities by date
+      const allActivities = [
+        ...accommodations.map(acc => ({
+          type: 'accommodation',
+          date: acc.checkIn,
+          title: acc.name,
+          subtitle: 'Check-In',
+          details: {
+            'ACCOMMODATIONS': acc.name,
+            'BOOKING #': acc.confirmationNumber || '',
+            'CHECK-IN': formatDateTime(acc.checkIn),
+            'CHECK-OUT': formatDateTime(acc.checkOut)
+          },
+          notes: acc.notes,
+          location: acc.location
+        })),
+        ...activities.map(activity => ({
+          type: 'activity',
+          date: activity.date,
+          title: activity.name,
+          subtitle: activity.type,
+          details: {
+            'ABOUT': activity.name,
+            'BOOKING #': activity.confirmationNumber || '',
+            'START': formatDateTime(activity.date) + (activity.startTime ? ` ${activity.startTime}` : ''),
+            'FINISH': activity.endTime || ''
+          },
+          notes: activity.notes
+        })),
+        ...flights.map(flight => ({
+          type: 'flight',
+          date: flight.departureDate,
+          title: `Flight to: ${flight.arrivalCity}`,
+          subtitle: 'Flight',
+          details: {
+            'AIRLINE & FLIGHT #': `${flight.airline} ${flight.flightNumber}`,
+            'DEPARTURE': formatDateTime(flight.departureDate),
+            'ARRIVAL': formatDateTime(flight.arrivalDate)
+          },
+          notes: '',
+          location: `${flight.departureCity} - ${flight.arrivalCity}`
+        })),
+        ...transports.map(transport => ({
+          type: 'transport',
+          date: transport.pickupDate,
+          title: transport.type,
+          subtitle: 'Transport',
+          details: {
+            'CONTACT': transport.provider || '',
+            'BOOKING #': transport.confirmationNumber || '',
+            'START': formatDateTime(transport.pickupDate),
+            'FINISH': transport.endDate ? formatDateTime(transport.endDate) : ''
+          },
+          notes: transport.notes,
+          location: `${transport.pickupLocation} - ${transport.dropoffLocation || ''}`
+        }))
+      ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      // Group by date
+      const activitiesByDate = allActivities.reduce((acc, activity) => {
+        const dateKey = formatDate(activity.date);
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(activity);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      Object.entries(activitiesByDate).forEach(([date, dayActivities]) => {
+        const dayDate = new Date(dayActivities[0].date);
+        const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        const monthName = dayDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+        const dayNumber = dayDate.getDate();
+
+        htmlContent += `
+          <div class="day-section">
+            <div class="day-header">
+              <div class="day-box">
+                <span class="day-month">${dayName}<br/>${monthName}</span>
+                <span class="day-number">${dayNumber}</span>
               </div>
-              ${acc.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${acc.notes}</p>` : ''}
+              <div style="flex: 1;">
+                ${dayActivities.map(activity => `<strong>${activity.title}</strong>`).join(' • ')}
+              </div>
+            </div>
+        `;
+
+        dayActivities.forEach(activity => {
+          htmlContent += `
+            <div class="activity-item">
+              <div class="activity-title">${activity.title}</div>
+              <div class="activity-details">
+                ${Object.entries(activity.details).map(([key, value]) => `
+                  <div class="detail-item">
+                    <div class="detail-label">${key}</div>
+                    <div class="detail-value">${value}</div>
+                  </div>
+                `).join('')}
+              </div>
+              ${activity.notes ? `<div class="notes">${activity.notes}</div>` : ''}
             </div>
           `;
         });
-        htmlContent += `</div>`;
-      }
 
-      if (activities.length > 0) {
-        htmlContent += `<div class="section"><h2>🎯 Actividades</h2>`;
-        activities.forEach(activity => {
-          htmlContent += `
-            <div class="item">
-              <h3>${activity.name} <span class="badge">${activity.type}</span></h3>
-              <div class="details">
-                <div class="detail">📅 ${formatDate(activity.date)}</div>
-                ${activity.startTime ? `<div class="detail">⏰ ${activity.startTime} - ${activity.endTime}</div>` : ''}
-                ${activity.confirmationNumber ? `<div class="detail">🎫 ${activity.confirmationNumber}</div>` : ''}
-              </div>
-              ${activity.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${activity.notes}</p>` : ''}
-            </div>
-          `;
-        });
         htmlContent += `</div>`;
-      }
+      });
 
-      if (flights.length > 0) {
-        htmlContent += `<div class="section"><h2>✈️ Vuelos</h2>`;
-        flights.forEach(flight => {
-          htmlContent += `
-            <div class="item">
-              <h3>${flight.airline} ${flight.flightNumber} <span class="badge">${flight.class}</span></h3>
-              <div class="details">
-                <div class="detail">🛫 ${flight.departureCity} → ${flight.arrivalCity}</div>
-                <div class="detail">📅 Salida: ${formatDate(flight.departureDate)}</div>
-                <div class="detail">🕐 Llegada: ${formatDate(flight.arrivalDate)}</div>
-                ${flight.reservationNumber ? `<div class="detail">🎫 ${flight.reservationNumber}</div>` : ''}
-              </div>
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
-
-      if (transports.length > 0) {
-        htmlContent += `<div class="section"><h2>🚗 Transporte</h2>`;
-        transports.forEach(transport => {
-          htmlContent += `
-            <div class="item">
-              <h3>${transport.name} <span class="badge">${transport.type}</span></h3>
-              <div class="details">
-                <div class="detail">📍 ${transport.pickupLocation} → ${transport.dropoffLocation || 'Destino'}</div>
-                <div class="detail">📅 ${formatDate(transport.pickupDate)}</div>
-                ${transport.confirmationNumber ? `<div class="detail">🎫 ${transport.confirmationNumber}</div>` : ''}
-              </div>
-              ${transport.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${transport.notes}</p>` : ''}
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
-
-      if (cruises.length > 0) {
-        htmlContent += `<div class="section"><h2>🚢 Cruceros</h2>`;
-        cruises.forEach(cruise => {
-          htmlContent += `
-            <div class="item">
-              <h3>${cruise.cruiseLine}</h3>
-              <div class="details">
-                <div class="detail">📅 ${formatDate(cruise.departureDate)} - ${formatDate(cruise.arrivalDate)}</div>
-                <div class="detail">🏃 ${cruise.departurePort} → ${cruise.arrivalPort}</div>
-                ${cruise.confirmationNumber ? `<div class="detail">🎫 ${cruise.confirmationNumber}</div>` : ''}
-              </div>
-              ${cruise.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${cruise.notes}</p>` : ''}
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
-
-      if (insurances.length > 0) {
-        htmlContent += `<div class="section"><h2>🛡️ Seguros</h2>`;
-        insurances.forEach(insurance => {
-          htmlContent += `
-            <div class="item">
-              <h3>${insurance.provider} <span class="badge">${insurance.policyType}</span></h3>
-              <div class="details">
-                <div class="detail">📋 ${insurance.policyNumber}</div>
-                <div class="detail">📅 ${formatDate(insurance.effectiveDate)}</div>
-                ${insurance.emergencyNumber ? `<div class="detail">📞 ${insurance.emergencyNumber}</div>` : ''}
-              </div>
-              ${insurance.notes ? `<p style="margin-top: 10px; font-style: italic; color: #6b7280;">${insurance.notes}</p>` : ''}
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
-
+      // Add remaining notes section
       if (visibleNotes.length > 0) {
-        htmlContent += `<div class="section"><h2>📝 Notas Importantes</h2>`;
+        htmlContent += `
+          <div class="day-section">
+            <div class="day-header">
+              <div class="day-box">
+                <span class="day-month">NOTAS</span>
+              </div>
+              <div style="flex: 1;"><strong>Información Adicional</strong></div>
+            </div>
+        `;
         visibleNotes.forEach(note => {
           htmlContent += `
-            <div class="item">
-              <h3>${note.title}</h3>
-              <div class="detail" style="margin-bottom: 10px;">📅 ${formatDateTime(note.noteDate)}</div>
-              <p style="white-space: pre-wrap; margin: 10px 0; color: #374151;">${note.content}</p>
-              ${note.attachments && note.attachments.length > 0 ? `
-                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
-                  <strong>Documentos Adjuntos:</strong>
-                  <ul style="margin: 5px 0 0 20px; color: #6b7280;">
-                    ${note.attachments.map((fileName: string) => `<li>📄 ${fileName}</li>`).join('')}
-                  </ul>
-                </div>
-              ` : ''}
+            <div class="activity-item">
+              <div class="activity-title">${note.title}</div>
+              <div class="notes">${note.content}</div>
             </div>
           `;
         });
         htmlContent += `</div>`;
       }
 
+      // Add footer
       htmlContent += `
-          <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-            <p><strong>Itinerario generado por PLANNEALO - Agencia de Viajes</strong></p>
-            <p>Fecha de generación: ${formatDate(new Date())}</p>
+          <div class="footer">
+            PLANNEALO &nbsp;&nbsp;&nbsp; e: plannealo@gmail.com &nbsp;&nbsp;&nbsp; page 1 of 1
           </div>
-        </body>
-        </html>
-      `;
+        </body></html>`;
 
       // Set headers for HTML download (users can save as PDF)
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -701,48 +804,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update travel with cover image
   app.put("/api/travels/:id/cover-image", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
     try {
+      const travelId = req.params.id;
       const { coverImageURL } = req.body;
-      if (!coverImageURL) {
-        return res.status(400).json({ error: "coverImageURL is required" });
-      }
 
-      const travel = await storage.getTravel(req.params.id);
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        coverImageURL,
+        {
+          owner: "system", // For now, using system as owner
+          visibility: "public",
+        },
+      );
+
+      // Update travel with cover image URL
+      const travel = storage.getTravelById(travelId);
       if (!travel) {
         return res.status(404).json({ error: "Travel not found" });
       }
-      if (travel.createdBy !== req.user!.id) {
-        return res.status(403).json({ error: "Access denied" });
-      }
 
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = objectStorageService.normalizeObjectEntityPath(coverImageURL);
-
-      // Update travel with cover image path
-      await storage.updateTravel(req.params.id, { coverImage: objectPath });
+      // Update the travel object with the cover image path
+      const updatedTravel = { ...travel, coverImage: objectPath };
+      storage.updateTravel(travelId, updatedTravel);
 
       res.json({ objectPath });
     } catch (error) {
-      console.error("Error updating travel cover image:", error);
+      console.error("Error updating cover image:", error);
       res.status(500).json({ error: "Error updating cover image" });
-    }
-  });
-
-  // Serve objects
-  app.get("/objects/:objectPath(*)", async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error serving object:", error);
-      res.sendStatus(404);
     }
   });
 
