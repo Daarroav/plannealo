@@ -42,7 +42,9 @@ export function NavigationHeader() {
               </div>
               <div className="hidden md:block">
                 <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">Agente de Viajes</p>
+                <p className="text-xs text-muted-foreground">
+                  {user?.role === "admin" ? "Administrador" : "Agente de Viajes"}
+                </p>
               </div>
               <Button 
                 variant="ghost" 

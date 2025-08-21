@@ -34,6 +34,7 @@ export interface IStorage {
   // Travel methods
   createTravel(travel: InsertTravel): Promise<Travel>;
   getTravelsByUser(userId: string): Promise<Travel[]>;
+  getTravels(): Promise<Travel[]>;
   getTravel(id: string): Promise<Travel | undefined>;
   updateTravel(id: string, travel: Partial<Travel>): Promise<Travel>;
   deleteTravel(id: string): Promise<void>;
@@ -148,6 +149,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.travels.values())
       .filter((travel) => travel.createdBy === userId)
       .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+  }
+
+  async getTravels(): Promise<Travel[]> {
+    return Array.from(this.travels.values());
   }
 
   async getTravel(id: string): Promise<Travel | undefined> {

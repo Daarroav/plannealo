@@ -16,8 +16,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const travels = await storage.getTravelsByUser(req.user!.id);
-      res.json(travels);
+      if (req.user && req.user.role === "admin") {
+        // Si es admin, obtiene TODOS los viajes
+        const travels = await storage.getTravels();
+        res.json(travels);
+      } else if (req.user) {
+        // Si es un usuario normal (agente), solo obtiene sus propios viajes
+        const travels = await storage.getTravelsByUser(req.user.id);
+        res.json(travels);
+      } else {
+        // Este caso no debería ocurrir porque ya verificamos isAuthenticated() al inicio pero por si acaso
+        res.sendStatus(401);
+      }
     } catch (error) {
       console.error("Error fetching travels:", error);
       res.status(500).json({ message: "Error fetching travels" });
@@ -46,6 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/travels/:id", async (req, res) => {
+    console.info("Fetching travel:", req.params.id);
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
@@ -55,9 +66,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!travel) {
         return res.status(404).json({ message: "Travel not found" });
       }
-      if (travel.createdBy !== req.user!.id) {
+
+      // Condiciones para el acceso al viaje
+      const isOwner = travel.createdBy === req.user!.id;
+      const isAdmin = req.user!.role === "admin";
+      
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
+
       res.json(travel);
     } catch (error) {
       console.error("Error fetching travel:", error);
@@ -75,7 +92,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!travel) {
         return res.status(404).json({ message: "Travel not found" });
       }
-      if (travel.createdBy !== req.user!.id) {
+
+      // Condiciones para el acceso al viaje
+      const isOwner = travel.createdBy === req.user!.id;
+      const isAdmin = req.user!.role === "admin";
+      
+      if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
 
