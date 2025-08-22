@@ -349,6 +349,15 @@ export default function TravelDetail() {
     // For now, just logging. In a real app, you'd open a modal and set state for editing.
   };
 
+  const handleEditNote = (note: Note) => {
+    console.log("Editing note:", note);
+    // Implement logic to open the NoteFormModal and pre-fill it with the note's data
+    // For example:
+    // setSelectedNoteForEditing(note);
+    // setShowNoteModal(true);
+  };
+
+
   if (travelLoading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -942,7 +951,7 @@ export default function TravelDetail() {
                                 <p className="font-medium">{cruise.departurePort}</p>
                               </div>
                             </div>
-                            
+
                             <div className="space-y-3">
                               <h4 className="text-sm font-medium text-foreground">Llegada</h4>
                               <div>
@@ -1122,7 +1131,7 @@ export default function TravelDetail() {
                               <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-foreground">{note.title}</h3>
                                 <p className="text-muted-foreground">{formatDateTime(note.noteDate)}</p>
-                                
+
                                 {/* Indicador de visibilidad */}
                                 <div className="flex items-center space-x-2 mt-2">
                                   {note.visibleToTravelers ? (
@@ -1143,7 +1152,11 @@ export default function TravelDetail() {
                                 </div>
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleEditNote(note)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>

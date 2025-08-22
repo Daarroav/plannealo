@@ -21,8 +21,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Genera el nombre del archivo
     }
   });
-  
-  
+
+
   const upload = multer({ 
     storage: multerStorage, // Configuración de multer para subir archivos
     limits: {
@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
-    
+
     try {
       if (req.user && req.user.role === "admin") {
         // Si es admin, obtiene TODOS los viajes
@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: new Date(req.body.startDate),
         endDate: new Date(req.body.endDate),
       });
-      
+
       const travel = await storage.createTravel(validated);
       res.status(201).json(travel);
     } catch (error) {
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Condiciones para el acceso al viaje
       const isOwner = travel.createdBy === req.user!.id;
       const isAdmin = req.user!.role === "admin";
-      
+
       if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -121,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Condiciones para el acceso al viaje
       const isOwner = travel.createdBy === req.user!.id;
       const isAdmin = req.user!.role === "admin";
-      
+
       if (!isOwner && !isAdmin) {
         return res.status(403).json({ message: "Access denied" });
       }
@@ -165,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkOut: new Date(req.body.checkOut),
         thumbnail: thumbnail,
       });
-      
+
       const accommodation = await storage.createAccommodation(validated);
       res.status(201).json(accommodation);
     } catch (error) {
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelId: req.params.travelId,
         date: new Date(req.body.date),
       });
-      
+
       const activity = await storage.createActivity(validated);
       res.status(201).json(activity);
     } catch (error) {
@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
       });
-      
+
       const flight = await storage.createFlight(validated);
       res.status(201).json(flight);
     } catch (error) {
@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pickupDate: new Date(req.body.pickupDate),
         ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
       });
-      
+
       const transport = await storage.createTransport(validated);
       res.status(201).json(transport);
     } catch (error) {
@@ -343,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
       });
-      
+
       const cruise = await storage.createCruise(validated);
       res.status(201).json(cruise);
     } catch (error) {
@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelId: req.params.travelId,
         effectiveDate: new Date(req.body.effectiveDate),
       });
-      
+
       const insurance = await storage.createInsurance(validated);
       res.status(201).json(insurance);
     } catch (error) {
@@ -402,7 +402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/notes", async (req, res) => {
+  // Create note for travel
+  app.post("/api/travels/:id/notes", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
@@ -410,15 +411,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validated = insertNoteSchema.parse({
         ...req.body,
-        travelId: req.params.travelId,
+        travelId: req.params.id,
         noteDate: new Date(req.body.noteDate),
       });
-      
+
       const note = await storage.createNote(validated);
       res.status(201).json(note);
     } catch (error) {
       console.error("Error creating note:", error);
       res.status(400).json({ message: "Error creating note" });
+    }
+  });
+
+  // Update note for travel
+  app.put("/api/travels/:travelId/notes/:noteId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const noteData = insertNoteSchema.parse(req.body);
+      const note = await storage.updateNote(req.params.noteId, noteData);
+      res.json(note);
+    } catch (error) {
+      console.error("Error updating note:", error);
+      res.status(400).json({ error: "Error updating note" });
     }
   });
 
@@ -432,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const travels = await storage.getTravelsByUser(req.user!.id);
       const activeTrips = travels.filter(t => t.status === "published").length;
       const drafts = travels.filter(t => t.status === "draft").length;
-      
+
       // For clients, we'll count unique client names
       const uniqueClients = new Set(travels.map(t => t.clientName)).size;
 
@@ -485,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/travels/:id/share/email", async (req, res) => {
     try {
       const { clientEmail, clientName, message } = req.body;
-      
+
       if (!clientEmail || !clientName) {
         return res.status(400).json({ error: "Client email and name are required" });
       }
@@ -504,7 +521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       res.json({ 
         success: true, 
         message: "Itinerario enviado exitosamente" 
@@ -853,7 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set headers for HTML download (users can save as PDF)
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
-      
+
       res.send(htmlContent);
     } catch (error) {
       console.error("Error generating PDF:", error);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,13 +27,15 @@ interface NoteFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   isPending?: boolean;
+  editingNote?: any;
 }
 
 export function NoteFormModal({ 
   open, 
   onOpenChange, 
   onSubmit, 
-  isPending = false 
+  isPending = false,
+  editingNote
 }: NoteFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
 
@@ -48,6 +50,32 @@ export function NoteFormModal({
       attachments: [],
     },
   });
+
+  // Reset form when editing note changes
+  React.useEffect(() => {
+    if (editingNote) {
+      const noteDate = editingNote.noteDate ? new Date(editingNote.noteDate).toISOString().split('T')[0] : "";
+      form.reset({
+        title: editingNote.title || "",
+        noteDate,
+        noteTime: editingNote.noteTime || "",
+        content: editingNote.content || "",
+        visibleToTravelers: editingNote.visibleToTravelers ?? true,
+        attachments: editingNote.attachments || [],
+      });
+      setAttachedFiles(editingNote.attachments || []);
+    } else {
+      form.reset({
+        title: "",
+        noteDate: "",
+        noteTime: "",
+        content: "",
+        visibleToTravelers: true,
+        attachments: [],
+      });
+      setAttachedFiles([]);
+    }
+  }, [editingNote, form]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -69,6 +97,7 @@ export function NoteFormModal({
     console.log("Form data before processing:", data);
 
     const processedData = {
+      ...(editingNote ? { id: editingNote.id } : {}),
       title: data.title,
       noteDate: new Date(data.noteDate),
       noteTime: data.noteTime || undefined,
@@ -95,7 +124,7 @@ export function NoteFormModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar Nota</DialogTitle>
+          <DialogTitle>{editingNote ? "Editar Nota" : "Agregar Nota"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -248,7 +277,7 @@ export function NoteFormModal({
               type="submit"
               disabled={isPending}
             >
-              {isPending ? "Guardando..." : "Guardar Nota"}
+              {isPending ? "Guardando..." : editingNote ? "Actualizar Nota" : "Guardar Nota"}
             </Button>
           </div>
         </form>

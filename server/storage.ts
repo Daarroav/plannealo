@@ -2,10 +2,10 @@ import { randomUUID } from "crypto";
 import session from "express-session";
 import { Store } from "express-session";
 import createMemoryStore from "memorystore";
-import { 
-  User, 
-  InsertUser, 
-  Travel, 
+import {
+  User,
+  InsertUser,
+  Travel,
   InsertTravel,
   Accommodation,
   InsertAccommodation,
@@ -30,7 +30,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Travel methods
   createTravel(travel: InsertTravel): Promise<Travel>;
   getTravelsByUser(userId: string): Promise<Travel[]>;
@@ -38,49 +38,49 @@ export interface IStorage {
   getTravel(id: string): Promise<Travel | undefined>;
   updateTravel(id: string, travel: Partial<Travel>): Promise<Travel>;
   deleteTravel(id: string): Promise<void>;
-  
+
   // Accommodation methods
   createAccommodation(accommodation: InsertAccommodation): Promise<Accommodation>;
   getAccommodationsByTravel(travelId: string): Promise<Accommodation[]>;
   updateAccommodation(id: string, accommodation: Partial<Accommodation>): Promise<Accommodation>;
   deleteAccommodation(id: string): Promise<void>;
-  
+
   // Activity methods
   createActivity(activity: InsertActivity): Promise<Activity>;
   getActivitiesByTravel(travelId: string): Promise<Activity[]>;
   updateActivity(id: string, activity: Partial<Activity>): Promise<Activity>;
   deleteActivity(id: string): Promise<void>;
-  
+
   // Flight methods
   createFlight(flight: InsertFlight): Promise<Flight>;
   getFlightsByTravel(travelId: string): Promise<Flight[]>;
   updateFlight(id: string, flight: Partial<Flight>): Promise<Flight>;
   deleteFlight(id: string): Promise<void>;
-  
+
   // Transport methods
   createTransport(transport: InsertTransport): Promise<Transport>;
   getTransportsByTravel(travelId: string): Promise<Transport[]>;
   updateTransport(id: string, transport: Partial<Transport>): Promise<Transport>;
   deleteTransport(id: string): Promise<void>;
-  
+
   // Cruise methods
   createCruise(cruise: InsertCruise): Promise<Cruise>;
   getCruisesByTravel(travelId: string): Promise<Cruise[]>;
   updateCruise(id: string, cruise: Partial<Cruise>): Promise<Cruise>;
   deleteCruise(id: string): Promise<void>;
-  
+
   // Insurance methods
   createInsurance(insurance: InsertInsurance): Promise<Insurance>;
   getInsurancesByTravel(travelId: string): Promise<Insurance[]>;
   updateInsurance(id: string, insurance: Partial<Insurance>): Promise<Insurance>;
   deleteInsurance(id: string): Promise<void>;
-  
+
   // Note methods
   createNote(note: InsertNote): Promise<Note>;
   getNotesByTravel(travelId: string): Promise<Note[]>;
   updateNote(id: string, note: Partial<Note>): Promise<Note>;
   deleteNote(id: string): Promise<void>;
-  
+
   sessionStore: Store;
 }
 
