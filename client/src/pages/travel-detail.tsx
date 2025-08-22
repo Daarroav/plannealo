@@ -314,7 +314,13 @@ export default function TravelDetail() {
         ? `/api/travels/${travelId}/notes/${data.id}`
         : `/api/travels/${travelId}/notes`;
       
-      const response = await apiRequest(method, url, data);
+      // Ensure travelId is included in the data
+      const noteData = {
+        ...data,
+        travelId: travelId
+      };
+      
+      const response = await apiRequest(method, url, noteData);
       return await response.json();
     },
     onSuccess: () => {
