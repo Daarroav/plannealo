@@ -159,6 +159,10 @@ export const insertInsuranceSchema = createInsertSchema(insurances).omit({
 
 export const insertNoteSchema = createInsertSchema(notes).omit({
   id: true,
+}).extend({
+  noteDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 // Types
