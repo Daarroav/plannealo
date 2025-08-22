@@ -38,6 +38,7 @@ export const accommodations = pgTable("accommodations", {
   confirmationNumber: text("confirmation_number"),
   policies: text("policies"),
   notes: text("notes"),
+  thumbnail: text("thumbnail"),
 });
 
 export const activities = pgTable("activities", {

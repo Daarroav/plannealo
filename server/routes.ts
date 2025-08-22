@@ -4,9 +4,34 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
+import multer from 'multer';  // Instalacion  para subir archivos
+import express from 'express'; // Instalacion para archivos estaticos
+import path from 'path';
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
+
+  // Configuración de multer para subir archivos
+  const multerStorage = multer.diskStorage({
+    destination: 'uploads/', // Directorio donde se guardarán los archivos subidos
+    filename: function (req, file, cb) { // Nombre del archivo subido
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9); // Genera un nombre único
+      const ext = path.extname(file.originalname); // Obtiene la extensión del archivo
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Genera el nombre del archivo
+    }
+  });
+  
+  
+  const upload = multer({ 
+    storage: multerStorage, // Configuración de multer para subir archivos
+    limits: {
+      fileSize: 5 * 1024 * 1024 // Límite de 5MB
+    }
+  }); // Configuración de multer para subir archivos
+  app.use('/uploads', express.static('uploads')); // Configuración de archivos estáticos
+
+
   setupAuth(app);
 
   // Travel routes
@@ -124,17 +149,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/accommodations", async (req, res) => {
+  app.post("/api/travels/:travelId/accommodations", upload.single('thumbnail'), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
+
+      console.log("Thumbnail:", thumbnail);
       const validated = insertAccommodationSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         checkIn: new Date(req.body.checkIn),
         checkOut: new Date(req.body.checkOut),
+        thumbnail: thumbnail,
       });
       
       const accommodation = await storage.createAccommodation(validated);
