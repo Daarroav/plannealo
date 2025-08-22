@@ -33,6 +33,7 @@ export default function TravelDetail() {
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -307,15 +308,24 @@ export default function TravelDetail() {
   const createNoteMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Sending note data:", data);
-      const response = await apiRequest("POST", `/api/travels/${travelId}/notes`, data);
+      const isEditing = data.id;
+      const method = isEditing ? "PUT" : "POST";
+      const url = isEditing 
+        ? `/api/travels/${travelId}/notes/${data.id}`
+        : `/api/travels/${travelId}/notes`;
+      
+      const response = await apiRequest(method, url, data);
       return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "notes"] });
       setShowNoteModal(false);
+      setEditingNote(null);
       toast({
-        title: "Nota agregada",
-        description: "La nota ha sido agregada exitosamente al viaje.",
+        title: editingNote ? "Nota actualizada" : "Nota agregada",
+        description: editingNote 
+          ? "La nota ha sido actualizada exitosamente."
+          : "La nota ha sido agregada exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -351,10 +361,13 @@ export default function TravelDetail() {
 
   const handleEditNote = (note: Note) => {
     console.log("Editing note:", note);
-    // Implement logic to open the NoteFormModal and pre-fill it with the note's data
-    // For example:
-    // setSelectedNoteForEditing(note);
-    // setShowNoteModal(true);
+    setEditingNote(note);
+    setShowNoteModal(true);
+  };
+
+  const handleAddNote = () => {
+    setEditingNote(null);
+    setShowNoteModal(true);
   };
 
 
@@ -1095,7 +1108,7 @@ export default function TravelDetail() {
                   <h2 className="text-2xl font-bold text-foreground">Notas</h2>
                   <Button 
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowNoteModal(true)}
+                    onClick={handleAddNote}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Nota
@@ -1113,7 +1126,7 @@ export default function TravelDetail() {
                         <p className="text-muted-foreground mb-6">
                           Agrega notas importantes sobre el viaje.
                         </p>
-                        <Button onClick={() => setShowNoteModal(true)}>
+                        <Button onClick={handleAddNote}>
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Primera Nota
                         </Button>
@@ -1245,9 +1258,15 @@ export default function TravelDetail() {
       {/* Note Form Modal */}
       <NoteFormModal
         open={showNoteModal}
-        onOpenChange={setShowNoteModal}
+        onOpenChange={(open) => {
+          setShowNoteModal(open);
+          if (!open) {
+            setEditingNote(null);
+          }
+        }}
         onSubmit={createNoteMutation.mutate}
         isPending={createNoteMutation.isPending}
+        editingNote={editingNote}
       />
 
       {/* Share Travel Modal */}
