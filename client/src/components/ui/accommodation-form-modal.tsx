@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
+import { useRef } from "react";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -43,6 +44,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [checkOutDate, setCheckOutDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
 
   const form = useForm<AccommodationForm>({
     resolver: zodResolver(accommodationFormSchema),
@@ -64,16 +68,37 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     },
   });
 
+  
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnail(file);
+    }
+    // Resetear el valor del input para permitir seleccionar el mismo archivo nuevamente
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (data: AccommodationForm) => {
+  const removeThumbnail = () => {
+    setThumbnail(null);
+    // Resetear el valor del input al eliminar la imagen
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  /*const handleSubmit = (data: AccommodationForm) => {
     // Combine date and time for check-in and check-out
     const checkIn = new Date(`${data.checkInDate}T${data.checkInTime}:00`);
     const checkOut = new Date(`${data.checkOutDate}T${data.checkOutTime}:00`);
@@ -90,6 +115,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       confirmationNumber: data.confirmationNumber,
       policies: data.policies,
       notes: data.notes,
+      thumbnail: thumbnail,
     };
 
     onSubmit(submitData);
@@ -97,6 +123,46 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
+  };*/
+
+  const handleSubmit = async (data: AccommodationForm) => {
+    // Combine date and time for check-in and check-out
+    const checkIn = new Date(`${data.checkInDate}T${data.checkInTime}:00`);
+    const checkOut = new Date(`${data.checkOutDate}T${data.checkOutTime}:00`);
+  
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add all form fields to formData
+    formData.append('name', data.name);
+    formData.append('type', data.type);
+    formData.append('location', data.location);
+    formData.append('checkIn', checkIn.toISOString());
+    formData.append('checkOut', checkOut.toISOString());
+    formData.append('roomType', `${data.roomCount} ${data.roomType}`);
+    formData.append('price', data.price || '');
+    formData.append('confirmationNumber', data.confirmationNumber || '');
+    formData.append('policies', data.policies || '');
+    formData.append('notes', data.notes || '');
+    formData.append('travelId', data.travelId);
+    
+    // Add thumbnail file if exists
+    if (thumbnail) {
+      formData.append('thumbnail', thumbnail);
+    }
+  
+    // Enviar el formData directamente
+    try {
+      await onSubmit(formData);
+      // Limpiar el formulario si es exitoso
+      form.reset();
+      setCheckInDate(undefined);
+      setCheckOutDate(undefined);
+      setAttachedFiles([]);
+      setThumbnail(null);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   const handleClose = () => {
@@ -140,7 +206,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" encType="multipart/form-data">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -345,6 +411,52 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               rows={4}
             />
           </div>
+
+          {/* Thumbnail */}
+          <hr />
+          <div>
+            <Label>Imagen Alojamiento</Label>
+            <div className="mt-2">
+              <input
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.webp,.svg"
+                onChange={handleThumbnailUpload}
+                className="hidden"
+                id="thumbnail"
+                ref={fileInputRef}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('thumbnail')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Seleccionar Archivos
+              </Button>
+            </div>
+
+            {thumbnail && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium"> Imagen Previsualizada:</p>
+                <div className=" w-fit">
+                  <img src={URL.createObjectURL(thumbnail)} alt="Thumbnail" className="max-w-full max-h-40" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeThumbnail()}
+                    className="absolute top-0 right-0 bg-accent text-white opacity-80"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <hr />
+
 
           {/* File Attachments */}
           <div>

@@ -11,6 +11,8 @@ interface TravelCardProps {
 }
 
 export function TravelCard({ travel, onEdit }: TravelCardProps) {
+  const statusCard  = travel.status === "published" ? "" :  "opacity-50";
+  const statusButton = travel.status === "published" ? "" :  "bg-yellow-100 text-yellow-800";
   const statusColor = travel.status === "published" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
   const statusText = travel.status === "published" ? "Publicado" : "Borrador";
 
@@ -20,7 +22,7 @@ export function TravelCard({ travel, onEdit }: TravelCardProps) {
   };
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <div className={`border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 ${statusCard}`}>
       <img 
         src={travel.coverImage ? `${travel.coverImage}` : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"} 
         alt={travel.name}
@@ -49,7 +51,7 @@ export function TravelCard({ travel, onEdit }: TravelCardProps) {
         </div>
         <Button 
           onClick={() => onEdit(travel.id)}
-          className="w-full bg-muted hover:bg-muted/80 text-foreground text-sm font-medium"
+          className={`w-full bg-muted hover:bg-muted/80 text-foreground text-sm font-medium ${statusButton}`}
           variant="secondary"
         >
           {travel.status === "draft" ? "Continuar Editando" : "Editar Viaje"}

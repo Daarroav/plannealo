@@ -40,6 +40,8 @@ export default function TravelPreview() {
     enabled: !!id,
   });
 
+  console.info(data);
+
   const formatDateTime = (dateTime: string | Date) => {
     const date = new Date(dateTime);
     return date.toLocaleString('es-ES', {
@@ -147,6 +149,8 @@ export default function TravelPreview() {
               {accommodations.map((accommodation) => (
                 <Card key={accommodation.id}>
                   <CardContent className="p-4">
+                    <div className="mb-2 bg-cover bg-center" style={{ width: "100%", height: "200px", backgroundImage: `url(${accommodation.thumbnail || ""})` }}>
+                    </div>
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold">{accommodation.name}</h3>
                       <Badge>{accommodation.category}</Badge>

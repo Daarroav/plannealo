@@ -163,11 +163,17 @@ export default function TravelDetail() {
       updateCoverImageMutation.mutate(uploadURL);
     }
   };
-
   const createAccommodationMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
-      return await response.json();
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch(`/api/travels/${travelId}/accommodations`, {
+        method: 'POST',
+        body: formData,
+        // No establezcas el header 'Content-Type', déjalo que el navegador lo maneje
+      });
+      if (!response.ok) {
+        throw new Error('Error al guardar el alojamiento');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
@@ -569,6 +575,11 @@ export default function TravelDetail() {
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            {/*<div>
+                              <p className="text-sm font-medium text-foreground">Imagen</p>
+                              <img src={accommodation.thumbnail || ""} alt="" />
+                              <p className="text-muted-foreground">{accommodation.thumbnail}</p>
+                            </div>*/}
                             <div>
                               <p className="text-sm font-medium text-foreground">Check-in</p>
                               <p className="text-muted-foreground">{formatDateTime(accommodation.checkIn, true)}</p>
