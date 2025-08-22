@@ -2,7 +2,18 @@ import { randomUUID } from "crypto";
 import session from "express-session";
 import { Store } from "express-session";
 import createMemoryStore from "memorystore";
+import { eq, desc } from "drizzle-orm";
+import { db } from "./db";
 import {
+  users,
+  travels,
+  accommodations,
+  activities,
+  flights,
+  transports,
+  cruises,
+  insurances,
+  notes,
   User,
   InsertUser,
   Travel,
@@ -84,28 +95,10 @@ export interface IStorage {
   sessionStore: Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private travels: Map<string, Travel>;
-  private accommodations: Map<string, Accommodation>;
-  private activities: Map<string, Activity>;
-  private flights: Map<string, Flight>;
-  private transports: Map<string, Transport>;
-  private cruises: Map<string, Cruise>;
-  private insurances: Map<string, Insurance>;
-  private notes: Map<string, Note>;
+export class DatabaseStorage implements IStorage {
   public sessionStore: Store;
 
   constructor() {
-    this.users = new Map();
-    this.travels = new Map();
-    this.accommodations = new Map();
-    this.activities = new Map();
-    this.flights = new Map();
-    this.transports = new Map();
-    this.cruises = new Map();
-    this.insurances = new Map();
-    this.notes = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -113,331 +106,284 @@ export class MemStorage implements IStorage {
 
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id, role: insertUser.role || "agent" };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   // Travel methods
   async createTravel(insertTravel: InsertTravel): Promise<Travel> {
-    const id = randomUUID();
-    const now = new Date();
-    const travel: Travel = {
-      ...insertTravel,
-      id,
-      status: insertTravel.status || "draft",
-      coverImage: insertTravel.coverImage || null,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.travels.set(id, travel);
+    const [travel] = await db
+      .insert(travels)
+      .values(insertTravel)
+      .returning();
     return travel;
   }
 
   async getTravelsByUser(userId: string): Promise<Travel[]> {
-    return Array.from(this.travels.values())
-      .filter((travel) => travel.createdBy === userId)
-      .sort((a, b) => (b.updatedAt?.getTime() || 0) - (a.updatedAt?.getTime() || 0));
+    return await db.select()
+      .from(travels)
+      .where(eq(travels.createdBy, userId))
+      .orderBy(desc(travels.updatedAt));
   }
 
   async getTravels(): Promise<Travel[]> {
-    return Array.from(this.travels.values());
+    return await db.select().from(travels);
   }
 
   async getTravel(id: string): Promise<Travel | undefined> {
-    return this.travels.get(id);
+    const [travel] = await db.select().from(travels).where(eq(travels.id, id));
+    return travel || undefined;
   }
 
   async updateTravel(id: string, updates: Partial<Travel>): Promise<Travel> {
-    const travel = this.travels.get(id);
+    const [travel] = await db
+      .update(travels)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(travels.id, id))
+      .returning();
     if (!travel) {
       throw new Error("Travel not found");
     }
-    const updatedTravel = { ...travel, ...updates, updatedAt: new Date() };
-    this.travels.set(id, updatedTravel);
-    return updatedTravel;
+    return travel;
   }
 
   async deleteTravel(id: string): Promise<void> {
-    this.travels.delete(id);
-    // Also delete related records
-    Array.from(this.accommodations.entries()).forEach(([key, accommodation]) => {
-      if (accommodation.travelId === id) {
-        this.accommodations.delete(key);
-      }
-    });
-    Array.from(this.activities.entries()).forEach(([key, activity]) => {
-      if (activity.travelId === id) {
-        this.activities.delete(key);
-      }
-    });
-    Array.from(this.flights.entries()).forEach(([key, flight]) => {
-      if (flight.travelId === id) {
-        this.flights.delete(key);
-      }
-    });
-    Array.from(this.transports.entries()).forEach(([key, transport]) => {
-      if (transport.travelId === id) {
-        this.transports.delete(key);
-      }
-    });
+    await db.delete(travels).where(eq(travels.id, id));
+    // Related records will be deleted by cascade (if foreign keys are set up)
   }
 
   // Accommodation methods
   async createAccommodation(insertAccommodation: InsertAccommodation): Promise<Accommodation> {
-    const id = randomUUID();
-    const accommodation: Accommodation = {
-      ...insertAccommodation,
-      id,
-      price: insertAccommodation.price || null,
-      confirmationNumber: insertAccommodation.confirmationNumber || null,
-      policies: insertAccommodation.policies || null,
-      notes: insertAccommodation.notes || null,
-    };
-    this.accommodations.set(id, accommodation);
+    const [accommodation] = await db
+      .insert(accommodations)
+      .values(insertAccommodation)
+      .returning();
     return accommodation;
   }
 
   async getAccommodationsByTravel(travelId: string): Promise<Accommodation[]> {
-    return Array.from(this.accommodations.values()).filter(
-      (accommodation) => accommodation.travelId === travelId
-    );
+    return await db.select()
+      .from(accommodations)
+      .where(eq(accommodations.travelId, travelId));
   }
 
   async updateAccommodation(id: string, updates: Partial<Accommodation>): Promise<Accommodation> {
-    const accommodation = this.accommodations.get(id);
+    const [accommodation] = await db
+      .update(accommodations)
+      .set(updates)
+      .where(eq(accommodations.id, id))
+      .returning();
     if (!accommodation) {
       throw new Error("Accommodation not found");
     }
-    const updated = { ...accommodation, ...updates };
-    this.accommodations.set(id, updated);
-    return updated;
+    return accommodation;
   }
 
   async deleteAccommodation(id: string): Promise<void> {
-    this.accommodations.delete(id);
+    await db.delete(accommodations).where(eq(accommodations.id, id));
   }
 
   // Activity methods
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const id = randomUUID();
-    const activity: Activity = {
-      ...insertActivity,
-      id,
-      confirmationNumber: insertActivity.confirmationNumber || null,
-      notes: insertActivity.notes || null,
-      provider: insertActivity.provider || null,
-      startTime: insertActivity.startTime || null,
-      endTime: insertActivity.endTime || null,
-      conditions: insertActivity.conditions || null,
-    };
-    this.activities.set(id, activity);
+    const [activity] = await db
+      .insert(activities)
+      .values(insertActivity)
+      .returning();
     return activity;
   }
 
   async getActivitiesByTravel(travelId: string): Promise<Activity[]> {
-    return Array.from(this.activities.values()).filter(
-      (activity) => activity.travelId === travelId
-    );
+    return await db.select()
+      .from(activities)
+      .where(eq(activities.travelId, travelId));
   }
 
   async updateActivity(id: string, updates: Partial<Activity>): Promise<Activity> {
-    const activity = this.activities.get(id);
+    const [activity] = await db
+      .update(activities)
+      .set(updates)
+      .where(eq(activities.id, id))
+      .returning();
     if (!activity) {
       throw new Error("Activity not found");
     }
-    const updated = { ...activity, ...updates };
-    this.activities.set(id, updated);
-    return updated;
+    return activity;
   }
 
   async deleteActivity(id: string): Promise<void> {
-    this.activities.delete(id);
+    await db.delete(activities).where(eq(activities.id, id));
   }
 
   // Flight methods
   async createFlight(insertFlight: InsertFlight): Promise<Flight> {
-    const id = randomUUID();
-    const flight: Flight = {
-      ...insertFlight,
-      id,
-      departureTerminal: insertFlight.departureTerminal || null,
-      arrivalTerminal: insertFlight.arrivalTerminal || null,
-    };
-    this.flights.set(id, flight);
+    const [flight] = await db
+      .insert(flights)
+      .values(insertFlight)
+      .returning();
     return flight;
   }
 
   async getFlightsByTravel(travelId: string): Promise<Flight[]> {
-    return Array.from(this.flights.values()).filter(
-      (flight) => flight.travelId === travelId
-    );
+    return await db.select()
+      .from(flights)
+      .where(eq(flights.travelId, travelId));
   }
 
   async updateFlight(id: string, updates: Partial<Flight>): Promise<Flight> {
-    const flight = this.flights.get(id);
+    const [flight] = await db
+      .update(flights)
+      .set(updates)
+      .where(eq(flights.id, id))
+      .returning();
     if (!flight) {
       throw new Error("Flight not found");
     }
-    const updated = { ...flight, ...updates };
-    this.flights.set(id, updated);
-    return updated;
+    return flight;
   }
 
   async deleteFlight(id: string): Promise<void> {
-    this.flights.delete(id);
+    await db.delete(flights).where(eq(flights.id, id));
   }
 
   // Transport methods
   async createTransport(insertTransport: InsertTransport): Promise<Transport> {
-    const id = randomUUID();
-    const transport: Transport = {
-      ...insertTransport,
-      id,
-      endDate: insertTransport.endDate || null,
-      confirmationNumber: insertTransport.confirmationNumber || null,
-      notes: insertTransport.notes || null,
-      provider: insertTransport.provider || null,
-      contactName: insertTransport.contactName || null,
-      contactNumber: insertTransport.contactNumber || null,
-      dropoffLocation: insertTransport.dropoffLocation || null,
-    };
-    this.transports.set(id, transport);
+    const [transport] = await db
+      .insert(transports)
+      .values(insertTransport)
+      .returning();
     return transport;
   }
 
   async getTransportsByTravel(travelId: string): Promise<Transport[]> {
-    return Array.from(this.transports.values()).filter(
-      (transport) => transport.travelId === travelId
-    );
+    return await db.select()
+      .from(transports)
+      .where(eq(transports.travelId, travelId));
   }
 
   async updateTransport(id: string, updates: Partial<Transport>): Promise<Transport> {
-    const transport = this.transports.get(id);
+    const [transport] = await db
+      .update(transports)
+      .set(updates)
+      .where(eq(transports.id, id))
+      .returning();
     if (!transport) {
       throw new Error("Transport not found");
     }
-    const updated = { ...transport, ...updates };
-    this.transports.set(id, updated);
-    return updated;
+    return transport;
   }
 
   async deleteTransport(id: string): Promise<void> {
-    this.transports.delete(id);
+    await db.delete(transports).where(eq(transports.id, id));
   }
 
   // Cruise methods
   async createCruise(insertCruise: InsertCruise): Promise<Cruise> {
     const id = randomUUID();
-    const cruise: Cruise = {
-      ...insertCruise,
-      id,
-      confirmationNumber: insertCruise.confirmationNumber || null,
-      notes: insertCruise.notes || null,
-    };
-    this.cruises.set(id, cruise);
+    const [cruise] = await db
+      .insert(cruises)
+      .values({ ...insertCruise, id })
+      .returning();
     return cruise;
   }
 
   async getCruisesByTravel(travelId: string): Promise<Cruise[]> {
-    return Array.from(this.cruises.values()).filter(
-      (cruise) => cruise.travelId === travelId
-    );
+    return await db.select()
+      .from(cruises)
+      .where(eq(cruises.travelId, travelId));
   }
 
   async updateCruise(id: string, updates: Partial<Cruise>): Promise<Cruise> {
-    const cruise = this.cruises.get(id);
+    const [cruise] = await db
+      .update(cruises)
+      .set(updates)
+      .where(eq(cruises.id, id))
+      .returning();
     if (!cruise) {
       throw new Error("Cruise not found");
     }
-    const updated = { ...cruise, ...updates };
-    this.cruises.set(id, updated);
-    return updated;
+    return cruise;
   }
 
   async deleteCruise(id: string): Promise<void> {
-    this.cruises.delete(id);
+    await db.delete(cruises).where(eq(cruises.id, id));
   }
 
   // Insurance methods
   async createInsurance(insertInsurance: InsertInsurance): Promise<Insurance> {
     const id = randomUUID();
-    const insurance: Insurance = {
-      ...insertInsurance,
-      id,
-      emergencyNumber: insertInsurance.emergencyNumber || null,
-      importantInfo: insertInsurance.importantInfo || null,
-      policyDescription: insertInsurance.policyDescription || null,
-      attachments: insertInsurance.attachments || null,
-      notes: insertInsurance.notes || null,
-    };
-    this.insurances.set(id, insurance);
+    const [insurance] = await db
+      .insert(insurances)
+      .values({ ...insertInsurance, id })
+      .returning();
     return insurance;
   }
 
   async getInsurancesByTravel(travelId: string): Promise<Insurance[]> {
-    return Array.from(this.insurances.values()).filter(
-      (insurance) => insurance.travelId === travelId
-    );
+    return await db.select()
+      .from(insurances)
+      .where(eq(insurances.travelId, travelId));
   }
 
   async updateInsurance(id: string, updates: Partial<Insurance>): Promise<Insurance> {
-    const insurance = this.insurances.get(id);
+    const [insurance] = await db
+      .update(insurances)
+      .set(updates)
+      .where(eq(insurances.id, id))
+      .returning();
     if (!insurance) {
       throw new Error("Insurance not found");
     }
-    const updated = { ...insurance, ...updates };
-    this.insurances.set(id, updated);
-    return updated;
+    return insurance;
   }
 
   async deleteInsurance(id: string): Promise<void> {
-    this.insurances.delete(id);
+    await db.delete(insurances).where(eq(insurances.id, id));
   }
 
   // Note methods
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = randomUUID();
-    const note: Note = {
-      ...insertNote,
-      id,
-      visibleToTravelers: insertNote.visibleToTravelers ?? true,
-      attachments: insertNote.attachments || null,
-    };
-    this.notes.set(id, note);
+    const [note] = await db
+      .insert(notes)
+      .values({ ...insertNote, id })
+      .returning();
     return note;
   }
 
   async getNotesByTravel(travelId: string): Promise<Note[]> {
-    return Array.from(this.notes.values()).filter(
-      (note) => note.travelId === travelId
-    );
+    return await db.select()
+      .from(notes)
+      .where(eq(notes.travelId, travelId));
   }
 
   async updateNote(id: string, updates: Partial<Note>): Promise<Note> {
-    const note = this.notes.get(id);
+    const [note] = await db
+      .update(notes)
+      .set(updates)
+      .where(eq(notes.id, id))
+      .returning();
     if (!note) {
       throw new Error("Note not found");
     }
-    const updated = { ...note, ...updates };
-    this.notes.set(id, updated);
-    return updated;
+    return note;
   }
 
   async deleteNote(id: string): Promise<void> {
-    this.notes.delete(id);
+    await db.delete(notes).where(eq(notes.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
