@@ -24,6 +24,15 @@
     display: none !important;
   }
   
+  /* Page break utilities */
+  .print\:break-after-page {
+    break-after: page !important;
+  }
+  
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+  }
+  
   /* Optimize travel preview layout for print */
   .travel-preview-print {
     width: 100% !important;

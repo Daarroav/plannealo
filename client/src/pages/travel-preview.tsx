@@ -173,11 +173,11 @@ export default function TravelPreview() {
   // Agrupar eventos por día
   const groupEventsByDay = (events: any[]) => {
     const groups: { [key: string]: any[] } = {};
-    
+
     events.forEach(event => {
       const date = new Date(event.date);
       const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-      
+
       if (!groups[dayKey]) {
         groups[dayKey] = [];
       }
@@ -188,14 +188,14 @@ export default function TravelPreview() {
       .sort()
       .map(dateKey => ({
         date: new Date(dateKey),
-        events: groups[dateKey]
+        events: groups[dayKey]
       }));
   };
 
   const formatDayLabel = (date: Date) => {
     const dayNames = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
     const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
-    
+
     return {
       dayOfWeek: dayNames[date.getDay()],
       month: monthNames[date.getMonth()],
@@ -508,7 +508,7 @@ export default function TravelPreview() {
       >
         {/* Overlay oscuro para mejorar legibilidad del texto */}
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        
+
         {/* Contenido de la portada */}
         <div className="relative z-10 text-white px-8 max-w-4xl mx-auto">
           <h1 className="text-6xl font-bold mb-8 print:text-5xl drop-shadow-2xl">
@@ -573,7 +573,7 @@ export default function TravelPreview() {
                           <div className="text-2xl font-bold mt-1">{dayLabel.dayNumber}</div>
                         </div>
                       </div>
-                      
+
                       {/* Tarjetas del día - lado derecho */}
                       <div className="flex-1 space-y-3">
                         {dayGroup.events.map((event) => renderEventCard(event))}
