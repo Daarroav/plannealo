@@ -599,7 +599,7 @@ export default function TravelPreview() {
             {event.data.thumbnail && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <img 
-                  src={`/api/objects${event.data.thumbnail}`}
+                  src={event.data.thumbnail}
                   alt={`Imagen de ${event.data.name}`}
                   className="w-full h-48 object-cover rounded-lg"
                   onError={(e) => {
