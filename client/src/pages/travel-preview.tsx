@@ -498,7 +498,7 @@ export default function TravelPreview() {
 
       {/* Portada con imagen de fondo */}
       <div 
-        className="cover-page relative w-full h-screen print-letter-height print-letter-width flex items-center justify-center text-center print-page-break-after overflow-hidden"
+        className="cover-page relative w-full h-screen flex items-center justify-center text-center overflow-hidden print:break-after-page"
         style={{
           backgroundImage: travel.coverImage ? `url(${travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: 'cover',
@@ -531,9 +531,9 @@ export default function TravelPreview() {
       </div>
 
       {/* Contenido principal - Itinerario en páginas siguientes */}
-      <div className="max-w-4xl mx-auto p-6 print:p-0 print:max-w-none print:pt-8">
+      <div className="max-w-4xl mx-auto p-6 print:p-4 print:max-w-none">
         {/* Encabezado del itinerario en páginas siguientes */}
-        <div className="text-center mb-8 print:mb-6 print:mt-0">
+        <div className="text-center mb-8 print:mb-4">
           <h1 className="text-4xl font-bold text-foreground mb-4 print:text-3xl">
             Itinerario Detallado
           </h1>
