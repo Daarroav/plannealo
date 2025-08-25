@@ -365,7 +365,7 @@ export default function TravelPreview() {
       <div 
         className="cover-page relative w-full h-screen print:h-[11in] print:w-[8.5in] flex items-center justify-center text-center print:page-break-after-always overflow-hidden"
         style={{
-          backgroundImage: travel.thumbnail ? `url(/api/objects/${travel.thumbnail})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          backgroundImage: travel.coverImage ? `url(${travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
