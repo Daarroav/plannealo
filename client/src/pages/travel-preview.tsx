@@ -170,173 +170,308 @@ export default function TravelPreview() {
 
   const chronologicalEvents = getAllEvents();
 
+  // Agrupar eventos por día
+  const groupEventsByDay = (events: any[]) => {
+    const groups: { [key: string]: any[] } = {};
+    
+    events.forEach(event => {
+      const date = new Date(event.date);
+      const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      if (!groups[dayKey]) {
+        groups[dayKey] = [];
+      }
+      groups[dayKey].push(event);
+    });
+
+    return Object.keys(groups)
+      .sort()
+      .map(dateKey => ({
+        date: new Date(dateKey),
+        events: groups[dateKey]
+      }));
+  };
+
+  const formatDayLabel = (date: Date) => {
+    const dayNames = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+    const monthNames = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    
+    return {
+      dayOfWeek: dayNames[date.getDay()],
+      month: monthNames[date.getMonth()],
+      dayNumber: date.getDate()
+    };
+  };
+
+  const groupedEvents = groupEventsByDay(chronologicalEvents);
+
   const renderEventCard = (event: any) => {
     switch (event.type) {
       case 'activity':
         return (
-          <Card key={event.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-white">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <Camera className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold">{event.data.name}</h3>
-                <Badge variant="secondary">
-                  <Camera className="w-3 h-3 mr-1" />
-                  Actividad
-                </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                <div>📅 {formatDateTime(event.data.date)}</div>
-                <div>🏷️ {event.data.type}</div>
-                {event.data.provider && <div>👥 {event.data.provider}</div>}
-                {event.data.startTime && <div>⏰ {event.data.startTime} - {event.data.endTime || 'Sin hora fin'}</div>}
-                {event.data.confirmationNumber && <div>🎫 {event.data.confirmationNumber}</div>}
+              <Badge variant="secondary" className="text-xs">Actividad</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">TIPO</div>
+                <div className="text-gray-900">{event.data.type}</div>
               </div>
-              {event.data.notes && (
-                <p className="mt-2 text-sm text-muted-foreground">{event.data.notes}</p>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">HORARIO</div>
+                <div className="text-gray-900">
+                  {event.data.startTime} - {event.data.endTime || 'Sin hora fin'}
+                </div>
+              </div>
+              {event.data.provider && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">PROVEEDOR</div>
+                  <div className="text-gray-900">{event.data.provider}</div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+              {event.data.confirmationNumber && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">CONFIRMACIÓN</div>
+                  <div className="text-gray-900">{event.data.confirmationNumber}</div>
+                </div>
+              )}
+            </div>
+            {event.data.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600">{event.data.notes}</div>
+              </div>
+            )}
+          </div>
         );
 
       case 'flight':
         return (
-          <Card key={event.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold">{event.data.airline} {event.data.flightNumber}</h3>
-                <Badge variant="secondary">
-                  <Plane className="w-3 h-3 mr-1" />
-                  Vuelo
-                </Badge>
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-white">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <Plane className="w-4 h-4 text-accent" />
+                <h3 className="text-lg font-semibold">Vuelo: {event.data.departureCity} → {event.data.arrivalCity}</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                <div>🛫 {event.data.departureCity} → {event.data.arrivalCity}</div>
-                <div>📅 Salida: {formatDateTime(event.data.departureDate)}</div>
-                <div>📅 Llegada: {formatDateTime(event.data.arrivalDate)}</div>
-                <div>✈️ Clase: {event.data.class}</div>
-                {event.data.departureTerminal && <div>🏢 Terminal salida: {event.data.departureTerminal}</div>}
-                {event.data.arrivalTerminal && <div>🏢 Terminal llegada: {event.data.arrivalTerminal}</div>}
-                <div>🎫 {event.data.reservationNumber}</div>
+              <Badge variant="secondary" className="text-xs">Vuelo</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">AEROLÍNEA & VUELO</div>
+                <div className="text-gray-900">{event.data.airline} {event.data.flightNumber}</div>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">SALIDA</div>
+                <div className="text-gray-900">{formatDateTime(event.data.departureDate)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">LLEGADA</div>
+                <div className="text-gray-900">{formatDateTime(event.data.arrivalDate)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">CLASE</div>
+                <div className="text-gray-900">{event.data.class}</div>
+              </div>
+              {event.data.departureTerminal && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">TERMINAL SALIDA</div>
+                  <div className="text-gray-900">{event.data.departureTerminal}</div>
+                </div>
+              )}
+              {event.data.arrivalTerminal && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">TERMINAL LLEGADA</div>
+                  <div className="text-gray-900">{event.data.arrivalTerminal}</div>
+                </div>
+              )}
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">RESERVA</div>
+                <div className="text-gray-900">{event.data.reservationNumber}</div>
+              </div>
+            </div>
+          </div>
         );
 
       case 'transport':
         return (
-          <Card key={event.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-white">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <Car className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold">{event.data.name}</h3>
-                <Badge variant="secondary">
-                  <Car className="w-3 h-3 mr-1" />
-                  Transporte
-                </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                <div>🚗 {event.data.type}</div>
-                <div>📅 Recogida: {formatDateTime(event.data.pickupDate)}</div>
-                <div>📍 Desde: {event.data.pickupLocation}</div>
-                {event.data.dropoffLocation && <div>📍 Hasta: {event.data.dropoffLocation}</div>}
-                {event.data.provider && <div>👥 {event.data.provider}</div>}
-                {event.data.contactName && <div>📞 {event.data.contactName}: {event.data.contactNumber}</div>}
-                {event.data.confirmationNumber && <div>🎫 {event.data.confirmationNumber}</div>}
+              <Badge variant="secondary" className="text-xs">Transporte</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">TIPO</div>
+                <div className="text-gray-900">{event.data.type}</div>
               </div>
-              {event.data.notes && (
-                <p className="mt-2 text-sm text-muted-foreground">{event.data.notes}</p>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">RECOGIDA</div>
+                <div className="text-gray-900">{formatDateTime(event.data.pickupDate)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">DESDE</div>
+                <div className="text-gray-900">{event.data.pickupLocation}</div>
+              </div>
+              {event.data.dropoffLocation && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">HASTA</div>
+                  <div className="text-gray-900">{event.data.dropoffLocation}</div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+              {event.data.provider && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">PROVEEDOR</div>
+                  <div className="text-gray-900">{event.data.provider}</div>
+                </div>
+              )}
+              {event.data.contactName && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">CONTACTO</div>
+                  <div className="text-gray-900">{event.data.contactName}: {event.data.contactNumber}</div>
+                </div>
+              )}
+              {event.data.confirmationNumber && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">CONFIRMACIÓN</div>
+                  <div className="text-gray-900">{event.data.confirmationNumber}</div>
+                </div>
+              )}
+            </div>
+            {event.data.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600">{event.data.notes}</div>
+              </div>
+            )}
+          </div>
         );
 
       case 'cruise':
         return (
-          <Card key={event.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-white">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <Ship className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold">{event.data.cruiseLine}</h3>
-                <Badge variant="secondary">
-                  <Ship className="w-3 h-3 mr-1" />
-                  Crucero
-                </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                <div>📅 Salida: {formatDateTime(event.data.departureDate)}</div>
-                <div>📅 Regreso: {formatDateTime(event.data.arrivalDate)}</div>
-                <div>🛳️ Desde: {event.data.departurePort}</div>
-                <div>🛳️ Hasta: {event.data.arrivalPort}</div>
-                {event.data.confirmationNumber && <div>🎫 {event.data.confirmationNumber}</div>}
+              <Badge variant="secondary" className="text-xs">Crucero</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">SALIDA</div>
+                <div className="text-gray-900">{formatDateTime(event.data.departureDate)}</div>
               </div>
-              {event.data.notes && (
-                <p className="mt-2 text-sm text-muted-foreground">{event.data.notes}</p>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">REGRESO</div>
+                <div className="text-gray-900">{formatDateTime(event.data.arrivalDate)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">PUERTO SALIDA</div>
+                <div className="text-gray-900">{event.data.departurePort}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">PUERTO LLEGADA</div>
+                <div className="text-gray-900">{event.data.arrivalPort}</div>
+              </div>
+              {event.data.confirmationNumber && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">CONFIRMACIÓN</div>
+                  <div className="text-gray-900">{event.data.confirmationNumber}</div>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+            {event.data.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600">{event.data.notes}</div>
+              </div>
+            )}
+          </div>
         );
 
       case 'accommodation':
         return (
-          <Card key={event.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-white">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <Bed className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold">{event.data.name}</h3>
-                <Badge variant="secondary">
-                  <Bed className="w-3 h-3 mr-1" />
-                  Alojamiento
-                </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                <div>🏨 {event.data.type}</div>
-                <div>📍 {event.data.location}</div>
-                <div>📅 Check-in: {formatDateTime(event.data.checkIn)}</div>
-                <div>📅 Check-out: {formatDateTime(event.data.checkOut)}</div>
-                <div>🛏️ {event.data.roomType}</div>
-                {event.data.price && <div>💰 {event.data.price}</div>}
-                {event.data.confirmationNumber && <div>🎫 {event.data.confirmationNumber}</div>}
+              <Badge variant="secondary" className="text-xs">Alojamiento</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">TIPO</div>
+                <div className="text-gray-900">{event.data.type}</div>
               </div>
-              {event.data.notes && (
-                <p className="mt-2 text-sm text-muted-foreground">{event.data.notes}</p>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">UBICACIÓN</div>
+                <div className="text-gray-900">{event.data.location}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">CHECK-IN</div>
+                <div className="text-gray-900">{formatDateTime(event.data.checkIn)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">CHECK-OUT</div>
+                <div className="text-gray-900">{formatDateTime(event.data.checkOut)}</div>
+              </div>
+              <div>
+                <div className="font-medium text-gray-600 uppercase text-xs">HABITACIÓN</div>
+                <div className="text-gray-900">{event.data.roomType}</div>
+              </div>
+              {event.data.confirmationNumber && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">CONFIRMACIÓN</div>
+                  <div className="text-gray-900">{event.data.confirmationNumber}</div>
+                </div>
               )}
-              {event.data.policies && (
-                <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2">
-                  <strong>Políticas:</strong> {event.data.policies}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+            {event.data.notes && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600">{event.data.notes}</div>
+              </div>
+            )}
+            {event.data.policies && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600"><strong>Políticas:</strong> {event.data.policies}</div>
+              </div>
+            )}
+          </div>
         );
 
       case 'note':
         return (
-          <Card key={event.id} className="border-l-4 border-accent bg-accent/5">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start mb-2">
+          <div key={event.id} className="border border-border rounded-lg p-4 bg-yellow-50 border-l-4 border-l-yellow-400">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center space-x-2">
+                <StickyNote className="w-4 h-4 text-yellow-600" />
                 <h3 className="text-lg font-semibold">{event.data.title}</h3>
-                <Badge variant="secondary">
-                  <StickyNote className="w-3 h-3 mr-1" />
-                  Nota Importante
-                </Badge>
               </div>
-              <div className="text-sm text-muted-foreground mb-3">
-                📅 {formatDateTime(event.data.noteDate)}
-              </div>
-              <div className="p-3 bg-muted/20 rounded-lg border-l-4 border-accent">
-                <p className="whitespace-pre-wrap text-sm">{event.data.content}</p>
-              </div>
-              {event.data.attachments && event.data.attachments.length > 0 && (
-                <div className="mt-3 border-t border-border pt-3">
-                  <p className="text-sm font-medium text-foreground mb-2">Documentos Adjuntos</p>
-                  <div className="space-y-1">
-                    {event.data.attachments.map((fileName: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{fileName}</span>
-                      </div>
-                    ))}
-                  </div>
+              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">Nota Importante</Badge>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-lg border-l-4 border-l-yellow-400">
+              <p className="whitespace-pre-wrap text-sm text-gray-800">{event.data.content}</p>
+            </div>
+            {event.data.attachments && event.data.attachments.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-yellow-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">Documentos Adjuntos</p>
+                <div className="space-y-1">
+                  {event.data.attachments.map((fileName: string, index: number) => (
+                    <div key={index} className="flex items-center space-x-2 text-sm">
+                      <FileText className="w-4 h-4 text-gray-600" />
+                      <span className="text-gray-600">{fileName}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         );
 
       default:
@@ -363,9 +498,9 @@ export default function TravelPreview() {
 
       {/* Portada con imagen de fondo */}
       <div 
-        className="cover-page relative w-full h-screen print:h-[11in] print:w-[8.5in] flex items-center justify-center text-center print:page-break-after-always overflow-hidden"
+        className="cover-page relative w-full h-screen print-letter-height print-letter-width flex items-center justify-center text-center print-page-break-after overflow-hidden"
         style={{
-          backgroundImage: travel.coverImage ? `url(${travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          backgroundImage: travel.thumbnail ? `url(/api/objects/${travel.thumbnail})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -418,14 +553,35 @@ export default function TravelPreview() {
         </div>
 
         {/* Itinerario Cronológico */}
-        {chronologicalEvents.length > 0 && (
+        {groupedEvents.length > 0 && (
           <section className="mb-8 print:mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-4 print:text-xl flex items-center">
+            <h2 className="text-2xl font-bold text-foreground mb-6 print:text-xl flex items-center">
               <Calendar className="w-6 h-6 mr-2 text-accent" />
               Itinerario Cronológico
             </h2>
-            <div className="grid gap-4">
-              {chronologicalEvents.map((event) => renderEventCard(event))}
+            <div className="space-y-8">
+              {groupedEvents.map((dayGroup, dayIndex) => {
+                const dayLabel = formatDayLabel(dayGroup.date);
+                return (
+                  <div key={dayIndex} className="border-b border-border pb-6 last:border-b-0">
+                    <div className="flex gap-6">
+                      {/* Etiqueta del día - lado izquierdo */}
+                      <div className="flex-shrink-0 text-center w-20">
+                        <div className="bg-gray-900 text-white p-3 text-center">
+                          <div className="text-sm font-bold">{dayLabel.dayOfWeek}</div>
+                          <div className="text-xs font-medium">{dayLabel.month}</div>
+                          <div className="text-2xl font-bold mt-1">{dayLabel.dayNumber}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Tarjetas del día - lado derecho */}
+                      <div className="flex-1 space-y-3">
+                        {dayGroup.events.map((event) => renderEventCard(event))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}

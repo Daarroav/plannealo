@@ -89,15 +89,15 @@
   }
   
   /* Estilos específicos para portada del viaje */
-  .print\\:page-break-after-always {
+  .print-page-break-after {
     page-break-after: always !important;
   }
   
-  .print\\:h-\\[11in\\] {
+  .print-letter-height {
     height: 11in !important;
   }
   
-  .print\\:w-\\[8\\.5in\\] {
+  .print-letter-width {
     width: 8.5in !important;
   }
   
