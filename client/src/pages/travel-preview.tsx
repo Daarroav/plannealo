@@ -188,7 +188,7 @@ export default function TravelPreview() {
       .sort()
       .map(dateKey => ({
         date: new Date(dateKey),
-        events: groups[dayKey]
+        events: groups[dateKey]
       }));
   };
 
