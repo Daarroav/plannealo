@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,6 +204,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           <DialogTitle className="text-2xl font-bold text-foreground">
             {editingAccommodation ? "Editar Alojamiento" : "Agregar Alojamiento"}
           </DialogTitle>
+          <DialogDescription>
+            {editingAccommodation ? "Modifica los detalles del alojamiento" : "Agrega un nuevo alojamiento al itinerario"}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" encType="multipart/form-data">
