@@ -135,26 +135,63 @@ export const insertTravelSchema = createInsertSchema(travels).omit({
 
 export const insertAccommodationSchema = createInsertSchema(accommodations).omit({
   id: true,
+}).extend({
+  checkIn: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
+  checkOut: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
+}).extend({
+  date: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertFlightSchema = createInsertSchema(flights).omit({
   id: true,
+}).extend({
+  departureDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
+  arrivalDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertTransportSchema = createInsertSchema(transports).omit({
   id: true,
+}).extend({
+  pickupDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
+  endDate: z.union([z.date(), z.string().nullable()]).transform((val) => {
+    if (!val) return null;
+    return typeof val === 'string' ? new Date(val) : val;
+  }).optional(),
 });
 
 export const insertCruiseSchema = createInsertSchema(cruises).omit({
   id: true,
+}).extend({
+  departureDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
+  arrivalDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertInsuranceSchema = createInsertSchema(insurances).omit({
   id: true,
+}).extend({
+  effectiveDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertNoteSchema = createInsertSchema(notes).omit({

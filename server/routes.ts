@@ -996,7 +996,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
+    } catch (error: any) {
       if (error.name === "ObjectNotFoundError") {
         return res.status(404).json({ error: "Object not found" });
       }
