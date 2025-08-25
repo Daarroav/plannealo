@@ -97,7 +97,7 @@ export default function TravelPreview() {
   const getAllEvents = () => {
     const events: Array<{
       id: string;
-      type: 'accommodation' | 'activity' | 'flight' | 'transport' | 'cruise';
+      type: 'accommodation' | 'activity' | 'flight' | 'transport' | 'cruise' | 'note';
       date: Date;
       data: any;
     }> = [];
@@ -151,6 +151,18 @@ export default function TravelPreview() {
         data: accommodation
       });
     });
+
+    // Agregar notas importantes visibles para viajeros
+    notes
+      .filter(note => note.visibleToTravelers)
+      .forEach(note => {
+        events.push({
+          id: note.id,
+          type: 'note',
+          date: new Date(note.noteDate),
+          data: note
+        });
+      });
 
     // Ordenar cronológicamente
     return events.sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -293,6 +305,40 @@ export default function TravelPreview() {
           </Card>
         );
 
+      case 'note':
+        return (
+          <Card key={event.id} className="border-l-4 border-accent bg-accent/5">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold">{event.data.title}</h3>
+                <Badge variant="secondary">
+                  <StickyNote className="w-3 h-3 mr-1" />
+                  Nota Importante
+                </Badge>
+              </div>
+              <div className="text-sm text-muted-foreground mb-3">
+                📅 {formatDateTime(event.data.noteDate)}
+              </div>
+              <div className="p-3 bg-muted/20 rounded-lg border-l-4 border-accent">
+                <p className="whitespace-pre-wrap text-sm">{event.data.content}</p>
+              </div>
+              {event.data.attachments && event.data.attachments.length > 0 && (
+                <div className="mt-3 border-t border-border pt-3">
+                  <p className="text-sm font-medium text-foreground mb-2">Documentos Adjuntos</p>
+                  <div className="space-y-1">
+                    {event.data.attachments.map((fileName: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2 text-sm">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{fileName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
       default:
         return null;
     }
@@ -398,44 +444,6 @@ export default function TravelPreview() {
           </section>
         )}
 
-        {/* Notas visibles para viajeros ordenadas cronológicamente */}
-        {notes.filter(note => note.visibleToTravelers).length > 0 && (
-          <section className="mb-8 print:mb-6">
-            <h2 className="text-2xl font-bold text-foreground mb-4 print:text-xl flex items-center">
-              <StickyNote className="w-6 h-6 mr-2 text-accent" />
-              Notas Importantes
-            </h2>
-            <div className="grid gap-4">
-              {notes
-                .filter(note => note.visibleToTravelers)
-                .sort((a, b) => new Date(a.noteDate).getTime() - new Date(b.noteDate).getTime())
-                .map((note) => (
-                <Card key={note.id}>
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold mb-2">{note.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{formatDateTime(note.noteDate)}</p>
-                    <div className="p-3 bg-muted/20 rounded-lg border-l-4 border-accent">
-                      <p className="whitespace-pre-wrap">{note.content}</p>
-                    </div>
-                    {note.attachments && note.attachments.length > 0 && (
-                      <div className="mt-3 border-t border-border pt-3">
-                        <p className="text-sm font-medium text-foreground mb-2">Documentos Adjuntos</p>
-                        <div className="space-y-1">
-                          {note.attachments.map((fileName: string, index: number) => (
-                            <div key={index} className="flex items-center space-x-2 text-sm">
-                              <FileText className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">{fileName}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Footer para impresión */}
         <div className="print:block hidden mt-8 border-t border-border pt-4 text-center text-sm text-muted-foreground">
