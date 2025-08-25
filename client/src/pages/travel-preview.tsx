@@ -559,11 +559,11 @@ export default function TravelPreview() {
               <Calendar className="w-6 h-6 mr-2 text-accent" />
               Itinerario Cronológico
             </h2>
-            <div className="space-y-8">
+            <div className="space-y-8 print:px-4">
               {groupedEvents.map((dayGroup, dayIndex) => {
                 const dayLabel = formatDayLabel(dayGroup.date);
                 return (
-                  <div key={dayIndex} className="border-b border-border pb-6 last:border-b-0">
+                  <div key={dayIndex} className="border-b border-border pb-6 last:border-b-0 print:px-2">
                     <div className="flex gap-6">
                       {/* Etiqueta del día - lado izquierdo */}
                       <div className="flex-shrink-0 text-center w-20">
