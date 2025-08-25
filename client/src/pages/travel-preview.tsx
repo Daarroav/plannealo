@@ -682,6 +682,21 @@ export default function TravelPreview() {
         {/* Overlay oscuro para mejorar legibilidad del texto */}
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
 
+        {/* Logo y marca en la parte superior */}
+        <div className="absolute top-8 left-8 z-10">
+          <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">P</span>
+              </div>
+              <div>
+                <div className="font-bold text-gray-900 text-lg">PLANNEALO</div>
+                <div className="text-gray-600 text-sm">Agencia de Viajes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Contenido de la portada */}
         <div className="relative z-10 text-white px-8 max-w-4xl mx-auto">
           <h1 className="text-6xl font-bold mb-8 print:text-5xl drop-shadow-2xl">
@@ -690,7 +705,7 @@ export default function TravelPreview() {
           <h2 className="text-3xl font-light mb-6 print:text-2xl drop-shadow-xl">
             {travel.clientName}
           </h2>
-          <div className="flex items-center justify-center space-x-8 text-xl print:text-lg drop-shadow-lg">
+          <div className="flex items-center justify-center space-x-8 text-xl print:text-lg drop-shadow-lg mb-8">
             <div className="flex items-center space-x-2">
               <Calendar className="w-6 h-6" />
               <span>
@@ -703,6 +718,22 @@ export default function TravelPreview() {
                 {travel.travelers}{" "}
                 {travel.travelers === 1 ? "viajero" : "viajeros"}
               </span>
+            </div>
+          </div>
+          
+          {/* Información del agente de viajes en la portada */}
+          <div className="bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold mb-3 text-center">Su Agente de Viajes</h3>
+            <div className="text-center space-y-2">
+              <p className="text-sm opacity-90">
+                <strong>Email:</strong> plannealo@gmail.com
+              </p>
+              <p className="text-sm opacity-90">
+                <strong>Teléfono:</strong> +1 (555) 123-4567
+              </p>
+              <p className="text-xs opacity-75 mt-3">
+                Estamos aquí para hacer de tu viaje una experiencia inolvidable
+              </p>
             </div>
           </div>
         </div>
@@ -849,11 +880,49 @@ export default function TravelPreview() {
           </section>
         )}
 
-        {/* Footer para impresión */}
-        <div className="print:block hidden mt-8 border-t border-border pt-4 text-center text-sm text-muted-foreground">
-          <p>Itinerario generado por PLANNEALO - Agencia de Viajes</p>
-          <p>Fecha de generación: {formatDate(new Date())}</p>
-          <p>Powered by - Arten Digital</p>
+        {/* Footer visible en pantalla y para impresión */}
+        <div className="mt-8 border-t-2 border-accent pt-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
+            {/* Logo y información de la agencia */}
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-xl">P</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>
+                <p className="text-sm text-muted-foreground">Agencia de Viajes Profesional</p>
+                <p className="text-xs text-muted-foreground">Especialistas en experiencias únicas</p>
+              </div>
+            </div>
+            
+            {/* Información de contacto */}
+            <div className="text-center lg:text-right">
+              <h4 className="font-semibold text-foreground mb-2">Información de Contacto</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><strong>Email:</strong> plannealo@gmail.com</p>
+                <p><strong>Teléfono:</strong> +1 (555) 123-4567</p>
+                <p><strong>WhatsApp:</strong> +1 (555) 987-6543</p>
+                <p><strong>Web:</strong> www.plannealo.com</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Línea separadora y información adicional */}
+          <div className="mt-6 pt-4 border-t border-border text-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-muted-foreground">
+              <div>
+                <p><strong>Itinerario generado:</strong> {formatDate(new Date())}</p>
+              </div>
+              <div>
+                <p><strong>Licencia:</strong> IATA #12345</p>
+                <p><strong>Registro:</strong> RNT-54321</p>
+              </div>
+              <div>
+                <p>Powered by Arten Digital</p>
+                <p>© 2024 PLANNEALO. Todos los derechos reservados.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
