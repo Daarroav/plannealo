@@ -554,7 +554,7 @@ export default function TravelPreview() {
 
         {/* Itinerario Cronológico */}
         {groupedEvents.length > 0 && (
-          <section className="mb-8 print:mb-6">
+          <section className="mb-8 print:mb-6 print:p-3">
             <h2 className="text-2xl font-bold text-foreground mb-6 print:text-xl flex items-center">
               <Calendar className="w-6 h-6 mr-2 text-accent" />
               Itinerario Cronológico
