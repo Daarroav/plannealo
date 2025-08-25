@@ -1275,7 +1275,7 @@ export default function TravelDetail() {
         onSubmit={createActivityMutation.mutate}
         isLoading={createActivityMutation.isPending}
         travelId={travelId!}
-        initialData={editingActivity}
+        editingActivity={editingActivity}
       />
 
       {/* Flight Form Modal */}
@@ -1288,7 +1288,7 @@ export default function TravelDetail() {
         onSubmit={createFlightMutation.mutate}
         isLoading={createFlightMutation.isPending}
         travelId={travelId!}
-        initialData={editingFlight}
+        editingFlight={editingFlight}
       />
 
       {/* Transport Form Modal */}
@@ -1301,7 +1301,7 @@ export default function TravelDetail() {
         onSubmit={createTransportMutation.mutate}
         isLoading={createTransportMutation.isPending}
         travelId={travelId!}
-        initialData={editingTransport}
+        editingTransport={editingTransport}
       />
 
       {/* Cruise Form Modal */}

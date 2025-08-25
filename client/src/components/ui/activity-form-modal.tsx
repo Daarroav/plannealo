@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,9 +37,10 @@ interface ActivityFormModalProps {
   onSubmit: (data: any) => void;
   isLoading?: boolean;
   travelId: string;
+  editingActivity?: any;
 }
 
-export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId }: ActivityFormModalProps) {
+export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingActivity }: ActivityFormModalProps) {
   const [activityDate, setActivityDate] = useState<Date>();
 
   const form = useForm<ActivityForm>({
@@ -61,6 +62,51 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       notes: "",
     },
   });
+
+  // Pre-llenar formulario cuando se está editando
+  React.useEffect(() => {
+    if (editingActivity) {
+      const activityDateTime = new Date(editingActivity.date);
+      const dateStr = format(activityDateTime, "yyyy-MM-dd");
+      const timeStr = format(activityDateTime, "HH:mm");
+      
+      setActivityDate(activityDateTime);
+      form.reset({
+        travelId,
+        name: editingActivity.name || "",
+        type: editingActivity.type || "",
+        provider: editingActivity.provider || "",
+        activityDate: dateStr,
+        startTime: editingActivity.startTime || timeStr,
+        endTime: editingActivity.endTime || "",
+        confirmationNumber: editingActivity.confirmationNumber || "",
+        contactName: "",
+        contactPhone: "",
+        startLocation: "",
+        endLocation: "",
+        conditions: editingActivity.conditions || "",
+        notes: editingActivity.notes || "",
+      });
+    } else {
+      setActivityDate(undefined);
+      form.reset({
+        travelId,
+        name: "",
+        type: "",
+        provider: "",
+        activityDate: "",
+        startTime: "",
+        endTime: "",
+        confirmationNumber: "",
+        contactName: "",
+        contactPhone: "",
+        startLocation: "",
+        endLocation: "",
+        conditions: "",
+        notes: "",
+      });
+    }
+  }, [editingActivity, form, travelId]);
 
   const handleSubmit = (data: ActivityForm) => {
     // Combine date and time for the activity
@@ -118,7 +164,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Actividad *</Label>
-              <Select onValueChange={(value) => form.setValue("type", value)}>
+              <Select onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>

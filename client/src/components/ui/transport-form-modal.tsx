@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,9 +35,10 @@ interface TransportFormModalProps {
   onSubmit: (data: any) => void;
   isLoading?: boolean;
   travelId: string;
+  editingTransport?: any;
 }
 
-export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, travelId }: TransportFormModalProps) {
+export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingTransport }: TransportFormModalProps) {
   const [pickupDate, setPickupDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
@@ -60,6 +61,53 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       notes: "",
     },
   });
+
+  // Pre-llenar formulario cuando se está editando
+  React.useEffect(() => {
+    if (editingTransport) {
+      const pickupDateTime = new Date(editingTransport.pickupDate);
+      const endDateTime = editingTransport.endDate ? new Date(editingTransport.endDate) : null;
+      
+      setPickupDate(pickupDateTime);
+      setEndDate(endDateTime);
+      
+      form.reset({
+        travelId,
+        type: editingTransport.type || "",
+        name: editingTransport.name || "",
+        provider: editingTransport.provider || "",
+        contactName: editingTransport.contactName || "",
+        contactNumber: editingTransport.contactNumber || "",
+        pickupDateField: format(pickupDateTime, "yyyy-MM-dd"),
+        pickupTimeField: format(pickupDateTime, "HH:mm"),
+        pickupLocation: editingTransport.pickupLocation || "",
+        endDateField: endDateTime ? format(endDateTime, "yyyy-MM-dd") : "",
+        endTimeField: endDateTime ? format(endDateTime, "HH:mm") : "12:00",
+        dropoffLocation: editingTransport.dropoffLocation || "",
+        confirmationNumber: editingTransport.confirmationNumber || "",
+        notes: editingTransport.notes || "",
+      });
+    } else {
+      setPickupDate(undefined);
+      setEndDate(undefined);
+      form.reset({
+        travelId,
+        type: "",
+        name: "",
+        provider: "",
+        contactName: "",
+        contactNumber: "",
+        pickupDateField: "",
+        pickupTimeField: "12:00",
+        pickupLocation: "",
+        endDateField: "",
+        endTimeField: "12:00",
+        dropoffLocation: "",
+        confirmationNumber: "",
+        notes: "",
+      });
+    }
+  }, [editingTransport, form, travelId]);
 
   const handleSubmit = (data: TransportForm) => {
     // Combine date and time for pickup
@@ -124,7 +172,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Transporte *</Label>
-              <Select onValueChange={(value) => form.setValue("type", value)}>
+              <Select onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo de transporte" />
                 </SelectTrigger>

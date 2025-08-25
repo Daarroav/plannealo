@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,9 +34,10 @@ interface FlightFormModalProps {
   onSubmit: (data: any) => void;
   isLoading?: boolean;
   travelId: string;
+  editingFlight?: any;
 }
 
-export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId }: FlightFormModalProps) {
+export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingFlight }: FlightFormModalProps) {
   const [departureDate, setDepartureDate] = useState<Date>();
   const [arrivalDate, setArrivalDate] = useState<Date>();
 
@@ -58,6 +59,51 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       class: "",
     },
   });
+
+  // Pre-llenar formulario cuando se está editando
+  React.useEffect(() => {
+    if (editingFlight) {
+      const depDateTime = new Date(editingFlight.departureDate);
+      const arrDateTime = new Date(editingFlight.arrivalDate);
+      
+      setDepartureDate(depDateTime);
+      setArrivalDate(arrDateTime);
+      
+      form.reset({
+        travelId,
+        airline: editingFlight.airline || "",
+        flightNumber: editingFlight.flightNumber || "",
+        reservationNumber: editingFlight.reservationNumber || "",
+        departureCity: editingFlight.departureCity || "",
+        arrivalCity: editingFlight.arrivalCity || "",
+        departureDateField: format(depDateTime, "yyyy-MM-dd"),
+        departureTimeField: format(depDateTime, "HH:mm"),
+        arrivalDateField: format(arrDateTime, "yyyy-MM-dd"),
+        arrivalTimeField: format(arrDateTime, "HH:mm"),
+        departureTerminal: editingFlight.departureTerminal || "",
+        arrivalTerminal: editingFlight.arrivalTerminal || "",
+        class: editingFlight.class || "",
+      });
+    } else {
+      setDepartureDate(undefined);
+      setArrivalDate(undefined);
+      form.reset({
+        travelId,
+        airline: "",
+        flightNumber: "",
+        reservationNumber: "",
+        departureCity: "",
+        arrivalCity: "",
+        departureDateField: "",
+        departureTimeField: "12:00",
+        arrivalDateField: "",
+        arrivalTimeField: "12:00",
+        departureTerminal: "",
+        arrivalTerminal: "",
+        class: "",
+      });
+    }
+  }, [editingFlight, form, travelId]);
 
   const handleSubmit = (data: FlightForm) => {
     // Combine date and time for departure and arrival
@@ -317,7 +363,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
 
             <div>
               <Label htmlFor="class">Clase de Vuelo *</Label>
-              <Select onValueChange={(value) => form.setValue("class", value)}>
+              <Select onValueChange={(value) => form.setValue("class", value)} value={form.watch("class")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar clase" />
                 </SelectTrigger>
