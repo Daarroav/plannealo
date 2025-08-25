@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -174,7 +174,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   };
 
   // Update form when editing accommodation changes
-  useState(() => {
+  React.useEffect(() => {
     if (editingAccommodation) {
       setCheckInDate(editingAccommodation.checkIn ? new Date(editingAccommodation.checkIn) : undefined);
       setCheckOutDate(editingAccommodation.checkOut ? new Date(editingAccommodation.checkOut) : undefined);
@@ -194,8 +194,27 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         policies: editingAccommodation.policies || "",
         notes: editingAccommodation.notes || "",
       });
+    } else {
+      setCheckInDate(undefined);
+      setCheckOutDate(undefined);
+      form.reset({
+        travelId,
+        name: "",
+        type: "",
+        location: "",
+        checkInDate: "",
+        checkInTime: "15:00",
+        checkOutDate: "",
+        checkOutTime: "11:00",
+        roomType: "",
+        roomCount: 1,
+        price: "",
+        confirmationNumber: "",
+        policies: "",
+        notes: "",
+      });
     }
-  });
+  }, [editingAccommodation, form, travelId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -239,7 +258,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Alojamiento *</Label>
-              <Select onValueChange={(value) => form.setValue("type", value)}>
+              <Select onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>

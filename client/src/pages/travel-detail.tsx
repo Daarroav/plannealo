@@ -1083,14 +1083,14 @@ export default function TravelDetail() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">Crucero</Badge>
-                              <h4 className="font-semibold text-foreground">{cruise.name}</h4>
+                              <h4 className="font-semibold text-foreground">{cruise.cruiseLine}</h4>
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
                                 <span className="font-medium">Naviera:</span> {cruise.cruiseLine}
                               </div>
                               <div>
-                                <span className="font-medium">Barco:</span> {cruise.shipName || "N/A"}
+                                <span className="font-medium">Destino:</span> {cruise.arrivalPort}
                               </div>
                               <div>
                                 <span className="font-medium">Salida:</span> {formatDateTime(cruise.departureDate, true)}
@@ -1158,7 +1158,7 @@ export default function TravelDetail() {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline">{insurance.type}</Badge>
+                              <Badge variant="outline">{insurance.policyType}</Badge>
                               <h4 className="font-semibold text-foreground">{insurance.provider}</h4>
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1166,7 +1166,7 @@ export default function TravelDetail() {
                                 <span className="font-medium">Póliza:</span> {insurance.policyNumber}
                               </div>
                               <div>
-                                <span className="font-medium">Cobertura:</span> {insurance.coverage || "N/A"}
+                                <span className="font-medium">Descripción:</span> {insurance.policyDescription || "N/A"}
                               </div>
                               <div>
                                 <span className="font-medium">Vigencia:</span> {formatDateTime(insurance.effectiveDate, true)}
@@ -1262,7 +1262,7 @@ export default function TravelDetail() {
         onSubmit={createAccommodationMutation.mutate}
         isLoading={createAccommodationMutation.isPending}
         travelId={travelId!}
-        initialData={editingAccommodation}
+        editingAccommodation={editingAccommodation}
       />
 
       {/* Activity Form Modal */}
@@ -1313,7 +1313,6 @@ export default function TravelDetail() {
         }}
         onSubmit={createCruiseMutation.mutate}
         isPending={createCruiseMutation.isPending}
-        initialData={editingCruise}
       />
 
       {/* Insurance Form Modal */}

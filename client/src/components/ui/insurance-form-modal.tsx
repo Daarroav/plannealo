@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FileText, X } from "lucide-react";
+import { format } from "date-fns";
 import { insertInsuranceSchema } from "@shared/schema";
 
 // Form validation schema - extends the base schema with date string handling
@@ -27,6 +28,7 @@ interface InsuranceFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   isPending?: boolean;
+  initialData?: any;
 }
 
 const POLICY_TYPES = [
@@ -44,7 +46,8 @@ export function InsuranceFormModal({
   open, 
   onOpenChange, 
   onSubmit, 
-  isPending = false 
+  isPending = false,
+  initialData
 }: InsuranceFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
 
@@ -63,6 +66,44 @@ export function InsuranceFormModal({
       attachments: [],
     },
   });
+
+  // Pre-llenar formulario cuando se está editando
+  React.useEffect(() => {
+    if (initialData) {
+      const effectiveDateTime = new Date(initialData.effectiveDate);
+      const dateStr = format(effectiveDateTime, "yyyy-MM-dd");
+      const timeStr = format(effectiveDateTime, "HH:mm");
+      
+      form.reset({
+        provider: initialData.provider || "",
+        policyNumber: initialData.policyNumber || "",
+        policyType: initialData.policyType || "",
+        emergencyNumber: initialData.emergencyNumber || "",
+        effectiveDate: dateStr,
+        effectiveTime: timeStr,
+        importantInfo: initialData.importantInfo || "",
+        policyDescription: initialData.policyDescription || "",
+        notes: initialData.notes || "",
+        attachments: initialData.attachments || [],
+      });
+      
+      setAttachedFiles(initialData.attachments || []);
+    } else {
+      form.reset({
+        provider: "",
+        policyNumber: "",
+        policyType: "",
+        emergencyNumber: "",
+        effectiveDate: "",
+        effectiveTime: "",
+        importantInfo: "",
+        policyDescription: "",
+        notes: "",
+        attachments: [],
+      });
+      setAttachedFiles([]);
+    }
+  }, [initialData, form]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -116,9 +157,9 @@ export function InsuranceFormModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar Notas de Seguro</DialogTitle>
+          <DialogTitle>{initialData ? "Editar Seguro" : "Agregar Seguro"}</DialogTitle>
           <DialogDescription>
-            Agrega información de seguro de viaje al itinerario
+            {initialData ? "Modifica la información del seguro de viaje" : "Agrega información de seguro de viaje al itinerario"}
           </DialogDescription>
         </DialogHeader>
         
@@ -156,7 +197,7 @@ export function InsuranceFormModal({
               {/* Tipo de Política */}
               <div className="space-y-2">
                 <Label htmlFor="policyType">Tipo de Política *</Label>
-                <Select onValueChange={(value) => form.setValue("policyType", value)}>
+                <Select onValueChange={(value) => form.setValue("policyType", value)} value={form.watch("policyType")}>
                   <SelectTrigger className={form.formState.errors.policyType ? "border-red-500" : ""}>
                     <SelectValue placeholder="Selecciona el tipo de seguro" />
                   </SelectTrigger>
