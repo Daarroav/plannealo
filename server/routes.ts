@@ -537,12 +537,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const noteData = insertNoteSchema.parse(req.body);
-      const note = await storage.updateNote(req.params.noteId, noteData);
+      const updateData = { ...req.body };
+      
+      // Convert date if provided
+      if (updateData.noteDate) {
+        updateData.noteDate = new Date(updateData.noteDate);
+      }
+
+      // Remove undefined values to avoid "No values to set" error
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined || updateData[key] === null) {
+          delete updateData[key];
+        }
+      });
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No data provided for update" });
+      }
+
+      const note = await storage.updateNote(req.params.noteId, updateData);
       res.json(note);
     } catch (error) {
       console.error("Error updating note:", error);
-      res.status(400).json({ error: "Error updating note" });
+      res.status(400).json({ message: "Error updating note" });
     }
   });
 
