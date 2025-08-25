@@ -157,7 +157,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
 
+      console.log("Request body:", req.body);
       console.log("Thumbnail:", thumbnail);
+      console.log("Travel ID:", req.params.travelId);
+      
+      // Validate that required fields are present
+      if (!req.body.name || !req.body.type || !req.body.location || !req.body.checkIn || !req.body.checkOut || !req.body.roomType) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          received: Object.keys(req.body),
+          missing: {
+            name: !req.body.name,
+            type: !req.body.type,
+            location: !req.body.location,
+            checkIn: !req.body.checkIn,
+            checkOut: !req.body.checkOut,
+            roomType: !req.body.roomType
+          }
+        });
+      }
+      
       const validated = insertAccommodationSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
