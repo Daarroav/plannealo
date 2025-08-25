@@ -177,7 +177,23 @@ export default function TravelDetail() {
         const response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
         return await response.json();
       } else {
-        const response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
+        // Handle FormData for file uploads
+        let response;
+        if (data instanceof FormData) {
+          response = await fetch(`/api/travels/${travelId}/accommodations`, {
+            method: "POST",
+            credentials: "include",
+            body: data,
+          });
+        } else {
+          response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Error creating accommodation");
+        }
+        
         return await response.json();
       }
     },
