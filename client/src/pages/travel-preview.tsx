@@ -398,7 +398,7 @@ export default function TravelPreview() {
           </section>
         )}
 
-        {/* Notas visibles para viajeros */}
+        {/* Notas visibles para viajeros ordenadas cronológicamente */}
         {notes.filter(note => note.visibleToTravelers).length > 0 && (
           <section className="mb-8 print:mb-6">
             <h2 className="text-2xl font-bold text-foreground mb-4 print:text-xl flex items-center">
@@ -406,7 +406,10 @@ export default function TravelPreview() {
               Notas Importantes
             </h2>
             <div className="grid gap-4">
-              {notes.filter(note => note.visibleToTravelers).map((note) => (
+              {notes
+                .filter(note => note.visibleToTravelers)
+                .sort((a, b) => new Date(a.noteDate).getTime() - new Date(b.noteDate).getTime())
+                .map((note) => (
                 <Card key={note.id}>
                   <CardContent className="p-4">
                     <h3 className="text-lg font-semibold mb-2">{note.title}</h3>
