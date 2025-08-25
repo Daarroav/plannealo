@@ -361,13 +361,50 @@ export default function TravelPreview() {
         </Button>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-4xl mx-auto p-6 print:p-0 print:max-w-none">
-        {/* Encabezado del viaje */}
-        <div className="text-center mb-8 print:mb-6">
-          <h1 className="text-4xl font-bold text-foreground mb-4 print:text-3xl">
+      {/* Portada con imagen de fondo */}
+      <div 
+        className="cover-page relative w-full h-screen print:h-[11in] print:w-[8.5in] flex items-center justify-center text-center print:page-break-after-always overflow-hidden"
+        style={{
+          backgroundImage: travel.thumbnail ? `url(/api/objects/${travel.thumbnail})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay oscuro para mejorar legibilidad del texto */}
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        
+        {/* Contenido de la portada */}
+        <div className="relative z-10 text-white px-8 max-w-4xl mx-auto">
+          <h1 className="text-6xl font-bold mb-8 print:text-5xl drop-shadow-2xl">
             {travel.name}
           </h1>
+          <h2 className="text-3xl font-light mb-6 print:text-2xl drop-shadow-xl">
+            {travel.clientName}
+          </h2>
+          <div className="flex items-center justify-center space-x-8 text-xl print:text-lg drop-shadow-lg">
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-6 h-6" />
+              <span>{formatDate(travel.startDate)} - {formatDate(travel.endDate)}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Users className="w-6 h-6" />
+              <span>{travel.travelers} {travel.travelers === 1 ? 'viajero' : 'viajeros'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contenido principal - Itinerario en páginas siguientes */}
+      <div className="max-w-4xl mx-auto p-6 print:p-0 print:max-w-none print:pt-8">
+        {/* Encabezado del itinerario en páginas siguientes */}
+        <div className="text-center mb-8 print:mb-6 print:mt-0">
+          <h1 className="text-4xl font-bold text-foreground mb-4 print:text-3xl">
+            Itinerario Detallado
+          </h1>
+          <h2 className="text-2xl text-muted-foreground mb-4 print:text-xl">
+            {travel.name}
+          </h2>
           <div className="flex items-center justify-center space-x-6 text-muted-foreground mb-4">
             <div className="flex items-center space-x-1">
               <Calendar className="w-4 h-4" />
