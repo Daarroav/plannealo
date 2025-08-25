@@ -680,7 +680,7 @@ export default function TravelDetail() {
           </div>
           <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden bg-muted">
             <img
-              src={travel.coverImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400"}
+              src={travel.coverImage ? (travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400"}
               alt={`Portada de ${travel.name}`}
               className="w-full h-full object-cover"
               onError={(e) => {

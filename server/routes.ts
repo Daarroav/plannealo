@@ -180,11 +180,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const accommodation = await storage.updateAccommodation(req.params.id, {
-        ...req.body,
-        checkIn: req.body.checkIn ? new Date(req.body.checkIn) : undefined,
-        checkOut: req.body.checkOut ? new Date(req.body.checkOut) : undefined,
+      const updateData = { ...req.body };
+      
+      // Convert dates if provided
+      if (updateData.checkIn) {
+        updateData.checkIn = new Date(updateData.checkIn);
+      }
+      if (updateData.checkOut) {
+        updateData.checkOut = new Date(updateData.checkOut);
+      }
+
+      // Remove undefined values to avoid "No values to set" error
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined || updateData[key] === null) {
+          delete updateData[key];
+        }
       });
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No data provided for update" });
+      }
+
+      const accommodation = await storage.updateAccommodation(req.params.id, updateData);
       res.json(accommodation);
     } catch (error) {
       console.error("Error updating accommodation:", error);
@@ -958,6 +975,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting upload URL:", error);
       res.status(500).json({ error: "Error getting upload URL" });
+    }
+  });
+
+  // Serve object storage files
+  app.get("/api/objects/*", async (req, res) => {
+    try {
+      const objectPath = req.path.replace("/api", "");
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+      
+      // Check if user can access this object
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        userId: req.user?.id,
+        objectFile,
+      });
+
+      if (!canAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      await objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      if (error.name === "ObjectNotFoundError") {
+        return res.status(404).json({ error: "Object not found" });
+      }
+      console.error("Error serving object:", error);
+      res.status(500).json({ error: "Error serving object" });
     }
   });
 
