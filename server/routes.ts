@@ -244,6 +244,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/flights/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const flight = await storage.updateFlight(req.params.id, {
+        ...req.body,
+        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : undefined,
+        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : undefined,
+      });
+      res.json(flight);
+    } catch (error) {
+      console.error("Error updating flight:", error);
+      res.status(400).json({ message: "Error updating flight" });
+    }
+  });
+
+  app.put("/api/transports/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const transport = await storage.updateTransport(req.params.id, {
+        ...req.body,
+        pickupDate: req.body.pickupDate ? new Date(req.body.pickupDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+      });
+      res.json(transport);
+    } catch (error) {
+      console.error("Error updating transport:", error);
+      res.status(400).json({ message: "Error updating transport" });
+    }
+  });
+
+  app.put("/api/cruises/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const cruise = await storage.updateCruise(req.params.id, {
+        ...req.body,
+        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : undefined,
+        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : undefined,
+      });
+      res.json(cruise);
+    } catch (error) {
+      console.error("Error updating cruise:", error);
+      res.status(400).json({ message: "Error updating cruise" });
+    }
+  });
+
+  app.put("/api/insurances/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const insurance = await storage.updateInsurance(req.params.id, {
+        ...req.body,
+        effectiveDate: req.body.effectiveDate ? new Date(req.body.effectiveDate) : undefined,
+      });
+      res.json(insurance);
+    } catch (error) {
+      console.error("Error updating insurance:", error);
+      res.status(400).json({ message: "Error updating insurance" });
+    }
+  });
+
   // Flight routes
   app.get("/api/travels/:travelId/flights", async (req, res) => {
     if (!req.isAuthenticated()) {

@@ -34,6 +34,12 @@ export default function TravelDetail() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
+  const [editingTransport, setEditingTransport] = useState<Transport | null>(null);
+  const [editingCruise, setEditingCruise] = useState<Cruise | null>(null);
+  const [editingInsurance, setEditingInsurance] = useState<Insurance | null>(null);
   const { toast } = useToast();
 
   const travelId = params?.id;
@@ -164,24 +170,24 @@ export default function TravelDetail() {
       updateCoverImageMutation.mutate(uploadURL);
     }
   };
+
   const createAccommodationMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch(`/api/travels/${travelId}/accommodations`, {
-        method: 'POST',
-        body: formData,
-        // No establezcas el header 'Content-Type', déjalo que el navegador lo maneje
-      });
-      if (!response.ok) {
-        throw new Error('Error al guardar el alojamiento');
+    mutationFn: async (data: any) => {
+      if (editingAccommodation) {
+        const response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
+        return await response.json();
       }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
       setShowAccommodationModal(false);
+      setEditingAccommodation(null);
       toast({
-        title: "Alojamiento agregado",
-        description: "El alojamiento ha sido agregado exitosamente al viaje.",
+        title: editingAccommodation ? "Alojamiento actualizado" : "Alojamiento agregado",
+        description: editingAccommodation ? "El alojamiento ha sido actualizado exitosamente." : "El alojamiento ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -195,15 +201,21 @@ export default function TravelDetail() {
 
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/travels/${travelId}/activities`, data);
-      return await response.json();
+      if (editingActivity) {
+        const response = await apiRequest("PUT", `/api/activities/${editingActivity.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/activities`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "activities"] });
       setShowActivityModal(false);
+      setEditingActivity(null);
       toast({
-        title: "Actividad agregada",
-        description: "La actividad ha sido agregada exitosamente al viaje.",
+        title: editingActivity ? "Actividad actualizada" : "Actividad agregada",
+        description: editingActivity ? "La actividad ha sido actualizada exitosamente." : "La actividad ha sido agregada exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -217,15 +229,21 @@ export default function TravelDetail() {
 
   const createFlightMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/travels/${travelId}/flights`, data);
-      return await response.json();
+      if (editingFlight) {
+        const response = await apiRequest("PUT", `/api/flights/${editingFlight.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/flights`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
       setShowFlightModal(false);
+      setEditingFlight(null);
       toast({
-        title: "Vuelo agregado",
-        description: "El vuelo ha sido agregado exitosamente al viaje.",
+        title: editingFlight ? "Vuelo actualizado" : "Vuelo agregado",
+        description: editingFlight ? "El vuelo ha sido actualizado exitosamente." : "El vuelo ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -239,15 +257,21 @@ export default function TravelDetail() {
 
   const createTransportMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/travels/${travelId}/transports`, data);
-      return await response.json();
+      if (editingTransport) {
+        const response = await apiRequest("PUT", `/api/transports/${editingTransport.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/transports`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
       setShowTransportModal(false);
+      setEditingTransport(null);
       toast({
-        title: "Transporte agregado",
-        description: "El transporte ha sido agregado exitosamente al viaje.",
+        title: editingTransport ? "Transporte actualizado" : "Transporte agregado",
+        description: editingTransport ? "El transporte ha sido actualizado exitosamente." : "El transporte ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -261,16 +285,21 @@ export default function TravelDetail() {
 
   const createCruiseMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending cruise data:", data);
-      const response = await apiRequest("POST", `/api/travels/${travelId}/cruises`, data);
-      return await response.json();
+      if (editingCruise) {
+        const response = await apiRequest("PUT", `/api/cruises/${editingCruise.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/cruises`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "cruises"] });
       setShowCruiseModal(false);
+      setEditingCruise(null);
       toast({
-        title: "Crucero agregado",
-        description: "El crucero ha sido agregado exitosamente al viaje.",
+        title: editingCruise ? "Crucero actualizado" : "Crucero agregado",
+        description: editingCruise ? "El crucero ha sido actualizado exitosamente." : "El crucero ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -284,16 +313,21 @@ export default function TravelDetail() {
 
   const createInsuranceMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending insurance data:", data);
-      const response = await apiRequest("POST", `/api/travels/${travelId}/insurances`, data);
-      return await response.json();
+      if (editingInsurance) {
+        const response = await apiRequest("PUT", `/api/insurances/${editingInsurance.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/insurances`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "insurances"] });
       setShowInsuranceModal(false);
+      setEditingInsurance(null);
       toast({
-        title: "Seguro agregado",
-        description: "Las notas del seguro han sido agregadas exitosamente al viaje.",
+        title: editingInsurance ? "Seguro actualizado" : "Seguro agregado",
+        description: editingInsurance ? "El seguro ha sido actualizado exitosamente." : "El seguro ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -307,21 +341,13 @@ export default function TravelDetail() {
 
   const createNoteMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending note data:", data);
-      const isEditing = data.id;
-      const method = isEditing ? "PUT" : "POST";
-      const url = isEditing 
-        ? `/api/travels/${travelId}/notes/${data.id}`
-        : `/api/travels/${travelId}/notes`;
-      
-      // Ensure travelId is included in the data
-      const noteData = {
-        ...data,
-        travelId: travelId
-      };
-      
-      const response = await apiRequest(method, url, noteData);
-      return await response.json();
+      if (editingNote) {
+        const response = await apiRequest("PUT", `/api/travels/${travelId}/notes/${editingNote.id}`, data);
+        return await response.json();
+      } else {
+        const response = await apiRequest("POST", `/api/travels/${travelId}/notes`, data);
+        return await response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "notes"] });
@@ -329,9 +355,7 @@ export default function TravelDetail() {
       setEditingNote(null);
       toast({
         title: editingNote ? "Nota actualizada" : "Nota agregada",
-        description: editingNote 
-          ? "La nota ha sido actualizada exitosamente."
-          : "La nota ha sido agregada exitosamente al viaje.",
+        description: editingNote ? "La nota ha sido actualizada exitosamente." : "La nota ha sido agregada exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -342,6 +366,145 @@ export default function TravelDetail() {
       });
     },
   });
+
+  const updateAccommodationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
+      setShowAccommodationModal(false);
+      setEditingAccommodation(null);
+      toast({
+        title: "Alojamiento actualizado",
+        description: "El alojamiento ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateActivityMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/activities/${editingActivity!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "activities"] });
+      setShowActivityModal(false);
+      setEditingActivity(null);
+      toast({
+        title: "Actividad actualizada",
+        description: "La actividad ha sido actualizada exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateFlightMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/flights/${editingFlight!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
+      setShowFlightModal(false);
+      setEditingFlight(null);
+      toast({
+        title: "Vuelo actualizado",
+        description: "El vuelo ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateTransportMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/transports/${editingTransport!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
+      setShowTransportModal(false);
+      setEditingTransport(null);
+      toast({
+        title: "Transporte actualizado",
+        description: "El transporte ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateCruiseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/cruises/${editingCruise!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "cruises"] });
+      setShowCruiseModal(false);
+      setEditingCruise(null);
+      toast({
+        title: "Crucero actualizado",
+        description: "El crucero ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateInsuranceMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PUT", `/api/insurances/${editingInsurance!.id}`, data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "insurances"] });
+      setShowInsuranceModal(false);
+      setEditingInsurance(null);
+      toast({
+        title: "Seguro actualizado",
+        description: "El seguro ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
 
   const formatDateTime = (date: Date | string | null, includeTime = false) => {
     if (!date) return "";
@@ -354,15 +517,33 @@ export default function TravelDetail() {
 
   // Handlers for editing
   const handleEditAccommodation = (accommodation: Accommodation) => {
-    // Logic to open modal and pre-fill form with accommodation data
-    console.log("Editing accommodation:", accommodation);
-    // For now, just logging. In a real app, you'd open a modal and set state for editing.
+    setEditingAccommodation(accommodation);
+    setShowAccommodationModal(true);
   };
 
   const handleEditActivity = (activity: Activity) => {
-    // Logic to open modal and pre-fill form with activity data
-    console.log("Editing activity:", activity);
-    // For now, just logging. In a real app, you'd open a modal and set state for editing.
+    setEditingActivity(activity);
+    setShowActivityModal(true);
+  };
+
+  const handleEditFlight = (flight: Flight) => {
+    setEditingFlight(flight);
+    setShowFlightModal(true);
+  };
+
+  const handleEditTransport = (transport: Transport) => {
+    setEditingTransport(transport);
+    setShowTransportModal(true);
+  };
+
+  const handleEditCruise = (cruise: Cruise) => {
+    setEditingCruise(cruise);
+    setShowCruiseModal(true);
+  };
+
+  const handleEditInsurance = (insurance: Insurance) => {
+    setEditingInsurance(insurance);
+    setShowInsuranceModal(true);
   };
 
   const handleEditNote = (note: Note) => {
@@ -555,7 +736,10 @@ export default function TravelDetail() {
                   <h2 className="text-2xl font-bold text-foreground">Alojamientos</h2>
                   <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowAccommodationModal(true)}
+                    onClick={() => {
+                      setEditingAccommodation(null);
+                      setShowAccommodationModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Alojamiento
@@ -571,7 +755,10 @@ export default function TravelDetail() {
                         <p className="text-muted-foreground mb-6">Agrega el primer alojamiento para este viaje</p>
                         <Button
                           className="bg-accent hover:bg-accent/90"
-                          onClick={() => setShowAccommodationModal(true)}
+                          onClick={() => {
+                            setEditingAccommodation(null);
+                            setShowAccommodationModal(true);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Alojamiento
@@ -580,66 +767,40 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     accommodations.map((accommodation) => (
-                      <Card key={accommodation.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                                <Bed className="w-6 h-6 text-muted-foreground" />
+                      <Card key={accommodation.id} className="p-4 border-l-4 border-l-blue-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">{accommodation.type}</Badge>
+                              <h4 className="font-semibold text-foreground">{accommodation.name}</h4>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{accommodation.location}</p>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Check-in:</span> {formatDateTime(accommodation.checkIn, true)}
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground">{accommodation.name}</h3>
-                                <p className="text-muted-foreground">{accommodation.type}</p>
-                                <p className="text-sm text-muted-foreground">{accommodation.location}</p>
+                                <span className="font-medium">Check-out:</span> {formatDateTime(accommodation.checkOut, true)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Habitación:</span> {accommodation.roomType || "N/A"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Precio:</span> {accommodation.price || "N/A"}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditAccommodation(accommodation)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            {accommodation.notes && (
+                              <p className="text-sm text-muted-foreground mt-2 italic">{accommodation.notes}</p>
+                            )}
                           </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            {/*<div>
-                              <p className="text-sm font-medium text-foreground">Imagen</p>
-                              <img src={accommodation.thumbnail || ""} alt="" />
-                              <p className="text-muted-foreground">{accommodation.thumbnail}</p>
-                            </div>*/}
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Check-in</p>
-                              <p className="text-muted-foreground">{formatDateTime(accommodation.checkIn, true)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Check-out</p>
-                              <p className="text-muted-foreground">{formatDateTime(accommodation.checkOut, true)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Habitación</p>
-                              <p className="text-muted-foreground">{accommodation.roomType}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Precio Total</p>
-                              <p className="font-semibold text-[#040424]">{accommodation.price || "No especificado"}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Confirmación</p>
-                              <p className="text-muted-foreground">{accommodation.confirmationNumber || "Pendiente"}</p>
-                            </div>
-                          </div>
-
-                          {accommodation.notes && (
-                            <div className="border-t border-border pt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Notas Especiales</p>
-                              <p className="text-muted-foreground text-sm">{accommodation.notes}</p>
-                            </div>
-                          )}
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditAccommodation(accommodation)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -654,7 +815,10 @@ export default function TravelDetail() {
                   <h2 className="text-2xl font-bold text-foreground">Actividades y Tours</h2>
                   <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowActivityModal(true)}
+                    onClick={() => {
+                      setEditingActivity(null);
+                      setShowActivityModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Actividad
@@ -670,7 +834,10 @@ export default function TravelDetail() {
                         <p className="text-muted-foreground mb-6">Agrega la primera actividad para este viaje</p>
                         <Button
                           className="bg-accent hover:bg-accent/90"
-                          onClick={() => setShowActivityModal(true)}
+                          onClick={() => {
+                            setEditingActivity(null);
+                            setShowActivityModal(true);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Actividad
@@ -679,54 +846,39 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     activities.map((activity) => (
-                      <Card key={activity.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <MapPin className="w-6 h-6 text-blue-600" />
+                      <Card key={activity.id} className="p-4 border-l-4 border-l-green-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">{activity.type}</Badge>
+                              <h4 className="font-semibold text-foreground">{activity.name}</h4>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Fecha:</span> {formatDateTime(activity.date)}
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground">{activity.name}</h3>
-                                <p className="text-muted-foreground">{activity.type}</p>
-                                {activity.provider && <p className="text-sm text-muted-foreground">Proveedor: {activity.provider}</p>}
+                                <span className="font-medium">Proveedor:</span> {activity.provider || "N/A"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Inicio:</span> {activity.startTime || "N/A"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Fin:</span> {activity.endTime || "N/A"}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditActivity(activity)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            {activity.notes && (
+                              <p className="text-sm text-muted-foreground mt-2 italic">{activity.notes}</p>
+                            )}
                           </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Fecha</p>
-                              <p className="text-muted-foreground">{formatDateTime(activity.date)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Horario</p>
-                              <p className="text-muted-foreground">
-                                {activity.startTime && activity.endTime
-                                  ? `${activity.startTime} - ${activity.endTime}`
-                                  : "No especificado"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Confirmación</p>
-                              <p className="text-muted-foreground">{activity.confirmationNumber || "Pendiente"}</p>
-                            </div>
-                          </div>
-
-                          {activity.conditions && (
-                            <div className="border-t border-border pt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Condiciones</p>
-                              <p className="text-muted-foreground text-sm">{activity.conditions}</p>
-                            </div>
-                          )}
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditActivity(activity)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -739,9 +891,12 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Vuelos</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowFlightModal(true)}
+                    onClick={() => {
+                      setEditingFlight(null);
+                      setShowFlightModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Vuelo
@@ -755,9 +910,12 @@ export default function TravelDetail() {
                         <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay vuelos</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer vuelo para este viaje</p>
-                        <Button 
+                        <Button
                           className="bg-accent hover:bg-accent/90"
-                          onClick={() => setShowFlightModal(true)}
+                          onClick={() => {
+                            setEditingFlight(null);
+                            setShowFlightModal(true);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Vuelo
@@ -766,51 +924,36 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     flights.map((flight) => (
-                      <Card key={flight.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                                <Plane className="w-6 h-6 text-green-600" />
+                      <Card key={flight.id} className="p-4 border-l-4 border-l-purple-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">Vuelo</Badge>
+                              <h4 className="font-semibold text-foreground">{flight.airline} {flight.flightNumber}</h4>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Origen:</span> {flight.departureCity}
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  {flight.departureCity} → {flight.arrivalCity}
-                                </h3>
-                                <p className="text-muted-foreground">{flight.airline}</p>
-                                <p className="text-sm text-muted-foreground">Vuelo {flight.flightNumber}</p>
+                                <span className="font-medium">Destino:</span> {flight.arrivalCity}
+                              </div>
+                              <div>
+                                <span className="font-medium">Salida:</span> {formatDateTime(flight.departureDate, true)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Llegada:</span> {formatDateTime(flight.arrivalDate, true)}
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon">
-                              <Edit className="w-4 h-4" />
-                            </Button>
                           </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Salida</p>
-                              <p className="text-muted-foreground">{formatDateTime(flight.departureDate, true)}</p>
-                              {flight.departureTerminal && (
-                                <p className="text-sm text-muted-foreground">{flight.departureTerminal}</p>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Llegada</p>
-                              <p className="text-muted-foreground">{formatDateTime(flight.arrivalDate, true)}</p>
-                              {flight.arrivalTerminal && (
-                                <p className="text-sm text-muted-foreground">{flight.arrivalTerminal}</p>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Clase</p>
-                              <p className="text-muted-foreground">{flight.class}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Reserva</p>
-                              <p className="text-muted-foreground">{flight.reservationNumber}</p>
-                            </div>
-                          </div>
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditFlight(flight)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -823,9 +966,12 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Transporte Local</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowTransportModal(true)}
+                    onClick={() => {
+                      setEditingTransport(null);
+                      setShowTransportModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Transporte
@@ -839,9 +985,12 @@ export default function TravelDetail() {
                         <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No hay transportes</h3>
                         <p className="text-muted-foreground mb-6">Agrega el primer transporte para este viaje</p>
-                        <Button 
+                        <Button
                           className="bg-accent hover:bg-accent/90"
-                          onClick={() => setShowTransportModal(true)}
+                          onClick={() => {
+                            setEditingTransport(null);
+                            setShowTransportModal(true);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Transporte
@@ -850,56 +999,39 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     transports.map((transport) => (
-                      <Card key={transport.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <Car className="w-6 h-6 text-orange-600" />
+                      <Card key={transport.id} className="p-4 border-l-4 border-l-orange-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">{transport.type}</Badge>
+                              <h4 className="font-semibold text-foreground">{transport.name || transport.type}</h4>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Origen:</span> {transport.pickupLocation}
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground">{transport.name}</h3>
-                                <p className="text-muted-foreground">{transport.type}</p>
-                                {transport.provider && <p className="text-sm text-muted-foreground">{transport.provider}</p>}
+                                <span className="font-medium">Destino:</span> {transport.dropoffLocation || "N/A"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Fecha/Hora:</span> {formatDateTime(transport.pickupDate, true)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Proveedor:</span> {transport.provider || "N/A"}
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Fecha Recogida</p>
-                              <p className="text-muted-foreground">{formatDateTime(transport.pickupDate)}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Fecha Fin</p>
-                              <p className="text-muted-foreground">{transport.endDate ? formatDateTime(transport.endDate) : "No especificado"}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Confirmación</p>
-                              <p className="text-muted-foreground">{transport.confirmationNumber || "Pendiente"}</p>
-                            </div>
-                          </div>
-
-                          <div className="border-t border-border pt-4">
-                            <p className="text-sm font-medium text-foreground mb-2">Lugar de Recogida</p>
-                            <p className="text-muted-foreground text-sm">{transport.pickupLocation}</p>
-                            {transport.dropoffLocation && (
-                              <>
-                                <p className="text-sm font-medium text-foreground mb-2 mt-3">Lugar de Destino</p>
-                                <p className="text-muted-foreground text-sm">{transport.dropoffLocation}</p>
-                              </>
-                            )}
                             {transport.notes && (
-                              <>
-                                <p className="text-sm font-medium text-foreground mb-2 mt-3">Notas</p>
-                                <p className="text-muted-foreground text-sm">{transport.notes}</p>
-                              </>
+                              <p className="text-sm text-muted-foreground mt-2 italic">{transport.notes}</p>
                             )}
                           </div>
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditTransport(transport)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -912,9 +1044,12 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Cruceros</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowCruiseModal(true)}
+                    onClick={() => {
+                      setEditingCruise(null);
+                      setShowCruiseModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Crucero
@@ -932,7 +1067,10 @@ export default function TravelDetail() {
                         <p className="text-muted-foreground mb-6">
                           Agrega información sobre cruceros para este viaje.
                         </p>
-                        <Button onClick={() => setShowCruiseModal(true)}>
+                        <Button onClick={() => {
+                          setEditingCruise(null);
+                          setShowCruiseModal(true);
+                        }}>
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Primer Crucero
                         </Button>
@@ -940,57 +1078,36 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     cruises.map((cruise) => (
-                      <Card key={cruise.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <Ship className="w-6 h-6 text-blue-600" />
-                              </div>
-                              <div>
-                                <h3 className="text-lg font-semibold text-foreground">{cruise.cruiseLine}</h3>
-                                <p className="text-muted-foreground">Crucero</p>
-                                {cruise.confirmationNumber && <p className="text-sm text-muted-foreground">#{cruise.confirmationNumber}</p>}
-                              </div>
+                      <Card key={cruise.id} className="p-4 border-l-4 border-l-cyan-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">Crucero</Badge>
+                              <h4 className="font-semibold text-foreground">{cruise.name}</h4>
                             </div>
-                            <Button variant="ghost" size="icon">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-medium text-foreground">Salida</h4>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
                               <div>
-                                <p className="text-sm text-muted-foreground">Fecha y Hora</p>
-                                <p className="font-medium">{formatDateTime(cruise.departureDate, true)}</p>
+                                <span className="font-medium">Naviera:</span> {cruise.cruiseLine}
                               </div>
                               <div>
-                                <p className="text-sm text-muted-foreground">Puerto</p>
-                                <p className="font-medium">{cruise.departurePort}</p>
-                              </div>
-                            </div>
-
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-medium text-foreground">Llegada</h4>
-                              <div>
-                                <p className="text-sm text-muted-foreground">Fecha y Hora</p>
-                                <p className="font-medium">{formatDateTime(cruise.arrivalDate, true)}</p>
+                                <span className="font-medium">Barco:</span> {cruise.shipName || "N/A"}
                               </div>
                               <div>
-                                <p className="text-sm text-muted-foreground">Puerto</p>
-                                <p className="font-medium">{cruise.arrivalPort}</p>
+                                <span className="font-medium">Salida:</span> {formatDateTime(cruise.departureDate, true)}
+                              </div>
+                              <div>
+                                <span className="font-medium">Regreso:</span> {formatDateTime(cruise.arrivalDate, true)}
                               </div>
                             </div>
                           </div>
-
-                          {cruise.notes && (
-                            <div className="border-t border-border pt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Notas</p>
-                              <p className="text-muted-foreground text-sm">{cruise.notes}</p>
-                            </div>
-                          )}
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditCruise(cruise)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -1003,9 +1120,12 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Seguro de Asistencia</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
-                    onClick={() => setShowInsuranceModal(true)}
+                    onClick={() => {
+                      setEditingInsurance(null);
+                      setShowInsuranceModal(true);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Seguro
@@ -1023,7 +1143,10 @@ export default function TravelDetail() {
                         <p className="text-muted-foreground mb-6">
                           Agrega información sobre los seguros de viaje.
                         </p>
-                        <Button onClick={() => setShowInsuranceModal(true)}>
+                        <Button onClick={() => {
+                          setEditingInsurance(null);
+                          setShowInsuranceModal(true);
+                        }}>
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar Primer Seguro
                         </Button>
@@ -1031,75 +1154,33 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     insurances.map((insurance) => (
-                      <Card key={insurance.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                                <Shield className="w-6 h-6 text-green-600" />
+                      <Card key={insurance.id} className="p-4 border-l-4 border-l-red-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">{insurance.type}</Badge>
+                              <h4 className="font-semibold text-foreground">{insurance.provider}</h4>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div>
+                                <span className="font-medium">Póliza:</span> {insurance.policyNumber}
                               </div>
                               <div>
-                                <h3 className="text-lg font-semibold text-foreground">{insurance.provider}</h3>
-                                <p className="text-muted-foreground">{insurance.policyType}</p>
-                                <p className="text-sm text-muted-foreground">#{insurance.policyNumber}</p>
+                                <span className="font-medium">Cobertura:</span> {insurance.coverage || "N/A"}
                               </div>
-                            </div>
-                            <Button variant="ghost" size="icon">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                              <p className="text-sm font-medium text-foreground">Vigencia</p>
-                              <p className="text-muted-foreground">{formatDateTime(insurance.effectiveDate, true)}</p>
-                            </div>
-                            {insurance.emergencyNumber && (
                               <div>
-                                <p className="text-sm font-medium text-foreground">Número de Emergencia</p>
-                                <p className="text-muted-foreground">{insurance.emergencyNumber}</p>
+                                <span className="font-medium">Vigencia:</span> {formatDateTime(insurance.effectiveDate, true)}
                               </div>
-                            )}
+                            </div>
                           </div>
-
-                          {(insurance.importantInfo || insurance.policyDescription) && (
-                            <div className="border-t border-border pt-4 space-y-3">
-                              {insurance.importantInfo && (
-                                <div>
-                                  <p className="text-sm font-medium text-foreground">Información Importante</p>
-                                  <p className="text-muted-foreground text-sm">{insurance.importantInfo}</p>
-                                </div>
-                              )}
-                              {insurance.policyDescription && (
-                                <div>
-                                  <p className="text-sm font-medium text-foreground">Descripción de la Política</p>
-                                  <p className="text-muted-foreground text-sm">{insurance.policyDescription}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {insurance.attachments && insurance.attachments.length > 0 && (
-                            <div className="border-t border-border pt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Archivos Adjuntos</p>
-                              <div className="space-y-1">
-                                {insurance.attachments.map((fileName, index) => (
-                                  <div key={index} className="flex items-center space-x-2 text-sm">
-                                    <FileText className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-muted-foreground">{fileName}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {insurance.notes && (
-                            <div className="border-t border-border pt-4 mt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Notas</p>
-                              <p className="text-muted-foreground text-sm">{insurance.notes}</p>
-                            </div>
-                          )}
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditInsurance(insurance)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -1112,7 +1193,7 @@ export default function TravelDetail() {
               <section className="mb-12">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-foreground">Notas</h2>
-                  <Button 
+                  <Button
                     className="bg-accent hover:bg-accent/90"
                     onClick={handleAddNote}
                   >
@@ -1140,66 +1221,28 @@ export default function TravelDetail() {
                     </Card>
                   ) : (
                     notes.map((note) => (
-                      <Card key={note.id}>
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center">
-                                <StickyNote className="w-6 h-6 text-yellow-600" />
-                              </div>
-                              <div className="flex-1">
-                                <h3 className="text-lg font-semibold text-foreground">{note.title}</h3>
-                                <p className="text-muted-foreground">{formatDateTime(note.noteDate)}</p>
-
-                                {/* Indicador de visibilidad */}
-                                <div className="flex items-center space-x-2 mt-2">
-                                  {note.visibleToTravelers ? (
-                                    <>
-                                      <Eye className="w-4 h-4 text-green-600" />
-                                      <span className="text-sm font-medium text-green-600">
-                                        Visible para viajeros
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <EyeOff className="w-4 h-4 text-gray-600" />
-                                      <span className="text-sm font-medium text-gray-600">
-                                        Solo para agentes
-                                      </span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
+                      <Card key={note.id} className="p-4 border-l-4 border-l-gray-500">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={note.visibleToTravelers ? "default" : "secondary"}>
+                                {note.visibleToTravelers ? "Visible" : "Interno"}
+                              </Badge>
+                              <h4 className="font-semibold text-foreground">{note.title}</h4>
                             </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleEditNote(note)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Fecha: {formatDateTime(note.noteDate)}
+                            </p>
+                            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                           </div>
-
-                          {/* Contenido de la nota */}
-                          <div className="mt-4 p-4 bg-muted/20 rounded-lg border-l-4 border-accent">
-                            <p className="text-foreground whitespace-pre-wrap">{note.content}</p>
-                          </div>
-
-                          {/* Documentos adjuntos */}
-                          {note.attachments && note.attachments.length > 0 && (
-                            <div className="mt-4 border-t border-border pt-4">
-                              <p className="text-sm font-medium text-foreground mb-2">Documentos Adjuntos</p>
-                              <div className="space-y-1">
-                                {note.attachments.map((fileName, index) => (
-                                  <div key={index} className="flex items-center space-x-2 text-sm">
-                                    <FileText className="w-4 h-4 text-muted-foreground" />
-                                    <span className="text-muted-foreground">{fileName}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditNote(note)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </Card>
                     ))
                   )}
@@ -1212,53 +1255,77 @@ export default function TravelDetail() {
       {/* Accommodation Form Modal */}
       <AccommodationFormModal
         isOpen={showAccommodationModal}
-        onClose={() => setShowAccommodationModal(false)}
+        onClose={() => {
+          setShowAccommodationModal(false);
+          setEditingAccommodation(null);
+        }}
         onSubmit={createAccommodationMutation.mutate}
         isLoading={createAccommodationMutation.isPending}
         travelId={travelId!}
+        initialData={editingAccommodation}
       />
 
       {/* Activity Form Modal */}
       <ActivityFormModal
         isOpen={showActivityModal}
-        onClose={() => setShowActivityModal(false)}
+        onClose={() => {
+          setShowActivityModal(false);
+          setEditingActivity(null);
+        }}
         onSubmit={createActivityMutation.mutate}
         isLoading={createActivityMutation.isPending}
         travelId={travelId!}
+        initialData={editingActivity}
       />
 
       {/* Flight Form Modal */}
       <FlightFormModal
         isOpen={showFlightModal}
-        onClose={() => setShowFlightModal(false)}
+        onClose={() => {
+          setShowFlightModal(false);
+          setEditingFlight(null);
+        }}
         onSubmit={createFlightMutation.mutate}
         isLoading={createFlightMutation.isPending}
         travelId={travelId!}
+        initialData={editingFlight}
       />
 
       {/* Transport Form Modal */}
       <TransportFormModal
         isOpen={showTransportModal}
-        onClose={() => setShowTransportModal(false)}
+        onClose={() => {
+          setShowTransportModal(false);
+          setEditingTransport(null);
+        }}
         onSubmit={createTransportMutation.mutate}
         isLoading={createTransportMutation.isPending}
         travelId={travelId!}
+        initialData={editingTransport}
       />
 
       {/* Cruise Form Modal */}
       <CruiseFormModal
         open={showCruiseModal}
-        onOpenChange={setShowCruiseModal}
+        onOpenChange={(open) => {
+          setShowCruiseModal(open);
+          if (!open) setEditingCruise(null);
+        }}
         onSubmit={createCruiseMutation.mutate}
         isPending={createCruiseMutation.isPending}
+        initialData={editingCruise}
       />
 
       {/* Insurance Form Modal */}
       <InsuranceFormModal
         open={showInsuranceModal}
-        onOpenChange={setShowInsuranceModal}
+        onOpenChange={(open) => {
+          setShowInsuranceModal(open);
+          if (!open) setEditingInsurance(null);
+        }}
         onSubmit={createInsuranceMutation.mutate}
         isPending={createInsuranceMutation.isPending}
+        initialData={editingInsurance}
       />
 
       {/* Note Form Modal */}
