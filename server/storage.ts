@@ -47,6 +47,7 @@ export interface IStorage {
   getTravelsByUser(userId: string): Promise<Travel[]>;
   getTravels(): Promise<Travel[]>;
   getTravel(id: string): Promise<Travel | undefined>;
+  getTravelByPublicToken(token: string): Promise<Travel | undefined>;
   updateTravel(id: string, travel: Partial<Travel>): Promise<Travel>;
   deleteTravel(id: string): Promise<void>;
 
@@ -145,6 +146,11 @@ export class DatabaseStorage implements IStorage {
 
   async getTravel(id: string): Promise<Travel | undefined> {
     const [travel] = await db.select().from(travels).where(eq(travels.id, id));
+    return travel || undefined;
+  }
+
+  async getTravelByPublicToken(token: string): Promise<Travel | undefined> {
+    const [travel] = await db.select().from(travels).where(eq(travels.publicToken, token));
     return travel || undefined;
   }
 

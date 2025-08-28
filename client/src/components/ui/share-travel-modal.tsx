@@ -12,9 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const shareFormSchema = z.object({
-  clientEmail: z.string().email("Debe ser un email válido"),
+  recipientEmail: z.string().email("Debe ser un email válido"),
   clientName: z.string().min(1, "El nombre del cliente es requerido"),
-  message: z.string().optional(),
 });
 
 type ShareFormData = z.infer<typeof shareFormSchema>;
@@ -40,9 +39,8 @@ export function ShareTravelModal({
   const form = useForm<ShareFormData>({
     resolver: zodResolver(shareFormSchema),
     defaultValues: {
-      clientEmail: "",
+      recipientEmail: "",
       clientName: "",
-      message: "",
     },
   });
 
@@ -50,32 +48,33 @@ export function ShareTravelModal({
     try {
       setIsSendingEmail(true);
       
-      const response = await fetch(`/api/travels/${travelId}/share/email`, {
+      const response = await fetch(`/api/travels/${travelId}/share`, {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clientEmail: data.clientEmail,
+          recipientEmail: data.recipientEmail,
           clientName: data.clientName,
-          message: data.message,
         }),
       });
 
       if (response.ok) {
+        const result = await response.json();
         toast({
           title: "¡Itinerario enviado!",
-          description: `El itinerario ha sido enviado a ${data.clientEmail}`,
+          description: `El itinerario ha sido enviado a ${data.recipientEmail} con acceso hasta ${new Date(result.tokenExpiry).toLocaleDateString('es-ES')}`,
         });
         form.reset();
         onOpenChange(false);
       } else {
-        throw new Error("Error al enviar el correo");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al enviar el correo");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Por el momento el envío de correo no está configurado. Usa la opción de descarga PDF.",
+        description: error.message || "Error al enviar el itinerario por correo electrónico.",
         variant: "destructive",
       });
     } finally {
@@ -164,28 +163,26 @@ export function ShareTravelModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="clientEmail">Correo Electrónico</Label>
+                <Label htmlFor="recipientEmail">Correo Electrónico</Label>
                 <Input
-                  id="clientEmail"
+                  id="recipientEmail"
                   type="email"
-                  {...form.register("clientEmail")}
+                  {...form.register("recipientEmail")}
                   placeholder="cliente@ejemplo.com"
                 />
-                {form.formState.errors.clientEmail && (
+                {form.formState.errors.recipientEmail && (
                   <p className="text-sm text-red-500">
-                    {form.formState.errors.clientEmail.message}
+                    {form.formState.errors.recipientEmail.message}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">Mensaje Personalizado (Opcional)</Label>
-                <Textarea
-                  id="message"
-                  {...form.register("message")}
-                  placeholder="Mensaje personalizado para el cliente..."
-                  rows={3}
-                />
+              <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border">
+                <h4 className="font-medium text-sm text-blue-800 dark:text-blue-200">📧 Información del envío</h4>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  El cliente recibirá un correo con un enlace seguro para ver el itinerario. 
+                  El enlace será válido por 30 días y no requiere crear una cuenta.
+                </p>
               </div>
             </div>
 

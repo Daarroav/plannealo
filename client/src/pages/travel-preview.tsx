@@ -34,9 +34,24 @@ interface TravelData {
 
 export default function TravelPreview() {
   const { id } = useParams<{ id: string }>();
+  
+  // Obtener el token de los query parameters si existe
+  const searchParams = new URLSearchParams(window.location.search);
+  const publicToken = searchParams.get('token');
 
   const { data, isLoading, error } = useQuery<TravelData>({
-    queryKey: ["/api/travels", id, "full"],
+    queryKey: ["/api/travels", id, "full", publicToken],
+    queryFn: async () => {
+      const url = new URL(`/api/travels/${id}/full`, window.location.origin);
+      if (publicToken) {
+        url.searchParams.set('token', publicToken);
+      }
+      const response = await fetch(url.toString());
+      if (!response.ok) {
+        throw new Error('Failed to fetch travel data');
+      }
+      return response.json();
+    },
     enabled: !!id,
   });
 

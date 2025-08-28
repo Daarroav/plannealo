@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
+import { EmailService } from "./emailService";
 import multer from 'multer';  // Instalacion  para subir archivos
 import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
@@ -591,9 +592,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get full travel data (for preview and PDF generation)
   app.get("/api/travels/:id/full", async (req, res) => {
     try {
-      const travel = await storage.getTravel(req.params.id);
-      if (!travel) {
-        return res.status(404).json({ error: "Travel not found" });
+      const publicToken = req.query.token as string;
+      let travel;
+
+      if (publicToken) {
+        // Acceso público con token
+        travel = await storage.getTravelByPublicToken(publicToken);
+        if (!travel) {
+          return res.status(404).json({ error: "Travel not found or token invalid" });
+        }
+        
+        // Verificar que el token no haya expirado
+        if (travel.publicTokenExpiry && travel.publicTokenExpiry < new Date()) {
+          return res.status(403).json({ error: "Access link has expired" });
+        }
+        
+        // Verificar que el ID coincida con el token
+        if (travel.id !== req.params.id) {
+          return res.status(404).json({ error: "Travel not found" });
+        }
+      } else {
+        // Acceso autenticado normal
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        travel = await storage.getTravel(req.params.id);
+        if (!travel) {
+          return res.status(404).json({ error: "Travel not found" });
+        }
       }
 
       const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
@@ -1068,6 +1094,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating cover image:", error);
       res.status(500).json({ error: "Error updating cover image" });
+    }
+  });
+
+  // Endpoint para compartir itinerario por correo
+  app.post("/api/travels/:id/share", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const travelId = req.params.id;
+      const { recipientEmail, clientName } = req.body;
+
+      if (!recipientEmail) {
+        return res.status(400).json({ error: "Recipient email is required" });
+      }
+
+      // Obtener el viaje
+      const travel = await storage.getTravel(travelId);
+      if (!travel) {
+        return res.status(404).json({ error: "Travel not found" });
+      }
+
+      // Crear servicio de email
+      const emailService = new EmailService();
+      
+      // Generar token público si no existe o si ha expirado
+      let publicToken = travel.publicToken;
+      let publicTokenExpiry = travel.publicTokenExpiry;
+      
+      const now = new Date();
+      const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      
+      if (!publicToken || !publicTokenExpiry || publicTokenExpiry < now) {
+        publicToken = emailService.generatePublicToken();
+        publicTokenExpiry = oneMonthFromNow;
+        
+        // Actualizar el viaje con el nuevo token
+        await storage.updateTravel(travelId, {
+          publicToken,
+          publicTokenExpiry
+        });
+      }
+
+      // Enviar el correo
+      await emailService.sendTravelShareEmail(
+        { ...travel, clientName: clientName || travel.clientName },
+        recipientEmail,
+        publicToken
+      );
+
+      res.json({ 
+        success: true, 
+        message: "Itinerario enviado exitosamente",
+        tokenExpiry: publicTokenExpiry
+      });
+    } catch (error: any) {
+      console.error("Error sharing travel:", error);
+      res.status(500).json({ 
+        error: "Error al enviar el itinerario", 
+        details: error.message 
+      });
     }
   });
 

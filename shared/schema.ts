@@ -20,6 +20,8 @@ export const travels = pgTable("travels", {
   travelers: integer("travelers").notNull(),
   status: text("status").notNull().default("draft"), // draft, published
   coverImage: text("cover_image"),
+  publicToken: text("public_token"), // Token para acceso público
+  publicTokenExpiry: timestamp("public_token_expiry"), // Expiración del token
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
