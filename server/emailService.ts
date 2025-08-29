@@ -32,7 +32,7 @@ export class EmailService {
       const result = await this.mg.messages.create(this.domain, {
         from: "PLANNEALO <itinerarios@plannealo.com>",
         to: [recipientEmail],
-        subject: `Tu Itinerario: ${travelData.name}`,
+        subject: "🛩️Bienvenido a tu próximo viaje con Plannealo.",
         html: htmlContent,
         text: this.generatePlainTextEmail(travelData, itineraryUrl)
       });
@@ -173,8 +173,8 @@ export class EmailService {
 <body>
   <div class="email-container">
     <div class="header">
-      <h1>¡Tu itinerario está listo!</h1>
-      <p>Hemos preparado todos los detalles de tu viaje</p>
+      <h1>🛩️Bienvenido a tu próximo viaje con Plannealo.</h1>
+      <p>¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros! 🛩️🌎</p>
     </div>
     
     <div class="content">
@@ -212,12 +212,43 @@ export class EmailService {
       </div>
 
       <div class="cta-section">
-        <p>Tu itinerario completo te está esperando. Haz clic en el botón de abajo para verlo:</p>
+        <p>Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:</p>
         <a href="${itineraryUrl}" class="cta-button">Ver Mi Itinerario</a>
       </div>
 
-      <div class="note">
-        <strong>📋 Nota:</strong> Este enlace te permitirá acceder a tu itinerario completo sin necesidad de crear una cuenta. Guárdalo en un lugar seguro para consultarlo cuando lo necesites.
+      <div style="margin: 32px 0; padding: 24px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #dc2626;">
+        <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">📌 Opciones para consultar tu itinerario:</h3>
+        <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+          <li>Visualizar desde el botón "Ver Mi itinerario"</li>
+          <li>Descargar el documento y almacenarlo en tu dispositivo.</li>
+          <li>Añadir tu itinerario a la pantalla de inicio del celular. A continuación te explicamos cómo hacerlo:</li>
+        </ul>
+        
+        <div style="margin-top: 20px;">
+          <h4 style="margin: 16px 0 8px 0; color: #1f2937; font-size: 16px;">📱 En Android (Google Chrome)</h4>
+          <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: #4b5563;">
+            <li>Abre el enlace en Google Chrome.</li>
+            <li>Toca el botón de menú ⋮ (arriba a la derecha).</li>
+            <li>Elige "Agregar a la pantalla principal".</li>
+            <li>Escribe un nombre (ejemplo: Itinerario de Viaje).</li>
+            <li>Confirma en Añadir.</li>
+          </ol>
+          <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás un ícono en tu pantalla como si fuera una app.</p>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <h4 style="margin: 16px 0 8px 0; color: #1f2937; font-size: 16px;">🍏 En iPhone (Safari)</h4>
+          <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: #4b5563;">
+            <li>Abre el enlace en Safari.</li>
+            <li>Toca el botón de Compartir (cuadro con flecha hacia arriba).</li>
+            <li>Selecciona "Añadir a pantalla de inicio" o "Agregar a Inicio".</li>
+            <li>Cambia el nombre si quieres (ejemplo: Itinerario de Viaje).</li>
+            <li>Toca Añadir (arriba a la derecha).</li>
+          </ol>
+          <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás el botón en tu pantalla principal que abre el itinerario directo.</p>
+        </div>
+        
+        <p style="margin: 20px 0 0 0; font-weight: 600; color: #dc2626; text-align: center;">¡Prepárate para vivir una gran experiencia con PLANNEALO!</p>
       </div>
     </div>
 
