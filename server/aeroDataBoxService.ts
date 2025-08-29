@@ -142,13 +142,31 @@ export class AeroDataBoxService {
           const flights = response.data?.departures || [];
           if (flights.length > 0) {
             console.log(`Found ${flights.length} flights in ${range.desc} period`);
-            // Asegurar estructura de datos consistente
+            // Mapear estructura de datos de AeroDataBox a nuestro formato
             const processedFlights = flights.map((flight: any) => ({
-              ...flight,
               number: flight.number || 'N/A',
               airline: flight.airline || { name: 'Unknown', iata: '', icao: '' },
-              departure: flight.departure || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' },
-              arrival: flight.arrival || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' }
+              departure: {
+                airport: {
+                  icao: airportCode, // Usamos el código del aeropuerto de origen
+                  iata: airportCode.length === 3 ? airportCode : '',
+                  name: 'Departure Airport',
+                  municipalityName: 'Origin City'
+                },
+                scheduledTimeLocal: flight.departure?.scheduledTime?.local || flight.departure?.scheduledTime?.utc || '',
+                actualTimeLocal: flight.departure?.actualTime?.local || flight.departure?.actualTime?.utc,
+                terminal: flight.departure?.terminal,
+                gate: flight.departure?.gate
+              },
+              arrival: {
+                airport: flight.arrival?.airport || { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' },
+                scheduledTimeLocal: flight.arrival?.scheduledTime?.local || flight.arrival?.scheduledTime?.utc || '',
+                actualTimeLocal: flight.arrival?.actualTime?.local || flight.arrival?.actualTime?.utc,
+                terminal: flight.arrival?.terminal,
+                gate: flight.arrival?.gate
+              },
+              aircraft: flight.aircraft,
+              status: flight.status || 'Unknown'
             }));
             return processedFlights;
           }
@@ -206,17 +224,34 @@ export class AeroDataBoxService {
           const dayText = nearbyDate.offset > 0 ? `${nearbyDate.offset} días después` : `${Math.abs(nearbyDate.offset)} días antes`;
           console.log(`Found ${flights.length} flights ${dayText} (${nearbyDate.date})`);
           
-          // Agregar información de fecha alternativa a los vuelos y asegurar estructura
+          // Mapear estructura de datos y agregar información de fecha alternativa
           const processedFlights = flights.map((flight: any) => ({
-            ...flight,
-            _alternativeDate: nearbyDate.date,
-            _originalDate: originalDate,
-            _dateOffset: nearbyDate.offset,
-            // Asegurar que la estructura básica existe
             number: flight.number || 'N/A',
             airline: flight.airline || { name: 'Unknown', iata: '', icao: '' },
-            departure: flight.departure || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' },
-            arrival: flight.arrival || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' }
+            departure: {
+              airport: {
+                icao: airportCode,
+                iata: airportCode.length === 3 ? airportCode : '',
+                name: 'Departure Airport',
+                municipalityName: 'Origin City'
+              },
+              scheduledTimeLocal: flight.departure?.scheduledTime?.local || flight.departure?.scheduledTime?.utc || '',
+              actualTimeLocal: flight.departure?.actualTime?.local || flight.departure?.actualTime?.utc,
+              terminal: flight.departure?.terminal,
+              gate: flight.departure?.gate
+            },
+            arrival: {
+              airport: flight.arrival?.airport || { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' },
+              scheduledTimeLocal: flight.arrival?.scheduledTime?.local || flight.arrival?.scheduledTime?.utc || '',
+              actualTimeLocal: flight.arrival?.actualTime?.local || flight.arrival?.actualTime?.utc,
+              terminal: flight.arrival?.terminal,
+              gate: flight.arrival?.gate
+            },
+            aircraft: flight.aircraft,
+            status: flight.status || 'Unknown',
+            _alternativeDate: nearbyDate.date,
+            _originalDate: originalDate,
+            _dateOffset: nearbyDate.offset
           }));
           
           return processedFlights;
@@ -232,6 +267,9 @@ export class AeroDataBoxService {
   // Buscar vuelos entre dos aeropuertos específicos con búsqueda flexible
   static async searchFlightsBetweenAirports(originCode: string, destinationCode: string, date: string): Promise<any> {
     try {
+      // Obtener información del aeropuerto de origen para mejores datos
+      const originAirport = await this.getAirportInfo(originCode);
+      
       // Primero obtenemos todos los vuelos de salida del aeropuerto origen
       const departureFlights = await this.getDepartureFlights(originCode, date);
       
