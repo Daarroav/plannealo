@@ -24,7 +24,7 @@ export class EmailService {
       ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
       : 'http://localhost:5000';
     
-    const itineraryUrl = `${baseUrl}/preview/${travelData.id}?token=${publicToken}`;
+    const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
     
     const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
     
