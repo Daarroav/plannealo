@@ -263,10 +263,10 @@ export function FlightSearchModal({
                         {/* Información de la aerolínea y vuelo */}
                         <div className="flex items-center space-x-2 mb-2">
                           <span className="font-bold text-lg">
-                            {flight.airline.iata || flight.airline.icao} {flight.number}
+                            {flight.airline?.iata || flight.airline?.icao || 'N/A'} {flight.number}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {flight.airline.name}
+                            {flight.airline?.name || 'Aerolínea no especificada'}
                           </span>
                           {flight.status && (
                             <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
@@ -290,7 +290,7 @@ export function FlightSearchModal({
                               {formatDate(flight.departure.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {flight.departure.airport.iata || flight.departure.airport.icao} - {flight.departure.airport.municipalityName}
+                              {flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A'} - {flight.departure?.airport?.municipalityName || 'Ciudad no especificada'}
                             </div>
                             {flight.departure.terminal && (
                               <div className="text-xs text-muted-foreground">
@@ -322,7 +322,7 @@ export function FlightSearchModal({
                               {formatDate(flight.arrival.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {flight.arrival.airport.iata || flight.arrival.airport.icao} - {flight.arrival.airport.municipalityName}
+                              {flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A'} - {flight.arrival?.airport?.municipalityName || 'Ciudad no especificada'}
                             </div>
                             {flight.arrival.terminal && (
                               <div className="text-xs text-muted-foreground">

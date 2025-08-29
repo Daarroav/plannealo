@@ -2,11 +2,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Bell, User } from "lucide-react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
-import { Link,  NavLink } from "react-router-dom";
+import { Link, useLocation } from "wouter";
 
 
 export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
+  const [location] = useLocation();
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -23,30 +24,24 @@ export function NavigationHeader() {
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <NavLink
+            <Link
               to="/"
-              className={({ isActive }) =>
-                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
-              }
+              className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/" ? "border-b-2 border-accent" : ""}`}
             >
               Viajes
-            </NavLink>
-            <NavLink
+            </Link>
+            <Link
               to="/clients"
-              className={({ isActive }) =>
-                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
-              }
+              className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/clients" ? "border-b-2 border-accent" : ""}`}
             >
               Clientes
-            </NavLink>
-            <NavLink
+            </Link>
+            <Link
               to="/reportes"
-              className={({ isActive }) =>
-                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
-              }
+              className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/reportes" ? "border-b-2 border-accent" : ""}`}
             >
               Reportes
-            </NavLink>
+            </Link>
           </nav>
           
           <div className="flex items-center space-x-4">
