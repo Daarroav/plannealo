@@ -169,6 +169,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         return;
       }
 
+      // Usar directamente los tiempos de la API (ya incluyen zona horaria local)
       const departureTime = new Date(flight.departure.scheduledTimeLocal);
       const arrivalTime = new Date(flight.arrival.scheduledTimeLocal);
 
@@ -178,22 +179,29 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         return;
       }
 
+      // Actualizar los estados de fecha para los calendarios
       setDepartureDate(departureTime);
       setArrivalDate(arrivalTime);
 
-      // Llenar formulario con datos seguros
+      // Llenar formulario con datos de la API
       form.setValue("airline", flight.airline?.name || `${flight.airline?.iata || flight.airline?.icao || 'Aerolínea'}`);
       form.setValue("flightNumber", flight.number || "");
       form.setValue("departureCity", `${flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A'} - ${flight.departure?.airport?.municipalityName || 'Ciudad de origen'}`);
       form.setValue("arrivalCity", `${flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A'} - ${flight.arrival?.airport?.municipalityName || 'Ciudad de destino'}`);
+      
+      // Usar las fechas y horas directamente de la API (ya en zona horaria local)
       form.setValue("departureDateField", format(departureTime, "yyyy-MM-dd"));
       form.setValue("departureTimeField", format(departureTime, "HH:mm"));
       form.setValue("arrivalDateField", format(arrivalTime, "yyyy-MM-dd"));
       form.setValue("arrivalTimeField", format(arrivalTime, "HH:mm"));
+      
       form.setValue("departureTerminal", flight.departure?.terminal || "");
       form.setValue("arrivalTerminal", flight.arrival?.terminal || "");
       
-      console.log("Flight form populated successfully", flight);
+      console.log("Flight form populated successfully with API times:", {
+        departure: flight.departure.scheduledTimeLocal,
+        arrival: flight.arrival.scheduledTimeLocal
+      });
     } catch (error) {
       console.error("Error populating flight form:", error, flight);
     }

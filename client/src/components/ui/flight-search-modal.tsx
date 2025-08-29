@@ -82,25 +82,25 @@ export function FlightSearchModal({
     setLoading(true);
     setSearched(true);
     setSearchMessage("");
-    
+
     try {
       const originCode = originAirport.iata || originAirport.icao;
       const destinationCode = destinationAirport.iata || destinationAirport.icao;
-      
+
       const response = await fetch(
         `/api/flights/search?origin=${originCode}&destination=${destinationCode}&date=${searchDate}`
       );
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log("Flight search response:", data);
         setFlights(data.flights || []);
-        
+
         // Debug: mostrar el primer vuelo para ver la estructura
         if (data.flights && data.flights.length > 0) {
           console.log("First flight structure:", data.flights[0]);
         }
-        
+
         // Mostrar información adicional sobre la búsqueda
         if (data.searchInfo) {
           if (data.searchInfo.error) {
@@ -141,27 +141,23 @@ export function FlightSearchModal({
     onClose();
   };
 
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateTimeString: string) => {
     try {
-      if (!dateString) return "N/A";
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      return format(date, "HH:mm", { locale: es });
+      const date = new Date(dateTimeString);
+      return format(date, "HH:mm");
     } catch (error) {
-      console.error("Error formatting time:", error, dateString);
-      return dateString || "N/A";
+      console.warn("Error formatting time:", dateTimeString);
+      return "00:00";
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateTimeString: string) => {
     try {
-      if (!dateString) return "N/A";
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
+      const date = new Date(dateTimeString);
       return format(date, "dd MMM", { locale: es });
     } catch (error) {
-      console.error("Error formatting date:", error, dateString);
-      return dateString || "N/A";
+      console.warn("Error formatting date:", dateTimeString);
+      return "N/A";
     }
   };
 
