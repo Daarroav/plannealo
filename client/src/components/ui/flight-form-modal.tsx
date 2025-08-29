@@ -162,22 +162,41 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
 
   // Función para llenar automáticamente el formulario cuando se selecciona un vuelo
   const handleSelectFlight = (flight: FlightInfo) => {
-    const departureTime = new Date(flight.departure.scheduledTimeLocal);
-    const arrivalTime = new Date(flight.arrival.scheduledTimeLocal);
+    try {
+      // Validar que tenemos la información mínima necesaria
+      if (!flight.departure?.scheduledTimeLocal || !flight.arrival?.scheduledTimeLocal) {
+        console.error("Flight missing required time information", flight);
+        return;
+      }
 
-    setDepartureDate(departureTime);
-    setArrivalDate(arrivalTime);
+      const departureTime = new Date(flight.departure.scheduledTimeLocal);
+      const arrivalTime = new Date(flight.arrival.scheduledTimeLocal);
 
-    form.setValue("airline", flight.airline.name);
-    form.setValue("flightNumber", flight.number);
-    form.setValue("departureCity", `${flight.departure.airport.iata || flight.departure.airport.icao} - ${flight.departure.airport.municipalityName}`);
-    form.setValue("arrivalCity", `${flight.arrival.airport.iata || flight.arrival.airport.icao} - ${flight.arrival.airport.municipalityName}`);
-    form.setValue("departureDateField", format(departureTime, "yyyy-MM-dd"));
-    form.setValue("departureTimeField", format(departureTime, "HH:mm"));
-    form.setValue("arrivalDateField", format(arrivalTime, "yyyy-MM-dd"));
-    form.setValue("arrivalTimeField", format(arrivalTime, "HH:mm"));
-    form.setValue("departureTerminal", flight.departure.terminal || "");
-    form.setValue("arrivalTerminal", flight.arrival.terminal || "");
+      // Validar que las fechas son válidas
+      if (isNaN(departureTime.getTime()) || isNaN(arrivalTime.getTime())) {
+        console.error("Invalid flight times", flight);
+        return;
+      }
+
+      setDepartureDate(departureTime);
+      setArrivalDate(arrivalTime);
+
+      // Llenar formulario con datos seguros
+      form.setValue("airline", flight.airline?.name || `${flight.airline?.iata || flight.airline?.icao || 'Aerolínea'}`);
+      form.setValue("flightNumber", flight.number || "");
+      form.setValue("departureCity", `${flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A'} - ${flight.departure?.airport?.municipalityName || 'Ciudad de origen'}`);
+      form.setValue("arrivalCity", `${flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A'} - ${flight.arrival?.airport?.municipalityName || 'Ciudad de destino'}`);
+      form.setValue("departureDateField", format(departureTime, "yyyy-MM-dd"));
+      form.setValue("departureTimeField", format(departureTime, "HH:mm"));
+      form.setValue("arrivalDateField", format(arrivalTime, "yyyy-MM-dd"));
+      form.setValue("arrivalTimeField", format(arrivalTime, "HH:mm"));
+      form.setValue("departureTerminal", flight.departure?.terminal || "");
+      form.setValue("arrivalTerminal", flight.arrival?.terminal || "");
+      
+      console.log("Flight form populated successfully", flight);
+    } catch (error) {
+      console.error("Error populating flight form:", error, flight);
+    }
   };
 
   const handleSubmit = (data: FlightForm) => {
