@@ -49,7 +49,7 @@ export function InsuranceFormModal({
   isPending = false,
   initialData
 }: InsuranceFormModalProps) {
-  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const form = useForm<InsuranceFormData>({
     resolver: zodResolver(insuranceFormSchema),
@@ -108,20 +108,18 @@ export function InsuranceFormModal({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const fileNames = Array.from(files).map(file => file.name);
-      const updatedFiles = [...attachedFiles, ...fileNames];
+      const newFiles = Array.from(files);
+      const updatedFiles = [...attachedFiles, ...newFiles];
       setAttachedFiles(updatedFiles);
-      form.setValue("attachments", updatedFiles);
     }
   };
 
   const removeFile = (index: number) => {
     const updatedFiles = attachedFiles.filter((_, i) => i !== index);
     setAttachedFiles(updatedFiles);
-    form.setValue("attachments", updatedFiles);
   };
 
-  const handleSubmit = (data: InsuranceFormData) => {
+  const handleSubmit = async (data: InsuranceFormData) => {
     console.log("Form data before processing:", data);
 
     // Combine date and time for effective date
@@ -129,20 +127,29 @@ export function InsuranceFormModal({
       ? new Date(`${data.effectiveDate}T${data.effectiveTime}`)
       : new Date(data.effectiveDate);
 
-    const processedData = {
-      provider: data.provider,
-      policyNumber: data.policyNumber,
-      policyType: data.policyType,
-      emergencyNumber: data.emergencyNumber || undefined,
-      effectiveDate: effectiveDateTime,
-      importantInfo: data.importantInfo || undefined,
-      policyDescription: data.policyDescription || undefined,
-      attachments: attachedFiles.length > 0 ? attachedFiles : undefined,
-      notes: data.notes || undefined,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields
+    if (initialData) {
+      formData.append('id', initialData.id);
+    }
+    formData.append('provider', data.provider);
+    formData.append('policyNumber', data.policyNumber);
+    formData.append('policyType', data.policyType);
+    formData.append('emergencyNumber', data.emergencyNumber || '');
+    formData.append('effectiveDate', effectiveDateTime.toISOString());
+    formData.append('importantInfo', data.importantInfo || '');
+    formData.append('policyDescription', data.policyDescription || '');
+    formData.append('notes', data.notes || '');
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    console.log("Processed data to send:", processedData);
-    onSubmit(processedData);
+    console.log("FormData to send:", formData);
+    onSubmit(formData);
     form.reset();
     setAttachedFiles([]);
   };
@@ -311,7 +318,7 @@ export function InsuranceFormModal({
                     <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-foreground">{fileName}</span>
+                        <span className="text-sm text-foreground">{fileName.name}</span>
                       </div>
                       <Button
                         type="button"

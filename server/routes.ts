@@ -357,10 +357,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       
       // Handle attachments upload
-      if (files.attachments) {
+      if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
       }
       
@@ -504,8 +504,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
       const validated = insertInsuranceSchema.parse({
         ...req.body,
@@ -544,8 +544,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
       const validated = insertNoteSchema.parse({
         ...req.body,
@@ -570,10 +570,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       
       // Handle attachments upload
-      if (files.attachments) {
+      if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
       }
       
