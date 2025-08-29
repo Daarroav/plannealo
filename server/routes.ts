@@ -1020,30 +1020,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </div>
         </body></html>`;
 
-      // Generate PDF using Puppeteer
-      browser = await puppeteer.launch({ 
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-      const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: {
-          top: '40px',
-          right: '40px',
-          bottom: '40px',
-          left: '40px'
-        }
-      });
+      // Try to generate PDF using Puppeteer, fallback to HTML if it fails
+      try {
+        browser = await puppeteer.launch({ 
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ]
+        });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '40px',
+            right: '40px',
+            bottom: '40px',
+            left: '40px'
+          }
+        });
 
-      // Set headers for PDF download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
-      
-      res.send(pdfBuffer);
+        // Set headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
+        
+        res.send(pdfBuffer);
+      } catch (puppeteerError) {
+        console.warn('Puppeteer failed, falling back to printable HTML:', puppeteerError.message);
+        
+        // Fallback: return HTML optimized for printing/PDF conversion
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Content-Disposition', `inline; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
+        
+        // Add print-specific CSS and auto-print script
+        const printableHtml = htmlContent.replace(
+          '</head>',
+          `
+          <style media="print">
+            @page { size: A4; margin: 40px; }
+            body { -webkit-print-color-adjust: exact; }
+          </style>
+          <script>
+            window.addEventListener('load', function() {
+              setTimeout(function() {
+                window.print();
+              }, 1000);
+            });
+          </script>
+          </head>`
+        );
+        
+        res.send(printableHtml);
+      }
       
     } catch (error) {
       console.error("Error generating PDF:", error);
