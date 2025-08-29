@@ -105,7 +105,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="name">Nombre del Viaje *</Label>
               <Input
                 id="name"
@@ -118,19 +118,8 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
                 </p>
               )}
             </div>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="clientName">Nombre del Cliente *</Label>
-                <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
-                {form.formState.errors.clientName && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.clientName.message}
-                  </p>
-                )}
-              </div>
 
-              <div className="space-y-2">
+            <div className="space-y-2">
                 <Label htmlFor="clientEmail">Correo Electrónico del Cliente *</Label>
                 <Input 
                   id="clientEmail" 
@@ -144,7 +133,40 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
                   </p>
                 )}
               </div>
-            </div>
+            
+      
+              <div className="space-y-2">
+                <Label htmlFor="clientName">Nombre del Cliente *</Label>
+                <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
+                {form.formState.errors.clientName && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.clientName.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2"> 
+                <Label htmlFor="travelers">Número de Viajeros *</Label>
+                <Select onValueChange={(value) => form.setValue("travelers", parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 viajero</SelectItem>
+                    <SelectItem value="2">2 viajeros</SelectItem>
+                    <SelectItem value="3">3 viajeros</SelectItem>
+                    <SelectItem value="4">4 viajeros</SelectItem>
+                    <SelectItem value="5">5+ viajeros</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.travelers && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.travelers.message}
+                  </p>
+                )}
+          </div>
+
+    
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -177,26 +199,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
             </div>
           </div>
           
-          <div>
-            <Label htmlFor="travelers">Número de Viajeros *</Label>
-            <Select onValueChange={(value) => form.setValue("travelers", parseInt(value))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 viajero</SelectItem>
-                <SelectItem value="2">2 viajeros</SelectItem>
-                <SelectItem value="3">3 viajeros</SelectItem>
-                <SelectItem value="4">4 viajeros</SelectItem>
-                <SelectItem value="5">5+ viajeros</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.travelers && (
-              <p className="text-sm text-destructive mt-1">
-                {form.formState.errors.travelers.message}
-              </p>
-            )}
-          </div>
+         
           
           <div>
             <Label>Imagen de Portada</Label>
