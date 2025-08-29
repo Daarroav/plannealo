@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plane, Clock, MapPin } from "lucide-react";
+import { Loader2, Plane, Clock, MapPin, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -71,6 +71,8 @@ export function FlightSearchModal({
   const [flights, setFlights] = useState<FlightInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [searchMessage, setSearchMessage] = useState<string>("");
+  const [searchMessageType, setSearchMessageType] = useState<"info" | "warning" | "error">("info");
 
   const handleSearch = async () => {
     if (!originAirport || !destinationAirport || !searchDate) {
@@ -79,6 +81,7 @@ export function FlightSearchModal({
 
     setLoading(true);
     setSearched(true);
+    setSearchMessage("");
     
     try {
       const originCode = originAirport.iata || originAirport.icao;
@@ -95,24 +98,33 @@ export function FlightSearchModal({
         // Mostrar información adicional sobre la búsqueda
         if (data.searchInfo) {
           if (data.searchInfo.error) {
-            console.error('Search error:', data.searchInfo.error.suggestion);
-            alert(data.searchInfo.error.suggestion);
+            setSearchMessage(data.searchInfo.error.suggestion);
+            setSearchMessageType("error");
           } else if (data.searchInfo.isAlternativeDate) {
             const offsetText = data.searchInfo.dateOffset > 0 
               ? `${data.searchInfo.dateOffset} días después`
               : `${Math.abs(data.searchInfo.dateOffset)} días antes`;
-            alert(`No se encontraron vuelos para ${searchDate}. Mostrando vuelos para ${data.searchInfo.actualDate} (${offsetText})`);
+            setSearchMessage(`No se encontraron vuelos para ${searchDate}. Mostrando vuelos para ${data.searchInfo.actualDate} (${offsetText})`);
+            setSearchMessageType("warning");
           } else if (data.searchInfo.matchingFlights === 0 && data.searchInfo.totalFlightsFound > 0) {
-            alert(`Se encontraron ${data.searchInfo.totalFlightsFound} vuelos desde ${originCode}, pero ninguno hacia ${destinationCode}. Revise el aeropuerto de destino.`);
+            setSearchMessage(`Se encontraron ${data.searchInfo.totalFlightsFound} vuelos desde ${originCode}, pero ninguno hacia ${destinationCode}. Revise el aeropuerto de destino.`);
+            setSearchMessageType("warning");
+          } else if (data.searchInfo.matchingFlights > 0) {
+            setSearchMessage(`Se encontraron ${data.searchInfo.matchingFlights} vuelos disponibles`);
+            setSearchMessageType("info");
           }
         }
       } else {
         console.error('Error searching flights:', response.statusText);
         setFlights([]);
+        setSearchMessage("Error al buscar vuelos. Intente nuevamente.");
+        setSearchMessageType("error");
       }
     } catch (error) {
       console.error('Error searching flights:', error);
       setFlights([]);
+      setSearchMessage("Error de conexión. Verifique su conexión a internet.");
+      setSearchMessageType("error");
     } finally {
       setLoading(false);
     }
@@ -188,6 +200,28 @@ export function FlightSearchModal({
             </Button>
           </div>
 
+          {/* Mensaje de información de búsqueda */}
+          {searchMessage && (
+            <div className={`border rounded-lg p-4 mb-4 ${
+              searchMessageType === "error" ? "border-red-200 bg-red-50" :
+              searchMessageType === "warning" ? "border-yellow-200 bg-yellow-50" :
+              "border-blue-200 bg-blue-50"
+            }`}>
+              <div className="flex items-start space-x-3">
+                {searchMessageType === "error" && <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />}
+                {searchMessageType === "warning" && <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />}
+                {searchMessageType === "info" && <Info className="w-5 h-5 text-blue-600 mt-0.5" />}
+                <p className={`text-sm ${
+                  searchMessageType === "error" ? "text-red-800" :
+                  searchMessageType === "warning" ? "text-yellow-800" :
+                  "text-blue-800"
+                }`}>
+                  {searchMessage}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Resultados de búsqueda */}
           {loading && (
             <div className="text-center py-8">
@@ -196,7 +230,7 @@ export function FlightSearchModal({
             </div>
           )}
 
-          {searched && !loading && flights.length === 0 && (
+          {searched && !loading && flights.length === 0 && !searchMessage && (
             <div className="text-center py-8 text-muted-foreground">
               <Plane className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No se encontraron vuelos para esta ruta y fecha.</p>
@@ -246,7 +280,7 @@ export function FlightSearchModal({
                               {formatDate(flight.departure.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {flight.departure.airport.iata || flight.departure.airport.icao} - {flight.departure.airport.municipalityName}
+                              {(flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A')} - {flight.departure?.airport?.municipalityName || 'Unknown'}
                             </div>
                             {flight.departure.terminal && (
                               <div className="text-xs text-muted-foreground">
@@ -278,7 +312,7 @@ export function FlightSearchModal({
                               {formatDate(flight.arrival.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {flight.arrival.airport.iata || flight.arrival.airport.icao} - {flight.arrival.airport.municipalityName}
+                              {(flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A')} - {flight.arrival?.airport?.municipalityName || 'Unknown'}
                             </div>
                             {flight.arrival.terminal && (
                               <div className="text-xs text-muted-foreground">
