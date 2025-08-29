@@ -90,7 +90,22 @@ export function FlightSearchModal({
       
       if (response.ok) {
         const data = await response.json();
-        setFlights(data);
+        setFlights(data.flights || []);
+        
+        // Mostrar información adicional sobre la búsqueda
+        if (data.searchInfo) {
+          if (data.searchInfo.error) {
+            console.error('Search error:', data.searchInfo.error.suggestion);
+            alert(data.searchInfo.error.suggestion);
+          } else if (data.searchInfo.isAlternativeDate) {
+            const offsetText = data.searchInfo.dateOffset > 0 
+              ? `${data.searchInfo.dateOffset} días después`
+              : `${Math.abs(data.searchInfo.dateOffset)} días antes`;
+            alert(`No se encontraron vuelos para ${searchDate}. Mostrando vuelos para ${data.searchInfo.actualDate} (${offsetText})`);
+          } else if (data.searchInfo.matchingFlights === 0 && data.searchInfo.totalFlightsFound > 0) {
+            alert(`Se encontraron ${data.searchInfo.totalFlightsFound} vuelos desde ${originCode}, pero ninguno hacia ${destinationCode}. Revise el aeropuerto de destino.`);
+          }
+        }
       } else {
         console.error('Error searching flights:', response.statusText);
         setFlights([]);

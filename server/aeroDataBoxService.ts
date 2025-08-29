@@ -64,6 +64,10 @@ export interface FlightInfo {
     model: string;
   };
   status: string;
+  // Propiedades opcionales para fechas alternativas
+  _alternativeDate?: string;
+  _originalDate?: string;
+  _dateOffset?: number;
 }
 
 export class AeroDataBoxService {
@@ -89,7 +93,7 @@ export class AeroDataBoxService {
     }
   }
 
-  // Obtener vuelos de salida desde un aeropuerto
+  // Obtener vuelos de salida desde un aeropuerto con búsqueda flexible
   static async getDepartureFlights(airportCode: string, date: string): Promise<FlightInfo[]> {
     try {
       if (!API_KEY) {
@@ -99,43 +103,109 @@ export class AeroDataBoxService {
       // Usar código IATA si está disponible, sino ICAO
       const codeType = airportCode.length === 3 ? 'iata' : 'icao';
       
-      // Convertir fecha YYYY-MM-DD a formato requerido por la API
-      // La API espera formato YYYY-MM-DDTHH:MM en hora local del aeropuerto
-      // Restricción: menos de 12 horas de duración
-      const fromLocal = date + 'T06:00';  // 6 AM
-      const toLocal = date + 'T17:59';    // 5:59 PM (11 horas 59 minutos)
-      
-      const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromLocal}/${toLocal}`, {
-        params: {
-          direction: 'Departure',
-          withLeg: true,
-          withCancelled: false,
-          withCodeshared: true,
-          withCargo: false,
-          withPrivate: false,
-          withLocation: false
-        }
-      });
+      // Intentar diferentes rangos de tiempo
+      const timeRanges = [
+        { from: 'T08:00', to: 'T14:00', desc: 'mañana' },     // 6 horas
+        { from: 'T14:00', to: 'T20:00', desc: 'tarde' },     // 6 horas  
+        { from: 'T06:00', to: 'T12:00', desc: 'madrugada' }, // 6 horas
+        { from: 'T20:00', to: 'T23:59', desc: 'noche' }     // 3h59m
+      ];
 
-      return response.data?.departures || [];
+      for (const range of timeRanges) {
+        try {
+          const fromLocal = date + range.from;
+          const toLocal = date + range.to;
+          
+          const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromLocal}/${toLocal}`, {
+            params: {
+              direction: 'Departure',
+              withLeg: true,
+              withCancelled: false,
+              withCodeshared: true,
+              withCargo: false,
+              withPrivate: false,
+              withLocation: false
+            }
+          });
+
+          const flights = response.data?.departures || [];
+          if (flights.length > 0) {
+            console.log(`Found ${flights.length} flights in ${range.desc} period`);
+            return flights;
+          }
+        } catch (rangeError: any) {
+          console.log(`No flights found in ${range.desc} period:`, rangeError.response?.data?.message || rangeError.message);
+          continue; // Intentar siguiente rango
+        }
+      }
+
+      // Si no encontró nada en el día solicitado, buscar días cercanos
+      return await this.searchNearbyDates(airportCode, codeType, date);
+
     } catch (error: any) {
       console.error('Error getting departure flights:', error.response?.data || error.message);
-      
-      // Proporcionar información más específica sobre los errores
-      if (error.response?.data?.message?.includes('time period')) {
-        throw new Error('El rango de tiempo debe ser menor a 12 horas. Intente con una fecha más reciente o aeropuertos con más tráfico.');
-      } else if (error.response?.status === 404) {
-        throw new Error('No se encontraron datos para este aeropuerto en la fecha seleccionada.');
-      } else if (error.response?.status === 403) {
-        throw new Error('Límite de API alcanzado. Intente nuevamente en unos minutos.');
-      } else {
-        throw new Error('No se pudieron obtener los vuelos de salida. Verifique los códigos de aeropuerto y la fecha.');
-      }
+      throw new Error('No se pudieron obtener vuelos para este aeropuerto.');
     }
   }
 
-  // Buscar vuelos entre dos aeropuertos específicos
-  static async searchFlightsBetweenAirports(originCode: string, destinationCode: string, date: string): Promise<FlightInfo[]> {
+  // Buscar en fechas cercanas
+  static async searchNearbyDates(airportCode: string, codeType: string, originalDate: string): Promise<FlightInfo[]> {
+    const searchDate = new Date(originalDate);
+    const nearbyDates = [];
+    
+    // Generar fechas cercanas (±3 días)
+    for (let i = -3; i <= 3; i++) {
+      if (i === 0) continue; // Ya probamos la fecha original
+      const nearDate = new Date(searchDate);
+      nearDate.setDate(nearDate.getDate() + i);
+      nearbyDates.push({
+        date: nearDate.toISOString().split('T')[0],
+        offset: i
+      });
+    }
+
+    // Buscar en fechas cercanas
+    for (const nearbyDate of nearbyDates) {
+      try {
+        const fromLocal = nearbyDate.date + 'T08:00';
+        const toLocal = nearbyDate.date + 'T20:00';
+        
+        const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromLocal}/${toLocal}`, {
+          params: {
+            direction: 'Departure',
+            withLeg: true,
+            withCancelled: false,
+            withCodeshared: true,
+            withCargo: false,
+            withPrivate: false,
+            withLocation: false
+          }
+        });
+
+        const flights = response.data?.departures || [];
+        if (flights.length > 0) {
+          const dayText = nearbyDate.offset > 0 ? `${nearbyDate.offset} días después` : `${Math.abs(nearbyDate.offset)} días antes`;
+          console.log(`Found ${flights.length} flights ${dayText} (${nearbyDate.date})`);
+          
+          // Agregar información de fecha alternativa a los vuelos
+          flights.forEach((flight: any) => {
+            flight._alternativeDate = nearbyDate.date;
+            flight._originalDate = originalDate;
+            flight._dateOffset = nearbyDate.offset;
+          });
+          
+          return flights;
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    throw new Error('No se encontraron vuelos en las fechas cercanas');
+  }
+
+  // Buscar vuelos entre dos aeropuertos específicos con búsqueda flexible
+  static async searchFlightsBetweenAirports(originCode: string, destinationCode: string, date: string): Promise<any> {
     try {
       // Primero obtenemos todos los vuelos de salida del aeropuerto origen
       const departureFlights = await this.getDepartureFlights(originCode, date);
@@ -147,18 +217,59 @@ export class AeroDataBoxService {
         flight.arrival?.airport?.icao === destinationCodeUpper
       );
 
-      return filteredFlights;
+      // Verificar si son vuelos de fecha alternativa
+      const hasAlternativeDate = departureFlights.length > 0 && departureFlights[0]._alternativeDate;
+      
+      return {
+        flights: filteredFlights,
+        searchInfo: {
+          originalDate: date,
+          actualDate: hasAlternativeDate ? departureFlights[0]._alternativeDate : date,
+          isAlternativeDate: hasAlternativeDate,
+          dateOffset: hasAlternativeDate ? departureFlights[0]._dateOffset : 0,
+          totalFlightsFound: departureFlights.length,
+          matchingFlights: filteredFlights.length
+        }
+      };
     } catch (error: any) {
       console.error('Error searching flights between airports:', error.message);
       
-      // Información más específica para el usuario
-      if (error.message.includes('tiempo')) {
-        throw new Error('Error en el rango de fechas. Intente con una fecha más cercana (dentro de los próximos 1-2 días).');
-      } else if (error.message.includes('datos')) {
-        throw new Error('No hay datos disponibles para esta ruta. Intente con aeropuertos internacionales principales (MEX, CUN, GDL).');
+      // Análisis detallado del error
+      let errorDetails = {
+        reason: 'unknown',
+        suggestion: '',
+        technicalError: error.message
+      };
+
+      if (error.message.includes('API key')) {
+        errorDetails.reason = 'api_key';
+        errorDetails.suggestion = 'Problema de configuración. Contacte al administrador.';
+      } else if (error.message.includes('fechas cercanas')) {
+        errorDetails.reason = 'no_data_nearby';
+        errorDetails.suggestion = `No se encontraron vuelos desde ${originCode} hacia ${destinationCode} en la fecha ${date} ni en fechas cercanas. Intente con:
+        • Aeropuertos principales (MEX, CUN, GDL, MTY)
+        • Fechas más cercanas (hoy o mañana)
+        • Rutas comerciales conocidas`;
+      } else if (error.message.includes('aeropuerto')) {
+        errorDetails.reason = 'airport_data';
+        errorDetails.suggestion = `El aeropuerto ${originCode} puede tener datos limitados. Los aeropuertos regionales a menudo no tienen información completa de vuelos en tiempo real.`;
       } else {
-        throw new Error('No se encontraron vuelos para esta ruta y fecha. Los datos pueden estar limitados para algunos aeropuertos regionales.');
+        errorDetails.reason = 'general';
+        errorDetails.suggestion = 'Error general en la búsqueda. Verifique los códigos de aeropuerto y la fecha, o intente más tarde.';
       }
+
+      return {
+        flights: [],
+        searchInfo: {
+          originalDate: date,
+          actualDate: date,
+          isAlternativeDate: false,
+          dateOffset: 0,
+          totalFlightsFound: 0,
+          matchingFlights: 0,
+          error: errorDetails
+        }
+      };
     }
   }
 

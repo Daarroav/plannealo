@@ -682,13 +682,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const flights = await AeroDataBoxService.searchFlightsBetweenAirports(
+      const result = await AeroDataBoxService.searchFlightsBetweenAirports(
         origin as string, 
         destination as string, 
         date as string
       );
       
-      res.json(flights);
+      res.json(result);
     } catch (error) {
       console.error("Error searching flights:", error);
       res.status(500).json({ message: "Error searching flights" });
