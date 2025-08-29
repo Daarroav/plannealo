@@ -350,15 +350,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/insurances/:id", async (req, res) => {
+  app.put("/api/insurances/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Handle attachments upload
+      if (files.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+      }
+      
       const insurance = await storage.updateInsurance(req.params.id, {
-        ...req.body,
-        effectiveDate: req.body.effectiveDate ? new Date(req.body.effectiveDate) : undefined,
+        ...updateData,
+        effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
       });
       res.json(insurance);
     } catch (error) {
@@ -490,16 +498,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/insurances", async (req, res) => {
+  app.post("/api/travels/:travelId/insurances", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      
       const validated = insertInsuranceSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         effectiveDate: new Date(req.body.effectiveDate),
+        attachments: attachments,
       });
 
       const insurance = await storage.createInsurance(validated);
@@ -526,16 +538,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create note for travel
-  app.post("/api/travels/:id/notes", async (req, res) => {
+  app.post("/api/travels/:id/notes", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      
       const validated = insertNoteSchema.parse({
         ...req.body,
         travelId: req.params.id,
         noteDate: new Date(req.body.noteDate),
+        attachments: attachments,
       });
 
       const note = await storage.createNote(validated);
@@ -547,13 +563,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update note for travel
-  app.put("/api/travels/:travelId/notes/:noteId", async (req, res) => {
+  app.put("/api/travels/:travelId/notes/:noteId", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
       const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Handle attachments upload
+      if (files.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+      }
       
       // Convert date if provided
       if (updateData.noteDate) {
