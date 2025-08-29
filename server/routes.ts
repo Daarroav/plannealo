@@ -36,6 +36,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Travel routes
+  // Obtener estadísticas de clientes
+  app.get("/api/clients/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
+    try {
+      const stats = await storage.getClientStats();
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching client stats:", error);
+      res.status(500).json({ message: "Error al obtener estadísticas de clientes" });
+    }
+  });
+
   app.get("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -59,6 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching travels" });
     }
   });
+  
 
   app.post("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
