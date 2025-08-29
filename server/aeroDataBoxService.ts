@@ -100,16 +100,10 @@ export class AeroDataBoxService {
       const codeType = airportCode.length === 3 ? 'iata' : 'icao';
       
       // Convertir fecha YYYY-MM-DD a formato requerido por la API
-      const searchDate = new Date(date);
-      const fromDateTime = new Date(searchDate);
-      fromDateTime.setHours(0, 0, 0, 0);
-      
-      const toDateTime = new Date(searchDate);
-      toDateTime.setHours(23, 59, 59, 999);
-      
-      // Formato ISO para la API
-      const fromLocal = fromDateTime.toISOString().slice(0, 19);
-      const toLocal = toDateTime.toISOString().slice(0, 19);
+      // La API espera formato YYYY-MM-DDTHH:MM en hora local del aeropuerto
+      // Restricción: menos de 12 horas de duración
+      const fromLocal = date + 'T06:00';  // 6 AM
+      const toLocal = date + 'T17:59';    // 5:59 PM (11 horas 59 minutos)
       
       const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromLocal}/${toLocal}`, {
         params: {
@@ -126,7 +120,17 @@ export class AeroDataBoxService {
       return response.data?.departures || [];
     } catch (error: any) {
       console.error('Error getting departure flights:', error.response?.data || error.message);
-      throw new Error('Failed to get departure flights');
+      
+      // Proporcionar información más específica sobre los errores
+      if (error.response?.data?.message?.includes('time period')) {
+        throw new Error('El rango de tiempo debe ser menor a 12 horas. Intente con una fecha más reciente o aeropuertos con más tráfico.');
+      } else if (error.response?.status === 404) {
+        throw new Error('No se encontraron datos para este aeropuerto en la fecha seleccionada.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Límite de API alcanzado. Intente nuevamente en unos minutos.');
+      } else {
+        throw new Error('No se pudieron obtener los vuelos de salida. Verifique los códigos de aeropuerto y la fecha.');
+      }
     }
   }
 
@@ -146,7 +150,15 @@ export class AeroDataBoxService {
       return filteredFlights;
     } catch (error: any) {
       console.error('Error searching flights between airports:', error.message);
-      throw new Error('Failed to search flights between airports');
+      
+      // Información más específica para el usuario
+      if (error.message.includes('tiempo')) {
+        throw new Error('Error en el rango de fechas. Intente con una fecha más cercana (dentro de los próximos 1-2 días).');
+      } else if (error.message.includes('datos')) {
+        throw new Error('No hay datos disponibles para esta ruta. Intente con aeropuertos internacionales principales (MEX, CUN, GDL).');
+      } else {
+        throw new Error('No se encontraron vuelos para esta ruta y fecha. Los datos pueden estar limitados para algunos aeropuertos regionales.');
+      }
     }
   }
 
