@@ -12,6 +12,7 @@ import { X, Image, Upload } from "lucide-react";
 const newTravelSchema = z.object({
   name: z.string().min(1, "El nombre del viaje es requerido"),
   clientName: z.string().min(1, "El nombre del cliente es requerido"),
+  clientEmail: z.string().email("El correo electrónico no es válido"),
   startDate: z.string().min(1, "La fecha de inicio es requerida"),
   endDate: z.string().min(1, "La fecha de fin es requerida"),
   travelers: z.number().min(1, "Debe haber al menos 1 viajero"),
@@ -36,6 +37,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
     defaultValues: {
       name: "",
       clientName: "",
+      clientEmail: "",
       startDate: "",
       endDate: "",
       travelers: 1,
@@ -117,18 +119,31 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
               )}
             </div>
             
-            <div>
-              <Label htmlFor="clientName">Cliente *</Label>
-              <Input
-                id="clientName"
-                {...form.register("clientName")}
-                placeholder="Nombre del cliente"
-              />
-              {form.formState.errors.clientName && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.clientName.message}
-                </p>
-              )}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="clientName">Nombre del Cliente *</Label>
+                <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
+                {form.formState.errors.clientName && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.clientName.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="clientEmail">Correo Electrónico del Cliente *</Label>
+                <Input 
+                  id="clientEmail" 
+                  type="email" 
+                  {...form.register("clientEmail")} 
+                  placeholder="cliente@ejemplo.com" 
+                />
+                {form.formState.errors.clientEmail && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.clientEmail.message}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           

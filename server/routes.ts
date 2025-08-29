@@ -65,19 +65,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+    console.log("Request body:", req.body);
     try {
+      const { clientEmail, ...travelData } = req.body;
+      
+      // Verificar si el cliente ya existe
+      let client = await storage.getUserByUsername(clientEmail);
+      console.log("Client:", client);
+      
+      // Si no existe, crear un nuevo usuario cliente
+      if (!client) {
+        // Generar una contraseña temporal segura
+        const tempPassword = Math.random().toString(36).slice(-8);
+
+        
+        client = await storage.createUser({
+          username: clientEmail,
+          password: tempPassword, // La contraseña se hasheará en el storage
+          name: req.body.clientName,
+          role: 'client',
+        });
+        
+        // Aquí podrías enviar un correo al cliente con sus credenciales
+        // await emailService.sendWelcomeEmail(clientEmail, tempPassword);
+      }
+
       const validated = insertTravelSchema.parse({
-        ...req.body,
+        ...travelData,
+        clientEmail: clientEmail,
+        clientId: client.id,
         createdBy: req.user!.id,
-        startDate: new Date(req.body.startDate),
-        endDate: new Date(req.body.endDate),
+        startDate: new Date(travelData.startDate),
+        endDate: new Date(travelData.endDate),
       });
 
       const travel = await storage.createTravel(validated);
       res.status(201).json(travel);
     } catch (error) {
       console.error("Error creating travel:", error);
-      res.status(400).json({ message: "Error creating travel" });
+      res.status(400).json({ 
+        message: "Error creating travel",
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 
