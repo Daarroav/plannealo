@@ -194,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/accommodations/:id", async (req, res) => {
+  app.put("/api/accommodations/:id", upload.single('thumbnail'), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
@@ -1054,7 +1054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
         
         res.send(pdfBuffer);
-      } catch (puppeteerError) {
+      } catch (puppeteerError: any) {
         console.warn('Puppeteer failed, falling back to printable HTML:', puppeteerError.message);
         
         // Fallback: return HTML optimized for printing/PDF conversion

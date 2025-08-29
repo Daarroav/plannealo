@@ -174,7 +174,23 @@ export default function TravelDetail() {
   const createAccommodationMutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingAccommodation) {
-        const response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
+        // Handle FormData for file uploads in updates too
+        let response;
+        if (data instanceof FormData) {
+          response = await fetch(`/api/accommodations/${editingAccommodation.id}`, {
+            method: "PUT",
+            credentials: "include",
+            body: data,
+          });
+        } else {
+          response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Error updating accommodation");
+        }
+        
         return await response.json();
       } else {
         // Handle FormData for file uploads
