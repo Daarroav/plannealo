@@ -202,6 +202,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       
+      // Handle thumbnail upload
+      if (req.file) {
+        updateData.thumbnail = `/uploads/${req.file.filename}`;
+      }
+      
       // Convert dates if provided
       if (updateData.checkIn) {
         updateData.checkIn = new Date(updateData.checkIn);
