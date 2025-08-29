@@ -90,7 +90,7 @@ export class AeroDataBoxService {
   }
 
   // Obtener vuelos de salida desde un aeropuerto
-  static async getDepartureFlights(airportCode: string, fromDate: string, toDate: string): Promise<FlightInfo[]> {
+  static async getDepartureFlights(airportCode: string, date: string): Promise<FlightInfo[]> {
     try {
       if (!API_KEY) {
         throw new Error('AeroDataBox API key not configured');
@@ -99,7 +99,19 @@ export class AeroDataBoxService {
       // Usar código IATA si está disponible, sino ICAO
       const codeType = airportCode.length === 3 ? 'iata' : 'icao';
       
-      const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromDate}/${toDate}`, {
+      // Convertir fecha YYYY-MM-DD a formato requerido por la API
+      const searchDate = new Date(date);
+      const fromDateTime = new Date(searchDate);
+      fromDateTime.setHours(0, 0, 0, 0);
+      
+      const toDateTime = new Date(searchDate);
+      toDateTime.setHours(23, 59, 59, 999);
+      
+      // Formato ISO para la API
+      const fromLocal = fromDateTime.toISOString().slice(0, 19);
+      const toLocal = toDateTime.toISOString().slice(0, 19);
+      
+      const response = await aeroDataBoxAPI.get(`/flights/airports/${codeType}/${airportCode}/${fromLocal}/${toLocal}`, {
         params: {
           direction: 'Departure',
           withLeg: true,
@@ -122,7 +134,7 @@ export class AeroDataBoxService {
   static async searchFlightsBetweenAirports(originCode: string, destinationCode: string, date: string): Promise<FlightInfo[]> {
     try {
       // Primero obtenemos todos los vuelos de salida del aeropuerto origen
-      const departureFlights = await this.getDepartureFlights(originCode, date, date);
+      const departureFlights = await this.getDepartureFlights(originCode, date);
       
       // Filtramos solo los vuelos que van al aeropuerto de destino
       const destinationCodeUpper = destinationCode.toUpperCase();
