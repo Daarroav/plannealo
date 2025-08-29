@@ -614,7 +614,7 @@ export default function TravelPreview() {
             {event.data.thumbnail && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <img 
-                  src={event.data.thumbnail}
+                  src={event.data.thumbnail.startsWith('/uploads/') ? event.data.thumbnail : `/uploads/${event.data.thumbnail}`}
                   alt={`Imagen de ${event.data.name}`}
                   className="w-full h-48 object-cover rounded-lg"
                   onError={(e) => {
@@ -662,7 +662,14 @@ export default function TravelPreview() {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <span className="text-gray-600">{fileName}</span>
+                        <a 
+                          href={fileName.startsWith('/uploads/') ? fileName : `/uploads/${fileName}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                        </a>
                       </div>
                     ),
                   )}
@@ -891,9 +898,14 @@ export default function TravelPreview() {
                                   className="flex items-center space-x-2 text-sm"
                                 >
                                   <FileText className="w-4 h-4 text-muted-foreground" />
-                                  <span className="text-muted-foreground">
-                                    {fileName}
-                                  </span>
+                                  <a 
+                                    href={fileName.startsWith('/uploads/') ? fileName : `/uploads/${fileName}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 underline"
+                                  >
+                                    {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                                  </a>
                                 </div>
                               ),
                             )}
