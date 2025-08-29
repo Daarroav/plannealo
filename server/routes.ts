@@ -196,16 +196,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/accommodations", upload.single('thumbnail'), async (req, res) => {
+  app.post("/api/travels/:travelId/accommodations", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
-      const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const thumbnail = files.thumbnail?.[0] ? `/uploads/${files.thumbnail[0].filename}` : null;
+      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
 
       console.log("Request body:", req.body);
       console.log("Thumbnail:", thumbnail);
+      console.log("Attachments:", attachments);
       console.log("Travel ID:", req.params.travelId);
       
       // Validate that required fields are present
@@ -230,6 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkIn: new Date(req.body.checkIn),
         checkOut: new Date(req.body.checkOut),
         thumbnail: thumbnail,
+        attachments: attachments,
       });
 
       const accommodation = await storage.createAccommodation(validated);
@@ -240,13 +244,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/accommodations/:id", async (req, res) => {
+  app.put("/api/accommodations/:id", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
       const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      
+      // Handle thumbnail upload
+      if (files.thumbnail?.[0]) {
+        updateData.thumbnail = `/uploads/${files.thumbnail[0].filename}`;
+      }
+      
+      // Handle attachments upload
+      if (files.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+      }
       
       // Convert dates if provided
       if (updateData.checkIn) {
@@ -381,15 +396,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/insurances/:id", async (req, res) => {
+  app.put("/api/insurances/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+      }
+      
       const insurance = await storage.updateInsurance(req.params.id, {
-        ...req.body,
-        effectiveDate: req.body.effectiveDate ? new Date(req.body.effectiveDate) : undefined,
+        ...updateData,
+        effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
       });
       res.json(insurance);
     } catch (error) {
@@ -521,16 +544,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/insurances", async (req, res) => {
+  app.post("/api/travels/:travelId/insurances", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      
       const validated = insertInsuranceSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         effectiveDate: new Date(req.body.effectiveDate),
+        attachments: attachments,
       });
 
       const insurance = await storage.createInsurance(validated);
@@ -557,16 +584,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create note for travel
-  app.post("/api/travels/:id/notes", async (req, res) => {
+  app.post("/api/travels/:id/notes", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      
       const validated = insertNoteSchema.parse({
         ...req.body,
         travelId: req.params.id,
         noteDate: new Date(req.body.noteDate),
+        attachments: attachments,
       });
 
       const note = await storage.createNote(validated);
@@ -578,13 +609,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update note for travel
-  app.put("/api/travels/:travelId/notes/:noteId", async (req, res) => {
+  app.put("/api/travels/:travelId/notes/:noteId", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
       const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+      }
       
       // Convert date if provided
       if (updateData.noteDate) {
@@ -728,8 +765,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate PDF for travel (returns HTML for now, can be converted to PDF on client)
+  // Generate PDF for travel using Puppeteer
   app.get("/api/travels/:id/generate-pdf", async (req, res) => {
+    const puppeteer = await import('puppeteer');
+    let browser;
+    
     try {
       const travel = await storage.getTravel(req.params.id);
       if (!travel) {
@@ -1063,14 +1103,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </div>
         </body></html>`;
 
-      // Set headers for HTML download (users can save as PDF)
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
+      // Try to generate PDF using Puppeteer, fallback to HTML if it fails
+      try {
+        browser = await puppeteer.launch({ 
+          headless: true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ]
+        });
+        const page = await browser.newPage();
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+          format: 'A4',
+          printBackground: true,
+          margin: {
+            top: '40px',
+            right: '40px',
+            bottom: '40px',
+            left: '40px'
+          }
+        });
 
-      res.send(htmlContent);
+        // Set headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
+        
+        res.send(pdfBuffer);
+      } catch (puppeteerError: any) {
+        console.warn('Puppeteer failed, falling back to printable HTML:', puppeteerError.message);
+        
+        // Fallback: return HTML optimized for printing/PDF conversion
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Content-Disposition', `inline; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
+        
+        // Add print-specific CSS and auto-print script
+        const printableHtml = htmlContent.replace(
+          '</head>',
+          `
+          <style media="print">
+            @page { size: A4; margin: 40px; }
+            body { -webkit-print-color-adjust: exact; }
+          </style>
+          <script>
+            window.addEventListener('load', function() {
+              setTimeout(function() {
+                window.print();
+              }, 1000);
+            });
+          </script>
+          </head>`
+        );
+        
+        res.send(printableHtml);
+      }
+      
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ error: "Error generating PDF" });
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   });
 

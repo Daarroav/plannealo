@@ -43,6 +43,7 @@ export const accommodations = pgTable("accommodations", {
   policies: text("policies"),
   notes: text("notes"),
   thumbnail: text("thumbnail"),
+  attachments: text("attachments").array(), // Archivos adjuntos adicionales
 });
 
 export const activities = pgTable("activities", {

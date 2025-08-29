@@ -37,7 +37,7 @@ export function NoteFormModal({
   isPending = false,
   editingNote
 }: NoteFormModalProps) {
-  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
@@ -80,34 +80,40 @@ export function NoteFormModal({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const fileNames = Array.from(files).map(file => file.name);
-      const updatedFiles = [...attachedFiles, ...fileNames];
+      const newFiles = Array.from(files);
+      const updatedFiles = [...attachedFiles, ...newFiles];
       setAttachedFiles(updatedFiles);
-      form.setValue("attachments", updatedFiles);
     }
   };
 
   const removeFile = (index: number) => {
     const updatedFiles = attachedFiles.filter((_, i) => i !== index);
     setAttachedFiles(updatedFiles);
-    form.setValue("attachments", updatedFiles);
   };
 
-  const handleSubmit = (data: NoteFormData) => {
+  const handleSubmit = async (data: NoteFormData) => {
     console.log("Form data before processing:", data);
 
-    const processedData = {
-      ...(editingNote ? { id: editingNote.id } : {}),
-      title: data.title,
-      noteDate: new Date(data.noteDate),
-      noteTime: data.noteTime || undefined,
-      content: data.content,
-      visibleToTravelers: data.visibleToTravelers,
-      attachments: attachedFiles.length > 0 ? attachedFiles : undefined,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields
+    if (editingNote) {
+      formData.append('id', editingNote.id);
+    }
+    formData.append('title', data.title);
+    formData.append('noteDate', new Date(data.noteDate).toISOString());
+    formData.append('noteTime', data.noteTime || '');
+    formData.append('content', data.content);
+    formData.append('visibleToTravelers', (data.visibleToTravelers ?? true).toString());
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    console.log("Processed data to send:", processedData);
-    onSubmit(processedData);
+    console.log("FormData to send:", formData);
+    onSubmit(formData);
     form.reset();
     setAttachedFiles([]);
   };
@@ -249,7 +255,7 @@ export function NoteFormModal({
                     <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-foreground">{fileName}</span>
+                        <span className="text-sm text-foreground">{fileName.name}</span>
                       </div>
                       <Button
                         type="button"

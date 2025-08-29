@@ -174,7 +174,23 @@ export default function TravelDetail() {
   const createAccommodationMutation = useMutation({
     mutationFn: async (data: any) => {
       if (editingAccommodation) {
-        const response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
+        // Handle FormData for file uploads in updates too
+        let response;
+        if (data instanceof FormData) {
+          response = await fetch(`/api/accommodations/${editingAccommodation.id}`, {
+            method: "PUT",
+            credentials: "include",
+            body: data,
+          });
+        } else {
+          response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Error updating accommodation");
+        }
+        
         return await response.json();
       } else {
         // Handle FormData for file uploads
@@ -784,7 +800,19 @@ export default function TravelDetail() {
                   ) : (
                     accommodations.map((accommodation) => (
                       <Card key={accommodation.id} className="p-4 border-l-4 border-l-blue-500">
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start gap-4">
+                          {accommodation.thumbnail && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={accommodation.thumbnail.startsWith('/uploads/') ? accommodation.thumbnail : `/uploads/${accommodation.thumbnail}`}
+                                alt={accommodation.name}
+                                className="w-20 h-20 object-cover rounded-lg border"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant="outline">{accommodation.type}</Badge>
