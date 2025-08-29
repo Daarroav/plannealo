@@ -79,9 +79,14 @@ export class AeroDataBoxService {
         throw new Error('AeroDataBox API key not configured');
       }
 
+      // Validar longitud mínima del término de búsqueda
+      if (!term || term.trim().length < 3) {
+        return []; // Retornar array vacío en lugar de error para términos cortos
+      }
+
       const response = await aeroDataBoxAPI.get(`/airports/search/term`, {
         params: {
-          q: term,
+          q: term.trim(),
           limit: 10
         }
       });
@@ -89,6 +94,12 @@ export class AeroDataBoxService {
       return response.data?.items || [];
     } catch (error: any) {
       console.error('Error searching airports:', error.response?.data || error.message);
+      
+      // Si el error es de longitud mínima, retornar array vacío en lugar de lanzar error
+      if (error.response?.data?.message?.includes('Minimum required length')) {
+        return [];
+      }
+      
       throw new Error('Failed to search airports');
     }
   }

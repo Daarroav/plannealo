@@ -660,6 +660,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Query parameter 'q' is required" });
       }
 
+      // Validar longitud mínima en el servidor también
+      if (q.trim().length < 3) {
+        return res.json([]); // Retornar array vacío para términos cortos
+      }
+
       const airports = await AeroDataBoxService.searchAirports(q);
       res.json(airports);
     } catch (error) {
