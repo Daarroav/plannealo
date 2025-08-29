@@ -131,7 +131,15 @@ export class AeroDataBoxService {
           const flights = response.data?.departures || [];
           if (flights.length > 0) {
             console.log(`Found ${flights.length} flights in ${range.desc} period`);
-            return flights;
+            // Asegurar estructura de datos consistente
+            const processedFlights = flights.map((flight: any) => ({
+              ...flight,
+              number: flight.number || 'N/A',
+              airline: flight.airline || { name: 'Unknown', iata: '', icao: '' },
+              departure: flight.departure || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' },
+              arrival: flight.arrival || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' }
+            }));
+            return processedFlights;
           }
         } catch (rangeError: any) {
           console.log(`No flights found in ${range.desc} period:`, rangeError.response?.data?.message || rangeError.message);
@@ -187,14 +195,20 @@ export class AeroDataBoxService {
           const dayText = nearbyDate.offset > 0 ? `${nearbyDate.offset} días después` : `${Math.abs(nearbyDate.offset)} días antes`;
           console.log(`Found ${flights.length} flights ${dayText} (${nearbyDate.date})`);
           
-          // Agregar información de fecha alternativa a los vuelos
-          flights.forEach((flight: any) => {
-            flight._alternativeDate = nearbyDate.date;
-            flight._originalDate = originalDate;
-            flight._dateOffset = nearbyDate.offset;
-          });
+          // Agregar información de fecha alternativa a los vuelos y asegurar estructura
+          const processedFlights = flights.map((flight: any) => ({
+            ...flight,
+            _alternativeDate: nearbyDate.date,
+            _originalDate: originalDate,
+            _dateOffset: nearbyDate.offset,
+            // Asegurar que la estructura básica existe
+            number: flight.number || 'N/A',
+            airline: flight.airline || { name: 'Unknown', iata: '', icao: '' },
+            departure: flight.departure || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' },
+            arrival: flight.arrival || { airport: { name: 'Unknown', iata: '', icao: '', municipalityName: 'Unknown' }, scheduledTimeLocal: '' }
+          }));
           
-          return flights;
+          return processedFlights;
         }
       } catch (error) {
         continue;

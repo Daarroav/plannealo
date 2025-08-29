@@ -93,7 +93,13 @@ export function FlightSearchModal({
       
       if (response.ok) {
         const data = await response.json();
+        console.log("Flight search response:", data);
         setFlights(data.flights || []);
+        
+        // Debug: mostrar el primer vuelo para ver la estructura
+        if (data.flights && data.flights.length > 0) {
+          console.log("First flight structure:", data.flights[0]);
+        }
         
         // Mostrar información adicional sobre la búsqueda
         if (data.searchInfo) {
@@ -261,10 +267,10 @@ export function FlightSearchModal({
                         {/* Información de la aerolínea y vuelo */}
                         <div className="flex items-center space-x-2 mb-2">
                           <span className="font-bold text-lg">
-                            {(flight.airline?.iata || flight.airline?.icao || 'N/A')} {flight.number || 'N/A'}
+                            {flight.airline.iata || flight.airline.icao} {flight.number}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            {flight.airline?.name || 'Aerolínea no especificada'}
+                            {flight.airline.name}
                           </span>
                           {flight.status && (
                             <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
@@ -282,13 +288,13 @@ export function FlightSearchModal({
                               <span className="font-medium">Salida</span>
                             </div>
                             <div className="text-lg font-bold">
-                              {formatTime(flight.departure?.scheduledTimeLocal)}
+                              {formatTime(flight.departure.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {formatDate(flight.departure?.scheduledTimeLocal)}
+                              {formatDate(flight.departure.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {(flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A')} - {flight.departure?.airport?.municipalityName || 'Unknown'}
+                              {flight.departure.airport.iata || flight.departure.airport.icao} - {flight.departure.airport.municipalityName}
                             </div>
                             {flight.departure.terminal && (
                               <div className="text-xs text-muted-foreground">
@@ -314,13 +320,13 @@ export function FlightSearchModal({
                               <span className="font-medium">Llegada</span>
                             </div>
                             <div className="text-lg font-bold">
-                              {formatTime(flight.arrival?.scheduledTimeLocal)}
+                              {formatTime(flight.arrival.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {formatDate(flight.arrival?.scheduledTimeLocal)}
+                              {formatDate(flight.arrival.scheduledTimeLocal)}
                             </div>
                             <div className="text-sm">
-                              {(flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A')} - {flight.arrival?.airport?.municipalityName || 'Unknown'}
+                              {flight.arrival.airport.iata || flight.arrival.airport.icao} - {flight.arrival.airport.municipalityName}
                             </div>
                             {flight.arrival.terminal && (
                               <div className="text-xs text-muted-foreground">
