@@ -623,6 +623,33 @@ export default function TravelPreview() {
                 />
               </div>
             )}
+            {event.data.attachments && event.data.attachments.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Documentos Adjuntos
+                </p>
+                <div className="space-y-1">
+                  {event.data.attachments.map(
+                    (fileName: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <a 
+                          href={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                        </a>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         );
 

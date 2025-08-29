@@ -150,6 +150,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     if (thumbnail) {
       formData.append('thumbnail', thumbnail);
     }
+    
+    // Add attached files if exists
+    attachedFiles.forEach((file, index) => {
+      formData.append('attachments', file);
+    });
   
     // Enviar el formData directamente
     try {

@@ -150,16 +150,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/accommodations", upload.single('thumbnail'), async (req, res) => {
+  app.post("/api/travels/:travelId/accommodations", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
-      const thumbnail = req.file ? `/uploads/${req.file.filename}` : null;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const thumbnail = files.thumbnail?.[0] ? `/uploads/${files.thumbnail[0].filename}` : null;
+      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
 
       console.log("Request body:", req.body);
       console.log("Thumbnail:", thumbnail);
+      console.log("Attachments:", attachments);
       console.log("Travel ID:", req.params.travelId);
       
       // Validate that required fields are present
@@ -184,6 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkIn: new Date(req.body.checkIn),
         checkOut: new Date(req.body.checkOut),
         thumbnail: thumbnail,
+        attachments: attachments,
       });
 
       const accommodation = await storage.createAccommodation(validated);
@@ -194,17 +198,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/accommodations/:id", upload.single('thumbnail'), async (req, res) => {
+  app.put("/api/accommodations/:id", upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
       const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
       // Handle thumbnail upload
-      if (req.file) {
-        updateData.thumbnail = `/uploads/${req.file.filename}`;
+      if (files.thumbnail?.[0]) {
+        updateData.thumbnail = `/uploads/${files.thumbnail[0].filename}`;
+      }
+      
+      // Handle attachments upload
+      if (files.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
       }
       
       // Convert dates if provided
