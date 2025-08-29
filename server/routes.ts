@@ -682,8 +682,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate PDF for travel (returns HTML for now, can be converted to PDF on client)
+  // Generate PDF for travel using Puppeteer
   app.get("/api/travels/:id/generate-pdf", async (req, res) => {
+    const puppeteer = await import('puppeteer');
+    let browser;
+    
     try {
       const travel = await storage.getTravel(req.params.id);
       if (!travel) {
@@ -1017,14 +1020,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </div>
         </body></html>`;
 
-      // Set headers for HTML download (users can save as PDF)
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
+      // Generate PDF using Puppeteer
+      browser = await puppeteer.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '40px',
+          right: '40px',
+          bottom: '40px',
+          left: '40px'
+        }
+      });
 
-      res.send(htmlContent);
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
+      
+      res.send(pdfBuffer);
+      
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ error: "Error generating PDF" });
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
     }
   });
 
