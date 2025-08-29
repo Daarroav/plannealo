@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 import { EmailService } from "./emailService";
+import { AeroDataBoxService } from "./aeroDataBoxService";
 import multer from 'multer';  // Instalacion  para subir archivos
 import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
@@ -644,6 +645,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating note:", error);
       res.status(400).json({ message: "Error updating note" });
+    }
+  });
+
+  // AeroDataBox API endpoints
+  app.get("/api/airports/search", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+
+      const airports = await AeroDataBoxService.searchAirports(q);
+      res.json(airports);
+    } catch (error) {
+      console.error("Error searching airports:", error);
+      res.status(500).json({ message: "Error searching airports" });
+    }
+  });
+
+  app.get("/api/flights/search", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { origin, destination, date } = req.query;
+      
+      if (!origin || !destination || !date) {
+        return res.status(400).json({ 
+          message: "Parameters 'origin', 'destination', and 'date' are required" 
+        });
+      }
+
+      const flights = await AeroDataBoxService.searchFlightsBetweenAirports(
+        origin as string, 
+        destination as string, 
+        date as string
+      );
+      
+      res.json(flights);
+    } catch (error) {
+      console.error("Error searching flights:", error);
+      res.status(500).json({ message: "Error searching flights" });
     }
   });
 
