@@ -1,6 +1,6 @@
-import formData from "form-data";
-import Mailgun from "mailgun.js";
-import crypto from "crypto";
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
+import crypto from 'crypto';
 
 export class EmailService {
   private mg: any;
@@ -8,44 +8,38 @@ export class EmailService {
 
   constructor() {
     if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-      throw new Error(
-        "MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required",
-      );
+      throw new Error('MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required');
     }
-
+    
     const mailgun = new Mailgun(formData);
     this.mg = mailgun.client({
-      username: "api",
+      username: 'api',
       key: process.env.MAILGUN_API_KEY,
     });
     this.domain = process.env.MAILGUN_DOMAIN;
   }
 
-  async sendTravelShareEmail(
-    travelData: any,
-    recipientEmail: string,
-    publicToken: string,
-  ) {
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : "http://localhost:5000";
-
+  async sendTravelShareEmail(travelData: any, recipientEmail: string, publicToken: string) {
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      : 'http://localhost:5000';
+    
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
-
+    
     const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
-
+    
     try {
       const result = await this.mg.messages.create(this.domain, {
-        from: "PLANNEALO <itinerarios@mail.plannealo.com>",
+        from: "PLANNEALO <itinerarios@plannealo.com>",
         to: [recipientEmail],
-        subject: `🛩️Bienvenido a tu próximo viaje con Plannealo.`,
+        subject: `Tu Itinerario: ${travelData.name}`,
         html: htmlContent,
-        text: this.generatePlainTextEmail(travelData, itineraryUrl),
+        text: this.generatePlainTextEmail(travelData, itineraryUrl)
       });
-
+      
       return result;
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error('Error sending email:', error);
       throw error;
     }
   }
@@ -179,9 +173,8 @@ export class EmailService {
 <body>
   <div class="email-container">
     <div class="header">
-      <h1>Hola,</h1>
-      <p>¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros! 🛩️🌎</p>
-      <p>Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:</p>
+      <h1>¡Tu itinerario está listo!</h1>
+      <p>Hemos preparado todos los detalles de tu viaje</p>
     </div>
     
     <div class="content">
@@ -194,35 +187,27 @@ export class EmailService {
           </div>
           <div class="detail-item">
             <span class="detail-label">Fecha de Inicio</span>
-            <span class="detail-value">${new Date(
-              travel.startDate,
-            ).toLocaleDateString("es-ES", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
+            <span class="detail-value">${new Date(travel.startDate).toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
             })}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Fecha de Fin</span>
-            <span class="detail-value">${new Date(
-              travel.endDate,
-            ).toLocaleDateString("es-ES", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
+            <span class="detail-value">${new Date(travel.endDate).toLocaleDateString('es-ES', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
             })}</span>
           </div>
-          ${
-            travel.destination
-              ? `
+          ${travel.destination ? `
           <div class="detail-item">
             <span class="detail-label">Destino</span>
             <span class="detail-value">${travel.destination}</span>
-          </div>`
-              : ""
-          }
+          </div>` : ''}
         </div>
       </div>
 
@@ -231,41 +216,8 @@ export class EmailService {
         <a href="${itineraryUrl}" class="cta-button">Ver Mi Itinerario</a>
       </div>
 
-      <div style="margin: 32px 0; padding: 24px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #dc2626;">
-        <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">📌 Opciones para consultar tu itinerario:</h3>
-        <ul style="margin: 0; padding-left: 20px; color: #374151;">
-          <li style="margin-bottom: 8px;">Visualizar desde el botón "Ver Mi itinerario"</li>
-          <li style="margin-bottom: 8px;">Descargar el documento y almacenarlo en tu dispositivo.</li>
-          <li style="margin-bottom: 16px;">Añadir tu itinerario a la pantalla de inicio del celular. A continuación te explicamos cómo hacerlo:</li>
-        </ul>
-        
-        <div style="margin: 20px 0;">
-          <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px;">📱 En Android (Google Chrome)</h4>
-          <ol style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 14px;">
-            <li>Abre el enlace en Google Chrome.</li>
-            <li>Toca el botón de menú ⋮ (arriba a la derecha).</li>
-            <li>Elige "Agregar a la pantalla principal".</li>
-            <li>Escribe un nombre (ejemplo: Itinerario de Viaje).</li>
-            <li>Confirma en Añadir.</li>
-          </ol>
-          <p style="margin: 8px 0 0 0; color: #059669; font-weight: 600; font-size: 14px;">✅ Verás un ícono en tu pantalla como si fuera una app.</p>
-        </div>
-        
-        <div style="margin: 20px 0;">
-          <h4 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px;">🍏 En iPhone (Safari)</h4>
-          <ol style="margin: 0; padding-left: 20px; color: #4b5563; font-size: 14px;">
-            <li>Abre el enlace en Safari.</li>
-            <li>Toca el botón de Compartir (cuadro con flecha hacia arriba).</li>
-            <li>Selecciona "Añadir a pantalla de inicio" o "Agregar a Inicio".</li>
-            <li>Cambia el nombre si quieres (ejemplo: Itinerario de Viaje).</li>
-            <li>Toca Añadir (arriba a la derecha).</li>
-          </ol>
-          <p style="margin: 8px 0 0 0; color: #059669; font-weight: 600; font-size: 14px;">✅ Verás el botón en tu pantalla principal que abre el itinerario directo.</p>
-        </div>
-      </div>
-
-      <div style="text-align: center; margin: 32px 0; padding: 20px; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border-radius: 8px; color: white;">
-        <p style="margin: 0; font-size: 18px; font-weight: 600;">¡Prepárate para vivir una gran experiencia con PLANNEALO!</p>
+      <div class="note">
+        <strong>📋 Nota:</strong> Este enlace te permitirá acceder a tu itinerario completo sin necesidad de crear una cuenta. Guárdalo en un lugar seguro para consultarlo cuando lo necesites.
       </div>
     </div>
 
@@ -285,44 +237,21 @@ export class EmailService {
 
   private generatePlainTextEmail(travel: any, itineraryUrl: string): string {
     return `
-Hola,
+¡Tu itinerario está listo!
 
-¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros! 🛩️🌎
-
-Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:
+PLANNEALO ha preparado todos los detalles de tu viaje.
 
 --- DETALLES DEL VIAJE ---
 Nombre: ${travel.name}
 Cliente: ${travel.clientName}
-Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString("es-ES")}
-Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString("es-ES")}
-${travel.destination ? `Destino: ${travel.destination}` : ""}
+Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString('es-ES')}
+Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString('es-ES')}
+${travel.destination ? `Destino: ${travel.destination}` : ''}
 
 Para ver tu itinerario completo, visita:
 ${itineraryUrl}
 
-📌 OPCIONES PARA CONSULTAR TU ITINERARIO:
-- Visualizar desde el enlace de arriba
-- Descargar el documento y almacenarlo en tu dispositivo
-- Añadir tu itinerario a la pantalla de inicio del celular:
-
-📱 En Android (Google Chrome):
-1. Abre el enlace en Google Chrome
-2. Toca el botón de menú ⋮ (arriba a la derecha)
-3. Elige "Agregar a la pantalla principal"
-4. Escribe un nombre (ejemplo: Itinerario de Viaje)
-5. Confirma en Añadir
-✅ Verás un ícono en tu pantalla como si fuera una app
-
-🍏 En iPhone (Safari):
-1. Abre el enlace en Safari
-2. Toca el botón de Compartir (cuadro con flecha hacia arriba)
-3. Selecciona "Añadir a pantalla de inicio" o "Agregar a Inicio"
-4. Cambia el nombre si quieres (ejemplo: Itinerario de Viaje)
-5. Toca Añadir (arriba a la derecha)
-✅ Verás el botón en tu pantalla principal que abre el itinerario directo
-
-¡Prepárate para vivir una gran experiencia con PLANNEALO!
+Este enlace te permitirá acceder a tu itinerario sin necesidad de crear una cuenta.
 
 ---
 PLANNEALO - Tu agencia de viajes de confianza
@@ -331,6 +260,6 @@ itinerarios@plannealo.com
   }
 
   generatePublicToken(): string {
-    return crypto.randomBytes(32).toString("hex");
+    return crypto.randomBytes(32).toString('hex');
   }
 }
