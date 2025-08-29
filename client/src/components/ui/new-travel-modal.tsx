@@ -12,6 +12,7 @@ import { X, Image, Upload } from "lucide-react";
 const newTravelSchema = z.object({
   name: z.string().min(1, "El nombre del viaje es requerido"),
   clientName: z.string().min(1, "El nombre del cliente es requerido"),
+  clientEmail: z.string().email("El correo electrónico no es válido"),
   startDate: z.string().min(1, "La fecha de inicio es requerida"),
   endDate: z.string().min(1, "La fecha de fin es requerida"),
   travelers: z.number().min(1, "Debe haber al menos 1 viajero"),
@@ -36,6 +37,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
     defaultValues: {
       name: "",
       clientName: "",
+      clientEmail: "",
       startDate: "",
       endDate: "",
       travelers: 1,
@@ -103,7 +105,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="name">Nombre del Viaje *</Label>
               <Input
                 id="name"
@@ -116,20 +118,55 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
                 </p>
               )}
             </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="clientEmail">Correo Electrónico del Cliente *</Label>
+                <Input 
+                  id="clientEmail" 
+                  type="email" 
+                  {...form.register("clientEmail")} 
+                  placeholder="cliente@ejemplo.com" 
+                />
+                {form.formState.errors.clientEmail && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.clientEmail.message}
+                  </p>
+                )}
+              </div>
             
-            <div>
-              <Label htmlFor="clientName">Cliente *</Label>
-              <Input
-                id="clientName"
-                {...form.register("clientName")}
-                placeholder="Nombre del cliente"
-              />
-              {form.formState.errors.clientName && (
-                <p className="text-sm text-destructive mt-1">
-                  {form.formState.errors.clientName.message}
-                </p>
-              )}
-            </div>
+      
+              <div className="space-y-2">
+                <Label htmlFor="clientName">Nombre del Cliente *</Label>
+                <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
+                {form.formState.errors.clientName && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.clientName.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2"> 
+                <Label htmlFor="travelers">Número de Viajeros *</Label>
+                <Select onValueChange={(value) => form.setValue("travelers", parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 viajero</SelectItem>
+                    <SelectItem value="2">2 viajeros</SelectItem>
+                    <SelectItem value="3">3 viajeros</SelectItem>
+                    <SelectItem value="4">4 viajeros</SelectItem>
+                    <SelectItem value="5">5+ viajeros</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.travelers && (
+                  <p className="text-sm text-destructive mt-1">
+                    {form.formState.errors.travelers.message}
+                  </p>
+                )}
+          </div>
+
+    
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -162,26 +199,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
             </div>
           </div>
           
-          <div>
-            <Label htmlFor="travelers">Número de Viajeros *</Label>
-            <Select onValueChange={(value) => form.setValue("travelers", parseInt(value))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 viajero</SelectItem>
-                <SelectItem value="2">2 viajeros</SelectItem>
-                <SelectItem value="3">3 viajeros</SelectItem>
-                <SelectItem value="4">4 viajeros</SelectItem>
-                <SelectItem value="5">5+ viajeros</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.travelers && (
-              <p className="text-sm text-destructive mt-1">
-                {form.formState.errors.travelers.message}
-              </p>
-            )}
-          </div>
+         
           
           <div>
             <Label>Imagen de Portada</Label>

@@ -90,8 +90,30 @@ export interface IStorage {
   // Note methods
   createNote(note: InsertNote): Promise<Note>;
   getNotesByTravel(travelId: string): Promise<Note[]>;
-  updateNote(id: string, note: Partial<Note>): Promise<Note>;
+  updateNote(id: string, updates: Partial<Note>): Promise<Note>;
   deleteNote(id: string): Promise<void>;
+
+  // Client stats
+  getClientStats(): Promise<{
+    clients: Array<{
+      id: string;
+      email: string;
+      name: string;
+      joinedAt: Date;
+      lastActive: Date;
+      stats: {
+        total: number;
+        published: number;
+        draft: number;
+      };
+    }>;
+    stats: {
+      totalClients: number;
+      totalTravels: number;
+      publishedTravels: number;
+      draftTravels: number;
+    };
+  }>;
 
   sessionStore: Store;
 }
@@ -389,6 +411,72 @@ export class DatabaseStorage implements IStorage {
 
   async deleteNote(id: string): Promise<void> {
     await db.delete(notes).where(eq(notes.id, id));
+  }
+
+  async getClientStats() {
+    // Obtener todos los clientes
+    const clients = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'client'))
+      .leftJoin(travels, eq(users.id, travels.clientId));
+
+    // Procesar los datos
+    const clientsMap = new Map();
+    
+    // Agrupar viajes por cliente
+    clients.forEach(({ users: user, travels: travel }) => {
+      if (!clientsMap.has(user.id)) {
+        clientsMap.set(user.id, {
+          id: user.id,
+          email: user.username,
+          name: user.name,
+          joinedAt: user.createdAt,
+          travels: [],
+        });
+      }
+      
+      if (travel) {
+        clientsMap.get(user.id).travels.push(travel);
+      }
+    });
+
+    // Calcular estadísticas para cada cliente
+    const processedClients = Array.from(clientsMap.values()).map(client => {
+      const stats = {
+        total: client.travels.length,
+        published: client.travels.filter((t: any) => t.status === 'published').length,
+        draft: client.travels.filter((t: any) => t.status === 'draft').length,
+      };
+
+      const lastActive = client.travels.length > 0
+        ? new Date(Math.max(...client.travels.map((t: any) => new Date(t.updatedAt).getTime())))
+        : client.joinedAt;
+
+      return {
+        ...client,
+        lastActive,
+        stats
+      };
+    });
+
+    // Ordenar por último activo (más reciente primero)
+    processedClients.sort((a, b) => 
+      new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()
+    );
+
+    // Calcular totales
+    const totalStats = {
+      totalClients: processedClients.length,
+      totalTravels: processedClients.reduce((sum, client) => sum + client.stats.total, 0),
+      publishedTravels: processedClients.reduce((sum, client) => sum + client.stats.published, 0),
+      draftTravels: processedClients.reduce((sum, client) => sum + client.stats.draft, 0),
+    };
+
+    return {
+      clients: processedClients,
+      stats: totalStats
+    };
   }
 }
 

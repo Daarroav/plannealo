@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   role: text("role").default("agent"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
 export const travels = pgTable("travels", {
@@ -22,6 +23,7 @@ export const travels = pgTable("travels", {
   coverImage: text("cover_image"),
   publicToken: text("public_token"), // Token para acceso público
   publicTokenExpiry: timestamp("public_token_expiry"), // Expiración del token
+  clientId: varchar("client_id").references(() => users.id, { onDelete: 'set null' }), // Id cliente 
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -130,11 +132,37 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
 });
 
-export const insertTravelSchema = createInsertSchema(travels).omit({
+
+export const insertTravelSchema = createInsertSchema(travels)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    clientId: z.string(),     // ⚠️ la llave foránea del usuario
+    createdBy: z.string(),    // si también quieres registrar quién creó el viaje
+  });
+
+/*export const insertTravelSchema = createInsertSchema(travels).omit({
   id: true,
+  clientId: true, // Lo manejaremos manualmente
   createdAt: true,
   updatedAt: true,
+  status: true,
+  coverImage: true,
+}).extend({
+  clientEmail: z.string().email("El correo electrónico no es válido"),
+  startDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
+  endDate: z.union([z.date(), z.string()]).transform((val) => {
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
+
+*/
+
 
 export const insertAccommodationSchema = createInsertSchema(accommodations).omit({
   id: true,

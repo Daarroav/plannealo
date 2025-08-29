@@ -36,6 +36,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Travel routes
+  // Obtener estadísticas de clientes
+  app.get("/api/clients/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
+    try {
+      const stats = await storage.getClientStats();
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching client stats:", error);
+      res.status(500).json({ message: "Error al obtener estadísticas de clientes" });
+    }
+  });
+
   app.get("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -59,25 +75,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching travels" });
     }
   });
+  
 
   app.post("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
+    console.log("Request body:", req.body);
     try {
+      const { clientEmail, ...travelData } = req.body;
+      
+      // Verificar si el cliente ya existe
+      let client = await storage.getUserByUsername(clientEmail);
+      console.log("Client:", client);
+      
+      // Si no existe, crear un nuevo usuario cliente
+      if (!client) {
+        // Generar una contraseña temporal segura
+        const tempPassword = Math.random().toString(36).slice(-8);
+
+        
+        client = await storage.createUser({
+          username: clientEmail,
+          password: tempPassword, // La contraseña se hasheará en el storage
+          name: req.body.clientName,
+          role: 'client',
+        });
+        
+        // Aquí podrías enviar un correo al cliente con sus credenciales
+        // await emailService.sendWelcomeEmail(clientEmail, tempPassword);
+      }
+
       const validated = insertTravelSchema.parse({
-        ...req.body,
+        ...travelData,
+        clientEmail: clientEmail,
+        clientId: client.id,
         createdBy: req.user!.id,
-        startDate: new Date(req.body.startDate),
-        endDate: new Date(req.body.endDate),
+        startDate: new Date(travelData.startDate),
+        endDate: new Date(travelData.endDate),
       });
 
       const travel = await storage.createTravel(validated);
       res.status(201).json(travel);
     } catch (error) {
       console.error("Error creating travel:", error);
-      res.status(400).json({ message: "Error creating travel" });
+      res.status(400).json({ 
+        message: "Error creating travel",
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 

@@ -2,6 +2,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Bell, User } from "lucide-react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
+import { Link,  NavLink } from "react-router-dom";
+
 
 export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
@@ -21,15 +23,30 @@ export function NavigationHeader() {
           </div>
           
           <nav className="hidden md:flex space-x-8">
-            <a href="#" className="text-foreground hover:text-accent px-3 py-2 text-sm font-medium border-b-2 border-accent">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
+              }
+            >
               Viajes
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium">
+            </NavLink>
+            <NavLink
+              to="/clients"
+              className={({ isActive }) =>
+                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
+              }
+            >
               Clientes
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground px-3 py-2 text-sm font-medium">
+            </NavLink>
+            <NavLink
+              to="/reportes"
+              className={({ isActive }) =>
+                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
+              }
+            >
               Reportes
-            </a>
+            </NavLink>
           </nav>
           
           <div className="flex items-center space-x-4">

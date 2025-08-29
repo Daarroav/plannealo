@@ -46,6 +46,7 @@ export default function HomePage() {
       const response = await apiRequest("POST", "/api/travels", {
         name: data.name,
         clientName: data.clientName,
+        clientEmail: data.clientEmail,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         travelers: data.travelers,
