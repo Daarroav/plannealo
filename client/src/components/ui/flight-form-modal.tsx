@@ -207,23 +207,34 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     }
   };
 
-  const handleSubmit = (data: FlightForm) => {
+  const handleSubmit = async (data: FlightForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Combine date and time for departure and arrival
-    const departureDateTime = new Date(`${data.departureDateField}T${data.departureTimeField}:00`);
-    const arrivalDateTime = new Date(`${data.arrivalDateField}T${data.arrivalTimeField}:00`);
+    const departureDateTime = new Date(`${currentValues.departureDateField}T${currentValues.departureTimeField}:00`);
+    const arrivalDateTime = new Date(`${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`);
 
     const submitData = {
-      travelId: data.travelId,
-      airline: data.airline,
-      flightNumber: data.flightNumber,
-      reservationNumber: data.reservationNumber,
-      departureCity: data.departureCity,
-      arrivalCity: data.arrivalCity,
+      travelId: currentValues.travelId,
+      airline: currentValues.airline,
+      flightNumber: currentValues.flightNumber,
+      reservationNumber: currentValues.reservationNumber,
+      departureCity: currentValues.departureCity,
+      arrivalCity: currentValues.arrivalCity,
       departureDate: departureDateTime.toISOString(),
       arrivalDate: arrivalDateTime.toISOString(),
-      departureTerminal: data.departureTerminal,
-      arrivalTerminal: data.arrivalTerminal,
-      class: data.class,
+      departureTerminal: currentValues.departureTerminal,
+      arrivalTerminal: currentValues.arrivalTerminal,
+      class: currentValues.class,
     };
 
     onSubmit(submitData);

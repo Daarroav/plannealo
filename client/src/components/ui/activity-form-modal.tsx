@@ -108,21 +108,32 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     }
   }, [editingActivity, form, travelId]);
 
-  const handleSubmit = (data: ActivityForm) => {
+  const handleSubmit = async (data: ActivityForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Combine date and time for the activity
-    const activityDateTime = new Date(`${data.activityDate}T${data.startTime}:00`);
+    const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
 
     const submitData = {
-      travelId: data.travelId,
-      name: data.name,
-      type: data.type,
-      provider: data.provider,
+      travelId: currentValues.travelId,
+      name: currentValues.name,
+      type: currentValues.type,
+      provider: currentValues.provider,
       date: activityDateTime.toISOString(),
-      startTime: data.startTime,
-      endTime: data.endTime,
-      confirmationNumber: data.confirmationNumber,
-      conditions: data.conditions,
-      notes: `${data.contactName ? `Contacto: ${data.contactName}` : ''}${data.contactPhone ? ` - Tel: ${data.contactPhone}` : ''}${data.startLocation ? `\nUbicación inicio: ${data.startLocation}` : ''}${data.endLocation ? `\nUbicación fin: ${data.endLocation}` : ''}${data.notes ? `\n${data.notes}` : ''}`.trim(),
+      startTime: currentValues.startTime,
+      endTime: currentValues.endTime,
+      confirmationNumber: currentValues.confirmationNumber,
+      conditions: currentValues.conditions,
+      notes: `${currentValues.contactName ? `Contacto: ${currentValues.contactName}` : ''}${currentValues.contactPhone ? ` - Tel: ${currentValues.contactPhone}` : ''}${currentValues.startLocation ? `\nUbicación inicio: ${currentValues.startLocation}` : ''}${currentValues.endLocation ? `\nUbicación fin: ${currentValues.endLocation}` : ''}${currentValues.notes ? `\n${currentValues.notes}` : ''}`.trim(),
     };
 
     onSubmit(submitData);

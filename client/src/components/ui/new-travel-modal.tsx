@@ -82,10 +82,21 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
     }
   };
 
-  const handleSubmit = (data: NewTravelForm) => {
+  const handleSubmit = async (data: NewTravelForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Pass the selected image separately for handling after travel creation
     onSubmit({ 
-      ...data, 
+      ...currentValues, 
       _selectedImage: selectedImage || undefined 
     });
     form.reset();

@@ -126,25 +126,36 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   };*/
 
   const handleSubmit = async (data: AccommodationForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Combine date and time for check-in and check-out
-    const checkIn = new Date(`${data.checkInDate}T${data.checkInTime}:00`);
-    const checkOut = new Date(`${data.checkOutDate}T${data.checkOutTime}:00`);
+    const checkIn = new Date(`${currentValues.checkInDate}T${currentValues.checkInTime}:00`);
+    const checkOut = new Date(`${currentValues.checkOutDate}T${currentValues.checkOutTime}:00`);
   
     // Create FormData
     const formData = new FormData();
     
     // Add all form fields to formData
-    formData.append('name', data.name);
-    formData.append('type', data.type);
-    formData.append('location', data.location);
+    formData.append('name', currentValues.name);
+    formData.append('type', currentValues.type);
+    formData.append('location', currentValues.location);
     formData.append('checkIn', checkIn.toISOString());
     formData.append('checkOut', checkOut.toISOString());
-    formData.append('roomType', `${data.roomCount} ${data.roomType}`);
-    formData.append('price', data.price || '');
-    formData.append('confirmationNumber', data.confirmationNumber || '');
-    formData.append('policies', data.policies || '');
-    formData.append('notes', data.notes || '');
-    formData.append('travelId', data.travelId);
+    formData.append('roomType', `${currentValues.roomCount} ${currentValues.roomType}`);
+    formData.append('price', currentValues.price || '');
+    formData.append('confirmationNumber', currentValues.confirmationNumber || '');
+    formData.append('policies', currentValues.policies || '');
+    formData.append('notes', currentValues.notes || '');
+    formData.append('travelId', currentValues.travelId);
     
     // Add thumbnail file if exists
     if (thumbnail) {
