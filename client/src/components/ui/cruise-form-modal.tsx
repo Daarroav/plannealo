@@ -49,27 +49,37 @@ export function CruiseFormModal({
     },
   });
 
-  const handleSubmit = (data: CruiseFormData) => {
-    console.log("Form data before processing:", data);
+  const handleSubmit = async (data: CruiseFormData) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    console.log("Form data before processing:", currentValues);
 
     // Combine date and time for departure
-    const departureDateTime = data.departureTime 
-      ? new Date(`${data.departureDate}T${data.departureTime}`)
-      : new Date(data.departureDate);
+    const departureDateTime = currentValues.departureTime 
+      ? new Date(`${currentValues.departureDate}T${currentValues.departureTime}`)
+      : new Date(currentValues.departureDate);
 
     // Combine date and time for arrival
-    const arrivalDateTime = data.arrivalTime 
-      ? new Date(`${data.arrivalDate}T${data.arrivalTime}`)
-      : new Date(data.arrivalDate);
+    const arrivalDateTime = currentValues.arrivalTime 
+      ? new Date(`${currentValues.arrivalDate}T${currentValues.arrivalTime}`)
+      : new Date(currentValues.arrivalDate);
 
     const processedData = {
-      cruiseLine: data.cruiseLine,
-      confirmationNumber: data.confirmationNumber || undefined,
+      cruiseLine: currentValues.cruiseLine,
+      confirmationNumber: currentValues.confirmationNumber || undefined,
       departureDate: departureDateTime,
-      departurePort: data.departurePort,
+      departurePort: currentValues.departurePort,
       arrivalDate: arrivalDateTime,
-      arrivalPort: data.arrivalPort,
-      notes: data.notes || undefined,
+      arrivalPort: currentValues.arrivalPort,
+      notes: currentValues.notes || undefined,
     };
 
     console.log("Processed data to send:", processedData);

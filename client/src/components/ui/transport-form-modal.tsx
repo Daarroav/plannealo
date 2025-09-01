@@ -109,28 +109,39 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     }
   }, [editingTransport, form, travelId]);
 
-  const handleSubmit = (data: TransportForm) => {
+  const handleSubmit = async (data: TransportForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Combine date and time for pickup
-    const pickupDateTime = new Date(`${data.pickupDateField}T${data.pickupTimeField}:00`);
+    const pickupDateTime = new Date(`${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00`);
     
     let endDateTime = null;
-    if (data.endDateField && data.endTimeField) {
-      endDateTime = new Date(`${data.endDateField}T${data.endTimeField}:00`);
+    if (currentValues.endDateField && currentValues.endTimeField) {
+      endDateTime = new Date(`${currentValues.endDateField}T${currentValues.endTimeField}:00`);
     }
 
     const submitData = {
-      travelId: data.travelId,
-      type: data.type,
-      name: data.name,
-      provider: data.provider || undefined,
-      contactName: data.contactName || undefined,
-      contactNumber: data.contactNumber || undefined,
+      travelId: currentValues.travelId,
+      type: currentValues.type,
+      name: currentValues.name,
+      provider: currentValues.provider || undefined,
+      contactName: currentValues.contactName || undefined,
+      contactNumber: currentValues.contactNumber || undefined,
       pickupDate: pickupDateTime,
-      pickupLocation: data.pickupLocation,
+      pickupLocation: currentValues.pickupLocation,
       endDate: endDateTime || undefined,
-      dropoffLocation: data.dropoffLocation || undefined,
-      confirmationNumber: data.confirmationNumber || undefined,
-      notes: data.notes || undefined,
+      dropoffLocation: currentValues.dropoffLocation || undefined,
+      confirmationNumber: currentValues.confirmationNumber || undefined,
+      notes: currentValues.notes || undefined,
     };
 
     onSubmit(submitData);

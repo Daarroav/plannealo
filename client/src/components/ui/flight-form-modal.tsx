@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Search, Plane } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
+import { AirportSearch } from "./airport-search";
+import { FlightSearchModal } from "./flight-search-modal";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -37,9 +39,62 @@ interface FlightFormModalProps {
   editingFlight?: any;
 }
 
+interface Airport {
+  icao: string;
+  iata: string;
+  name: string;
+  shortName: string;
+  municipalityName: string;
+  location: {
+    lat: number;
+    lon: number;
+  };
+  countryCode: string;
+}
+
+interface FlightInfo {
+  number: string;
+  airline: {
+    name: string;
+    icao: string;
+    iata: string;
+  };
+  departure: {
+    airport: {
+      icao: string;
+      iata: string;
+      name: string;
+      municipalityName: string;
+    };
+    scheduledTimeLocal: string;
+    actualTimeLocal?: string;
+    terminal?: string;
+    gate?: string;
+  };
+  arrival: {
+    airport: {
+      icao: string;
+      iata: string;
+      name: string;
+      municipalityName: string;
+    };
+    scheduledTimeLocal: string;
+    actualTimeLocal?: string;
+    terminal?: string;
+    gate?: string;
+  };
+  aircraft?: {
+    model: string;
+  };
+  status: string;
+}
+
 export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingFlight }: FlightFormModalProps) {
   const [departureDate, setDepartureDate] = useState<Date>();
   const [arrivalDate, setArrivalDate] = useState<Date>();
+  const [flightSearchOpen, setFlightSearchOpen] = useState(false);
+  const [originAirport, setOriginAirport] = useState<Airport | null>(null);
+  const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
 
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
@@ -105,23 +160,81 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     }
   }, [editingFlight, form, travelId]);
 
-  const handleSubmit = (data: FlightForm) => {
+  // Función para llenar automáticamente el formulario cuando se selecciona un vuelo
+  const handleSelectFlight = (flight: FlightInfo) => {
+    try {
+      // Validar que tenemos la información mínima necesaria
+      if (!flight.departure?.scheduledTimeLocal || !flight.arrival?.scheduledTimeLocal) {
+        console.error("Flight missing required time information", flight);
+        return;
+      }
+
+      // Usar directamente los tiempos de la API (ya incluyen zona horaria local)
+      const departureTime = new Date(flight.departure.scheduledTimeLocal);
+      const arrivalTime = new Date(flight.arrival.scheduledTimeLocal);
+
+      // Validar que las fechas son válidas
+      if (isNaN(departureTime.getTime()) || isNaN(arrivalTime.getTime())) {
+        console.error("Invalid flight times", flight);
+        return;
+      }
+
+      // Actualizar los estados de fecha para los calendarios
+      setDepartureDate(departureTime);
+      setArrivalDate(arrivalTime);
+
+      // Llenar formulario con datos de la API
+      form.setValue("airline", flight.airline?.name || `${flight.airline?.iata || flight.airline?.icao || 'Aerolínea'}`);
+      form.setValue("flightNumber", flight.number || "");
+      form.setValue("departureCity", `${flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A'} - ${flight.departure?.airport?.municipalityName || 'Ciudad de origen'}`);
+      form.setValue("arrivalCity", `${flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A'} - ${flight.arrival?.airport?.municipalityName || 'Ciudad de destino'}`);
+      
+      // Usar las fechas y horas directamente de la API (ya en zona horaria local)
+      form.setValue("departureDateField", format(departureTime, "yyyy-MM-dd"));
+      form.setValue("departureTimeField", format(departureTime, "HH:mm"));
+      form.setValue("arrivalDateField", format(arrivalTime, "yyyy-MM-dd"));
+      form.setValue("arrivalTimeField", format(arrivalTime, "HH:mm"));
+      
+      form.setValue("departureTerminal", flight.departure?.terminal || "");
+      form.setValue("arrivalTerminal", flight.arrival?.terminal || "");
+      
+      console.log("Flight form populated successfully with API times:", {
+        departure: flight.departure.scheduledTimeLocal,
+        arrival: flight.arrival.scheduledTimeLocal
+      });
+    } catch (error) {
+      console.error("Error populating flight form:", error, flight);
+    }
+  };
+
+  const handleSubmit = async (data: FlightForm) => {
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    
     // Combine date and time for departure and arrival
-    const departureDateTime = new Date(`${data.departureDateField}T${data.departureTimeField}:00`);
-    const arrivalDateTime = new Date(`${data.arrivalDateField}T${data.arrivalTimeField}:00`);
+    const departureDateTime = new Date(`${currentValues.departureDateField}T${currentValues.departureTimeField}:00`);
+    const arrivalDateTime = new Date(`${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`);
 
     const submitData = {
-      travelId: data.travelId,
-      airline: data.airline,
-      flightNumber: data.flightNumber,
-      reservationNumber: data.reservationNumber,
-      departureCity: data.departureCity,
-      arrivalCity: data.arrivalCity,
+      travelId: currentValues.travelId,
+      airline: currentValues.airline,
+      flightNumber: currentValues.flightNumber,
+      reservationNumber: currentValues.reservationNumber,
+      departureCity: currentValues.departureCity,
+      arrivalCity: currentValues.arrivalCity,
       departureDate: departureDateTime.toISOString(),
       arrivalDate: arrivalDateTime.toISOString(),
-      departureTerminal: data.departureTerminal,
-      arrivalTerminal: data.arrivalTerminal,
-      class: data.class,
+      departureTerminal: currentValues.departureTerminal,
+      arrivalTerminal: currentValues.arrivalTerminal,
+      class: currentValues.class,
     };
 
     onSubmit(submitData);
@@ -148,11 +261,56 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-foreground">Vuelo</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-foreground">
+            {editingFlight ? "Editar Vuelo" : "Agregar Vuelo"}
+          </DialogTitle>
           <DialogDescription>
-            Agrega información de vuelo al itinerario
+            {editingFlight 
+              ? "Modifica la información del vuelo" 
+              : "Agrega información de vuelo al itinerario"
+            }
           </DialogDescription>
         </DialogHeader>
+
+        {/* Búsqueda de vuelos automática */}
+        {!editingFlight && (
+          <div className="border rounded-lg p-4 bg-blue-50 mb-6">
+            <div className="flex items-center space-x-2 mb-3">
+              <Plane className="w-5 h-5 text-blue-600" />
+              <h3 className="font-semibold text-blue-900">Búsqueda Automática de Vuelos</h3>
+            </div>
+            <p className="text-sm text-blue-700 mb-4">
+              Selecciona los aeropuertos de origen y destino para buscar vuelos disponibles y llenar automáticamente el formulario.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <AirportSearch
+                label="Aeropuerto de Origen"
+                placeholder="Buscar aeropuerto de salida..."
+                value={originAirport ? `${originAirport.iata || originAirport.icao} - ${originAirport.shortName}` : ""}
+                onSelect={setOriginAirport}
+              />
+              
+              <AirportSearch
+                label="Aeropuerto de Destino"
+                placeholder="Buscar aeropuerto de llegada..."
+                value={destinationAirport ? `${destinationAirport.iata || destinationAirport.icao} - ${destinationAirport.shortName}` : ""}
+                onSelect={setDestinationAirport}
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setFlightSearchOpen(true)}
+              disabled={!originAirport || !destinationAirport}
+              className="w-full flex items-center space-x-2"
+            >
+              <Search className="w-4 h-4" />
+              <span>Buscar Vuelos Disponibles</span>
+            </Button>
+          </div>
+        )}
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Flight Basic Info */}
@@ -402,6 +560,15 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
             </Button>
           </div>
         </form>
+
+        {/* Modal de búsqueda de vuelos */}
+        <FlightSearchModal
+          open={flightSearchOpen}
+          onClose={() => setFlightSearchOpen(false)}
+          onSelectFlight={handleSelectFlight}
+          originAirport={originAirport}
+          destinationAirport={destinationAirport}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -120,12 +120,22 @@ export function InsuranceFormModal({
   };
 
   const handleSubmit = async (data: InsuranceFormData) => {
-    console.log("Form data before processing:", data);
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    console.log("Form data before processing:", currentValues);
 
     // Combine date and time for effective date
-    const effectiveDateTime = data.effectiveTime 
-      ? new Date(`${data.effectiveDate}T${data.effectiveTime}`)
-      : new Date(data.effectiveDate);
+    const effectiveDateTime = currentValues.effectiveTime 
+      ? new Date(`${currentValues.effectiveDate}T${currentValues.effectiveTime}`)
+      : new Date(currentValues.effectiveDate);
 
     // Create FormData
     const formData = new FormData();
@@ -134,14 +144,14 @@ export function InsuranceFormModal({
     if (initialData) {
       formData.append('id', initialData.id);
     }
-    formData.append('provider', data.provider);
-    formData.append('policyNumber', data.policyNumber);
-    formData.append('policyType', data.policyType);
-    formData.append('emergencyNumber', data.emergencyNumber || '');
+    formData.append('provider', currentValues.provider);
+    formData.append('policyNumber', currentValues.policyNumber);
+    formData.append('policyType', currentValues.policyType);
+    formData.append('emergencyNumber', currentValues.emergencyNumber || '');
     formData.append('effectiveDate', effectiveDateTime.toISOString());
-    formData.append('importantInfo', data.importantInfo || '');
-    formData.append('policyDescription', data.policyDescription || '');
-    formData.append('notes', data.notes || '');
+    formData.append('importantInfo', currentValues.importantInfo || '');
+    formData.append('policyDescription', currentValues.policyDescription || '');
+    formData.append('notes', currentValues.notes || '');
     
     // Add attached files
     attachedFiles.forEach((file) => {

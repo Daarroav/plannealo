@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 import { EmailService } from "./emailService";
+import { AeroDataBoxService } from "./aeroDataBoxService";
 import multer from 'multer';  // Instalacion  para subir archivos
 import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
@@ -566,20 +567,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Raw insurance req.body:", req.body);
+      console.log("Insurance Files:", req.files);
+      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
-      const validated = insertInsuranceSchema.parse({
-        ...req.body,
+      // Ensure all required fields are present
+      const { provider, policyNumber, policyType, effectiveDate } = req.body;
+      
+      // Check for empty strings and missing values
+      if (!provider || !policyNumber || policyNumber.trim() === '' || !policyType || !effectiveDate) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          received: { provider, policyNumber, policyType, effectiveDate },
+          details: "Todos los campos obligatorios deben completarse: provider, policyNumber, policyType, effectiveDate"
+        });
+      }
+      
+      const insuranceData = {
         travelId: req.params.travelId,
-        effectiveDate: new Date(req.body.effectiveDate),
+        provider: provider,
+        policyNumber: policyNumber,
+        policyType: policyType,
+        emergencyNumber: req.body.emergencyNumber || null,
+        effectiveDate: effectiveDate, // Let the schema handle the date transformation
+        importantInfo: req.body.importantInfo || null,
+        policyDescription: req.body.policyDescription || null,
+        notes: req.body.notes || null,
         attachments: attachments,
-      });
+      };
+      
+      console.log("Insurance data before validation:", insuranceData);
+      
+      const validated = insertInsuranceSchema.parse(insuranceData);
 
       const insurance = await storage.createInsurance(validated);
       res.status(201).json(insurance);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating insurance:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          details: error.errors 
+        });
+      }
       res.status(400).json({ message: "Error creating insurance" });
     }
   });
@@ -606,20 +638,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Raw req.body:", req.body);
+      console.log("Files:", req.files);
+      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
-      const validated = insertNoteSchema.parse({
-        ...req.body,
+      // Ensure all required fields are present
+      const { title, noteDate, content, visibleToTravelers } = req.body;
+      
+      if (!title || !noteDate || !content) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          received: { title, noteDate, content } 
+        });
+      }
+      
+      const noteData = {
         travelId: req.params.id,
-        noteDate: new Date(req.body.noteDate),
+        title: title,
+        noteDate: noteDate, // Let the schema handle the date transformation
+        content: content,
+        visibleToTravelers: visibleToTravelers === 'true',
         attachments: attachments,
-      });
+      };
+      
+      console.log("Note data before validation:", noteData);
+      
+      const validated = insertNoteSchema.parse(noteData);
 
       const note = await storage.createNote(validated);
       res.status(201).json(note);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating note:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          details: error.errors 
+        });
+      }
       res.status(400).json({ message: "Error creating note" });
     }
   });
@@ -660,6 +717,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating note:", error);
       res.status(400).json({ message: "Error updating note" });
+    }
+  });
+
+  // AeroDataBox API endpoints
+  app.get("/api/airports/search", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Query parameter 'q' is required" });
+      }
+
+      // Validar longitud mínima en el servidor también
+      if (q.trim().length < 3) {
+        return res.json([]); // Retornar array vacío para términos cortos
+      }
+
+      const airports = await AeroDataBoxService.searchAirports(q);
+      res.json(airports);
+    } catch (error) {
+      console.error("Error searching airports:", error);
+      res.status(500).json({ message: "Error searching airports" });
+    }
+  });
+
+  app.get("/api/flights/search", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { origin, destination, date } = req.query;
+      
+      if (!origin || !destination || !date) {
+        return res.status(400).json({ 
+          message: "Parameters 'origin', 'destination', and 'date' are required" 
+        });
+      }
+
+      const result = await AeroDataBoxService.searchFlightsBetweenAirports(
+        origin as string, 
+        destination as string, 
+        date as string
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error searching flights:", error);
+      res.status(500).json({ message: "Error searching flights" });
     }
   });
 
