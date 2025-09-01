@@ -551,20 +551,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Raw insurance req.body:", req.body);
+      console.log("Insurance Files:", req.files);
+      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
-      const validated = insertInsuranceSchema.parse({
-        ...req.body,
+      // Ensure all required fields are present
+      const { provider, coverage, effectiveDate } = req.body;
+      
+      if (!provider || !coverage || !effectiveDate) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          received: { provider, coverage, effectiveDate } 
+        });
+      }
+      
+      const insuranceData = {
         travelId: req.params.travelId,
-        effectiveDate: new Date(req.body.effectiveDate),
+        provider: provider,
+        coverage: coverage,
+        effectiveDate: effectiveDate, // Let the schema handle the date transformation
         attachments: attachments,
-      });
+      };
+      
+      console.log("Insurance data before validation:", insuranceData);
+      
+      const validated = insertInsuranceSchema.parse(insuranceData);
 
       const insurance = await storage.createInsurance(validated);
       res.status(201).json(insurance);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating insurance:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          details: error.errors 
+        });
+      }
       res.status(400).json({ message: "Error creating insurance" });
     }
   });
@@ -597,13 +621,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
-      // Convert boolean string to boolean
-      const visibleToTravelers = req.body.visibleToTravelers === 'true';
+      // Ensure all required fields are present
+      const { title, noteDate, content, visibleToTravelers } = req.body;
+      
+      if (!title || !noteDate || !content) {
+        return res.status(400).json({ 
+          message: "Missing required fields", 
+          received: { title, noteDate, content } 
+        });
+      }
       
       const noteData = {
-        ...req.body,
         travelId: req.params.id,
-        visibleToTravelers: visibleToTravelers,
+        title: title,
+        noteDate: noteDate, // Let the schema handle the date transformation
+        content: content,
+        visibleToTravelers: visibleToTravelers === 'true',
         attachments: attachments,
       };
       
@@ -613,8 +646,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const note = await storage.createNote(validated);
       res.status(201).json(note);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating note:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          details: error.errors 
+        });
+      }
       res.status(400).json({ message: "Error creating note" });
     }
   });
