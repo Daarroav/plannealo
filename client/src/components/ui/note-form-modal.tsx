@@ -92,7 +92,17 @@ export function NoteFormModal({
   };
 
   const handleSubmit = async (data: NoteFormData) => {
-    console.log("Form data before processing:", data);
+    // Force blur on any active input to ensure values are captured
+    const activeElement = document.activeElement as HTMLElement;
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      activeElement.blur();
+      // Wait a bit for the blur event to process
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // Get the most current form values
+    const currentValues = form.getValues();
+    console.log("Form data before processing:", currentValues);
 
     // Create FormData
     const formData = new FormData();
@@ -101,11 +111,11 @@ export function NoteFormModal({
     if (editingNote) {
       formData.append('id', editingNote.id);
     }
-    formData.append('title', data.title);
-    formData.append('noteDate', new Date(data.noteDate).toISOString());
-    formData.append('noteTime', data.noteTime || '');
-    formData.append('content', data.content);
-    formData.append('visibleToTravelers', (data.visibleToTravelers ?? true).toString());
+    formData.append('title', currentValues.title);
+    formData.append('noteDate', new Date(currentValues.noteDate).toISOString());
+    formData.append('noteTime', currentValues.noteTime || '');
+    formData.append('content', currentValues.content);
+    formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
     
     // Add attached files
     attachedFiles.forEach((file) => {
