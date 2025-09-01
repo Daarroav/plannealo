@@ -560,10 +560,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Ensure all required fields are present
       const { provider, policyNumber, policyType, effectiveDate } = req.body;
       
-      if (!provider || !policyNumber || !policyType || !effectiveDate) {
+      // Check for empty strings and missing values
+      if (!provider || !policyNumber || policyNumber.trim() === '' || !policyType || !effectiveDate) {
         return res.status(400).json({ 
           message: "Missing required fields", 
-          received: { provider, policyNumber, policyType, effectiveDate } 
+          received: { provider, policyNumber, policyType, effectiveDate },
+          details: "Todos los campos obligatorios deben completarse: provider, policyNumber, policyType, effectiveDate"
         });
       }
       
