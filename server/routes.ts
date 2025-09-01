@@ -591,15 +591,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      console.log("Raw req.body:", req.body);
+      console.log("Files:", req.files);
+      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
-      const validated = insertNoteSchema.parse({
+      // Convert boolean string to boolean
+      const visibleToTravelers = req.body.visibleToTravelers === 'true';
+      
+      const noteData = {
         ...req.body,
         travelId: req.params.id,
-        noteDate: new Date(req.body.noteDate),
+        visibleToTravelers: visibleToTravelers,
         attachments: attachments,
-      });
+      };
+      
+      console.log("Note data before validation:", noteData);
+      
+      const validated = insertNoteSchema.parse(noteData);
 
       const note = await storage.createNote(validated);
       res.status(201).json(note);
