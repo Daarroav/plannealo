@@ -52,6 +52,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/reports", async (req, res) => {
+
+    console.info("Fetching reports");
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
+    try {
+      const reports = await storage.getTravelStats();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      res.status(500).json({ message: "Error al obtener informes" });
+    }
+  });
+
   app.get("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -1305,6 +1321,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  
 
   const httpServer = createServer(app);
   return httpServer;

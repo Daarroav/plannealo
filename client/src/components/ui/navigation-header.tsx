@@ -40,7 +40,7 @@ export function NavigationHeader() {
               Clientes
             </NavLink>
             <NavLink
-              to="/reportes"
+              to="/reports"
               className={({ isActive }) =>
                 `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
               }
