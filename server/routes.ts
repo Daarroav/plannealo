@@ -558,20 +558,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
       
       // Ensure all required fields are present
-      const { provider, coverage, effectiveDate } = req.body;
+      const { provider, policyNumber, policyType, effectiveDate } = req.body;
       
-      if (!provider || !coverage || !effectiveDate) {
+      if (!provider || !policyNumber || !policyType || !effectiveDate) {
         return res.status(400).json({ 
           message: "Missing required fields", 
-          received: { provider, coverage, effectiveDate } 
+          received: { provider, policyNumber, policyType, effectiveDate } 
         });
       }
       
       const insuranceData = {
         travelId: req.params.travelId,
         provider: provider,
-        coverage: coverage,
+        policyNumber: policyNumber,
+        policyType: policyType,
+        emergencyNumber: req.body.emergencyNumber || null,
         effectiveDate: effectiveDate, // Let the schema handle the date transformation
+        importantInfo: req.body.importantInfo || null,
+        policyDescription: req.body.policyDescription || null,
+        notes: req.body.notes || null,
         attachments: attachments,
       };
       
