@@ -35,10 +35,14 @@ export function NavigationHeader() {
               className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/clients" ? "border-b-2 border-accent" : ""}`}
             >
               Clientes
-            </Link>
-            <Link
-              to="/reportes"
-              className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/reportes" ? "border-b-2 border-accent" : ""}`}
+
+            </NavLink>
+            <NavLink
+              to="/reports"
+              className={({ isActive }) =>
+                `text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${isActive ? "border-b-2 border-accent" : ""}`
+              }
+
             >
               Reportes
             </Link>

@@ -478,6 +478,33 @@ export class DatabaseStorage implements IStorage {
       stats: totalStats
     };
   }
+
+
+  async getTravelStats() {
+    const travelsInfo = await db.select().from(travels);
+
+    const stats = {
+      // Viajes Realizados
+      totalTravels: travelsInfo.length,
+      // Viajes Publicados
+      publishedTravels: travelsInfo.filter((t: any) => t.status === 'published').length,
+      // Viajes Borradores
+      draftTravels: travelsInfo.filter((t: any) => t.status === 'draft').length,
+      // Viajes Cancelados
+      cancelledTravels: travelsInfo.filter((t: any) => t.status === 'cancelled').length,
+      // Viajes Enviados
+      sentTravels: travelsInfo.filter((t: any) => t.status === 'sent').length,
+      // Viajes concluidos
+      completedTravels: travelsInfo.filter(t => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // ignorar la hora
+        const end = new Date(t.endDate);
+        end.setHours(0, 0, 0, 0);
+        return end < today;
+      }).length
+    };
+    return stats;
+  }
 }
 
 export const storage = new DatabaseStorage();
