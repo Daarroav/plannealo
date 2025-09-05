@@ -41,6 +41,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
 
   // Travel methods
   createTravel(travel: InsertTravel): Promise<Travel>;
@@ -146,6 +147,23 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    try {
+      const [user] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+}
+
   // Travel methods
   async createTravel(insertTravel: InsertTravel): Promise<Travel> {
     const [travel] = await db
@@ -177,9 +195,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTravel(id: string, updates: Partial<Travel>): Promise<Travel> {
+
+    const { startDate, endDate, ...rest } = updates;
     const [travel] = await db
       .update(travels)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({
+        ...rest,
+        startDate: startDate ? new Date(startDate) : new Date(),  // ✅ parseamos
+        endDate: endDate ? new Date(endDate) : new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(travels.id, id))
       .returning();
     if (!travel) {
@@ -505,6 +530,9 @@ export class DatabaseStorage implements IStorage {
     };
     return stats;
   }
+
+
+  
 }
 
 export const storage = new DatabaseStorage();

@@ -53,6 +53,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
+
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Error al obtener usuario" });
+    }
+  });
+
   app.get("/api/reports", async (req, res) => {
 
     console.info("Fetching reports");
@@ -141,6 +159,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Error creating travel",
         error: error instanceof Error ? error.message : 'Unknown error' 
       });
+    }
+  });
+
+  app.put("/api/travels/:id", async (req, res) => {
+    // check if the user is authenticated
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    console.info("Updating travel:", req.params, req.body);
+
+
+    try {
+      const travel= await storage.getTravel(req.params.id); // Get travel by id
+      if (!travel) { // If travel not found
+        return res.status(404).json({ message: "Travel not found" });
+      }
+
+      // Condiciones para el acceso al viaje
+      const isOwner = travel.createdBy === req.user!.id;
+      const isAdmin = req.user!.role === "admin";
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updated = await storage.updateTravel(req.params.id, req.body);
+
+      // Update name and mail client
+      await storage.updateUser(travel.clientId!, {
+        name: req.body.clientName,
+        username: req.body.clientEmail,
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating travel:", error);
+      res.status(500).json({ message: "Error updating travel" });
     }
   });
 

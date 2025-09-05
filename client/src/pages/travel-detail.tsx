@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
+// components UI
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,12 +14,17 @@ import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
+// components
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { NewTravelModal } from "@/components/ui/new-travel-modal";
+// icons
 import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera } from "lucide-react";
+// utils
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+// schemas or types
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
 export default function TravelDetail() {
@@ -41,9 +47,78 @@ export default function TravelDetail() {
   const [editingCruise, setEditingCruise] = useState<Cruise | null>(null);
   const [editingInsurance, setEditingInsurance] = useState<Insurance | null>(null);
   const { toast } = useToast();
+  const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
 
   const travelId = params?.id;
 
+  console.info("Travel ID:", travelId);
+
+  const updateTravelMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const startDate = new Date(data.startDate);
+      const endDate = new Date(data.endDate);
+      const selectedImage = data._selectedImage;
+      
+      // First create the travel
+      const response = await apiRequest("PUT", `/api/travels/${travelId}`, {
+        name: data.name,
+        clientName: data.clientName,
+        clientEmail: data.clientEmail,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        travelers: data.travelers,
+      });
+      const travel = await response.json();
+
+      // If there's a selected image, upload it
+      if (selectedImage) {
+        try {
+          // Get upload URL
+          const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
+          const { uploadURL } = await uploadResponse.json();
+          
+          // Upload the image to object storage
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: selectedImage,
+            headers: {
+              'Content-Type': selectedImage.type,
+            },
+          });
+
+          if (uploadResult.ok) {
+            // Update travel with cover image
+            await apiRequest("PUT", `/api/travels/${travelId}/cover-image`, {
+              coverImageURL: uploadURL,
+            });
+          }
+        } catch (error) {
+          console.error("Error uploading cover image:", error);
+          // Don't fail the whole operation if image upload fails
+        }
+      }
+
+      return travel;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      setIsNewTravelModalOpen(false);
+      toast({
+        title: "Viaje actualizado",
+        description: "El viaje ha sido actualizado exitosamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Get travel details
   const { data: travel, isLoading: travelLoading } = useQuery<Travel>({
     queryKey: ["/api/travels", travelId],
     enabled: !!travelId,
@@ -652,6 +727,8 @@ export default function TravelDetail() {
       <div className="bg-background border-b border-border sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
+            
+
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="icon" onClick={() => setLocation("/")}>
                 <ArrowLeft className="h-4 w-4" />
@@ -660,6 +737,13 @@ export default function TravelDetail() {
                 <h1 className="text-xl font-bold text-foreground">{travel.name}</h1>
                 <p className="text-sm text-muted-foreground">Cliente: {travel.clientName}</p>
               </div>
+            </div>
+
+            <div>
+              <Button variant="outline" onClick={() => setIsNewTravelModalOpen(true)}>
+                <Edit className="w-4 h-4 mr-2" />
+                Editar Viaje
+              </Button>
             </div>
 
             <div className="flex items-center space-x-3">
@@ -1391,6 +1475,14 @@ export default function TravelDetail() {
         onOpenChange={setShowShareModal}
         travelId={travelId!}
         travelTitle={travel?.name || ""}
+      />
+
+      <NewTravelModal
+        travel={travel}
+        isOpen={isNewTravelModalOpen}
+        onClose={() => setIsNewTravelModalOpen(false)}
+        onSubmit={(data) => updateTravelMutation.mutate(data)}
+        isLoading={updateTravelMutation.isPending}
       />
     </div>
   );

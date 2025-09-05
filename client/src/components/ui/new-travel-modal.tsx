@@ -8,6 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Image, Upload } from "lucide-react";
+import type { Travel } from "@shared/schema";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { User } from "@shared/schema";
 
 const newTravelSchema = z.object({
   name: z.string().min(1, "El nombre del viaje es requerido"),
@@ -25,13 +29,16 @@ interface NewTravelModalProps {
   onClose: () => void;
   onSubmit: (data: NewTravelForm & { _selectedImage?: File }) => void;
   isLoading?: boolean;
+  travel?: Travel | null;
 }
 
-export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTravelModalProps) {
+export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoading }: NewTravelModalProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
+  console.info("Travel", travel?.clientId);
   const form = useForm<NewTravelForm>({
     resolver: zodResolver(newTravelSchema),
     defaultValues: {
@@ -43,6 +50,29 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
       travelers: 1,
     },
   });
+
+  const { data: travelInfoUser } = useQuery<User>({
+    queryKey: ["/api/users/" + travel?.clientId],
+    enabled: !!travel?.clientId,
+  });
+  
+  useEffect(() => {
+    if (travel) {
+      form.reset({
+        name: travel.name,
+        clientName: travel.clientName,
+        clientEmail: travelInfoUser?.username || "", // ✅ aquí directo
+        startDate: travel.startDate
+          ? new Date(travel.startDate).toISOString().substring(0, 10)
+          : "",
+        endDate: travel.endDate
+          ? new Date(travel.endDate).toISOString().substring(0, 10)
+          : "",
+        travelers: travel.travelers,
+      });
+      setIsEditing(true);
+    }
+  }, [isOpen,travel, travelInfoUser, form]);
 
   const handleImageSelect = () => {
     fileInputRef.current?.click();
@@ -111,7 +141,9 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-2xl font-bold text-foreground">Crear Nuevo Viaje</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-foreground">
+            {isEditing ? "Editar Viaje" : "Crear Nuevo Viaje"}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -271,7 +303,7 @@ export function NewTravelModal({ isOpen, onClose, onSubmit, isLoading }: NewTrav
               Cancelar
             </Button>
             <Button type="submit" className="bg-accent hover:bg-accent/90" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear Viaje"}
+              {isLoading ? "Guardando..." : isEditing ? "Editar Viaje" : "Crear Viaje"}
             </Button>
           </div>
         </form>

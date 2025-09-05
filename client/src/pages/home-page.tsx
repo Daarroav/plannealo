@@ -261,6 +261,7 @@ export default function HomePage() {
       </div>
 
       <NewTravelModal
+        travel={null}
         isOpen={isNewTravelModalOpen}
         onClose={() => setIsNewTravelModalOpen(false)}
         onSubmit={(data) => createTravelMutation.mutate(data)}

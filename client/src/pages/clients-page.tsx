@@ -1,19 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { StatsCard } from "@/components/ui/stats-card";
-import { TravelCard } from "@/components/ui/travel-card";
-import { NewTravelModal } from "@/components/ui/new-travel-modal";
-import { CalendarView } from "@/components/ui/calendar-view";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+
 import { Plane, Users, Clock, Plus, Search, Grid3X3, Calendar } from "lucide-react";
-import type { Travel } from "@shared/schema";
 
 interface Client {
   id: string;
