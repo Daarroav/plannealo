@@ -188,10 +188,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updated = await storage.updateTravel(req.params.id, req.body);
 
       // Update name and mail client
-      await storage.updateUser(travel.clientId!, {
-        name: req.body.clientName,
-        username: req.body.clientEmail,
-      });
+      console.info("Updating client when updating travel:", travel.clientId, req.body.clientName, req.body.clientEmail);
+      if(req.body.clientName || req.body.clientEmail){
+        await storage.updateUser(travel.clientId!, {
+          name: req.body.clientName,
+          username: req.body.clientEmail,
+        });
+      }
       res.json(updated);
     } catch (error) {
       console.error("Error updating travel:", error);

@@ -739,12 +739,7 @@ export default function TravelDetail() {
               </div>
             </div>
 
-            <div>
-              <Button variant="outline" onClick={() => setIsNewTravelModalOpen(true)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Editar Viaje
-              </Button>
-            </div>
+        
 
             <div className="flex items-center space-x-3">
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
@@ -806,7 +801,13 @@ export default function TravelDetail() {
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end">
               <div className="p-6 text-white">
                 <h3 className="text-2xl font-bold mb-2">{travel.name}</h3>
-                <p className="text-lg opacity-90">Cliente: {travel.clientName}</p>
+                <div className="flex items-center justify-between gap-3">
+                <p className="text-lg opacity-90 ">Cliente: {travel.clientName} </p>
+                  <div onClick={() => setIsNewTravelModalOpen(true)}>
+                    <Edit className="w-6 h-6 mr-2 hover:text-red-500 bg-red-500 hover:bg-white  p-1 rounded-lg transition cursor-pointer" />
+        
+                  </div>
+                </div>
                 <p className="text-sm opacity-75 mt-1">
                   {formatDateTime(travel.startDate)} - {formatDateTime(travel.endDate)} • {travel.travelers} viajero{travel.travelers !== 1 ? 's' : ''}
                 </p>

@@ -37,6 +37,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  
 
   console.info("Travel", travel?.clientId);
   const form = useForm<NewTravelForm>({
@@ -51,17 +52,29 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
     },
   });
 
-  const { data: travelInfoUser } = useQuery<User>({
-    queryKey: ["/api/users/" + travel?.clientId],
-    enabled: !!travel?.clientId,
+  // Consulta para obtener la información del usuario si estamos editando un viaje
+  const { data: travelInfoUser, isLoading: isLoadingUser } = useQuery<User>({
+    queryKey: ["user", travel?.clientId],
+    queryFn: () => fetch(`/api/users/${travel?.clientId}`).then(res => res.json()),
+    enabled: !!travel?.clientId && isOpen,
+    staleTime: 5 * 60 * 1000, // 5 minutos 
   });
   
+  // Efecto para resetear el formulario cuando se abre el modal o cambia la información del usuario
   useEffect(() => {
+    if (!isOpen) return;
+    
     if (travel) {
-      form.reset({
+      // Solo actualizamos el formulario si tenemos la información del usuario o si estamos editando
+      // Esto evita que se sobrescriba el email con un valor vacío mientras se carga la información
+      if (travel.clientId && !travelInfoUser && isLoadingUser) {
+        return; // Esperamos a que cargue la información del usuario
+      }
+      
+      const initialValues = {
         name: travel.name,
         clientName: travel.clientName,
-        clientEmail: travelInfoUser?.username || "", // ✅ aquí directo
+        clientEmail: travelInfoUser?.username || "", // Usamos el username del usuario como email
         startDate: travel.startDate
           ? new Date(travel.startDate).toISOString().substring(0, 10)
           : "",
@@ -69,14 +82,32 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
           ? new Date(travel.endDate).toISOString().substring(0, 10)
           : "",
         travelers: travel.travelers,
-      });
+      };
+      
+      form.reset(initialValues);
       setIsEditing(true);
+    } else {
+      form.reset({
+        name: "",
+        clientName: "",
+        clientEmail: "",
+        startDate: "",
+        endDate: "",
+        travelers: 1,
+      });
+      setIsEditing(false);
     }
-  }, [isOpen,travel, travelInfoUser, form]);
+    
+    // Limpiar la imagen seleccionada al abrir/cerrar el modal
+    setSelectedImage(null);
+    setImagePreview(null);
+  }, [isOpen, travel, travelInfoUser]);
 
   const handleImageSelect = () => {
     fileInputRef.current?.click();
   };
+  const travelers = form.watch("travelers"); // observa el valor actual del formulario
+
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -190,7 +221,10 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
 
               <div className="space-y-2"> 
                 <Label htmlFor="travelers">Número de Viajeros *</Label>
-                <Select onValueChange={(value) => form.setValue("travelers", parseInt(value))}>
+                <Select
+                  value={travelers.toString()}
+                  onValueChange={(value) => form.setValue("travelers", parseInt(value))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar..." />
                   </SelectTrigger>
