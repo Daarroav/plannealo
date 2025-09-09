@@ -48,7 +48,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     defaultValues: {
       travelId,
       name: "",
-      type: "",
+      type:  "actividad",
       provider: "",
       activityDate: "",
       startTime: "",
@@ -70,7 +70,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       const dateStr = format(activityDateTime, "yyyy-MM-dd");
       const timeStr = format(activityDateTime, "HH:mm");
       
-      setActivityDate(activityDateTime);
+      setActivityDate(activityDateTime); // Se actualiza la fecha del calendario
       form.reset({
         travelId,
         name: editingActivity.name || "",
@@ -92,7 +92,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       form.reset({
         travelId,
         name: "",
-        type: "",
+        type: "actividad",
         provider: "",
         activityDate: "",
         startTime: "",
@@ -148,15 +148,10 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   };
 
   const activityTypes = [
-    { value: "evento", label: "Evento" },
-    { value: "restaurante", label: "Restaurante" },
-    { value: "spa", label: "Spa" },
-    { value: "teatro", label: "Teatro" },
-    { value: "excursion", label: "Excursión" },
-    { value: "clases", label: "Clases" },
-    { value: "paseo", label: "Paseo" },
-    { value: "recorrido", label: "Recorrido" },
+    { value: "actividad", label: "Actividad" },
     { value: "tour", label: "Tour" },
+    { value: "restaurante", label: "Restaurante" },
+    { value: "excursion", label: "Excursión" },
     { value: "otro", label: "Otro" },
   ];
 
@@ -175,7 +170,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Actividad *</Label>
-              <Select onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
+              <Select defaultValue="actividad" onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>

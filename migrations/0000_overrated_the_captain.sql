@@ -11,7 +11,8 @@ CREATE TABLE "accommodations" (
 	"confirmation_number" text,
 	"policies" text,
 	"notes" text,
-	"thumbnail" text
+	"thumbnail" text,
+	"attachments" text[]
 );
 --> statement-breakpoint
 CREATE TABLE "activities" (
@@ -104,6 +105,9 @@ CREATE TABLE "travels" (
 	"travelers" integer NOT NULL,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"cover_image" text,
+	"public_token" text,
+	"public_token_expiry" timestamp,
+	"client_id" varchar,
 	"created_by" varchar NOT NULL,
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
 	"updated_at" timestamp DEFAULT CURRENT_TIMESTAMP
@@ -115,9 +119,11 @@ CREATE TABLE "users" (
 	"password" text NOT NULL,
 	"name" text NOT NULL,
 	"role" text DEFAULT 'agent',
+	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT "users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
 ALTER TABLE "cruises" ADD CONSTRAINT "cruises_travel_id_travels_id_fk" FOREIGN KEY ("travel_id") REFERENCES "public"."travels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "insurances" ADD CONSTRAINT "insurances_travel_id_travels_id_fk" FOREIGN KEY ("travel_id") REFERENCES "public"."travels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "notes" ADD CONSTRAINT "notes_travel_id_travels_id_fk" FOREIGN KEY ("travel_id") REFERENCES "public"."travels"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "notes" ADD CONSTRAINT "notes_travel_id_travels_id_fk" FOREIGN KEY ("travel_id") REFERENCES "public"."travels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "travels" ADD CONSTRAINT "travels_client_id_users_id_fk" FOREIGN KEY ("client_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;

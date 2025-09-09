@@ -346,11 +346,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
 
           {/* Confirmation Number */}
           <div>
-            <Label htmlFor="reservationNumber"># de Confirmación *</Label>
+            <Label htmlFor="reservationNumber"># de Confirmación </Label>
             <Input
               id="reservationNumber"
               {...form.register("reservationNumber")}
-              placeholder="Número de confirmación de la reserva"
+              placeholder="Número de confirmación de la reserva" required={false}
             />
             {form.formState.errors.reservationNumber && (
               <p className="text-sm text-destructive mt-1">
@@ -520,8 +520,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
             </div>
 
             <div>
-              <Label htmlFor="class">Clase de Vuelo *</Label>
-              <Select onValueChange={(value) => form.setValue("class", value)} value={form.watch("class")}>
+              <Label htmlFor="class">Clase de Vuelo </Label>
+              <Select onValueChange={(value) => form.setValue("class", value)} value={form.watch("class")} required={false}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar clase" />
                 </SelectTrigger>

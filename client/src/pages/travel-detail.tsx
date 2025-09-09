@@ -888,6 +888,7 @@ export default function TravelDetail() {
                         <div className="flex justify-between items-start gap-4">
                           {accommodation.thumbnail && (
                             <div className="flex-shrink-0">
+                          
                               <img
                                 src={accommodation.thumbnail.startsWith('/uploads/') ? accommodation.thumbnail : `/uploads/${accommodation.thumbnail}`}
                                 alt={accommodation.name}
