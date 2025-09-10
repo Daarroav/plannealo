@@ -232,27 +232,27 @@ export class EmailService {
 
       <div class="cta-section">
         <p>Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:</p>
-        <!-- Botón seguro para email -->
-        <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
-          <tr>
-            <td bgcolor="#dc2626" style="border-radius:6px; text-align:center;">
-              <a href="${itineraryUrl}"
-                 target="_blank"
-                 style="display:inline-block;
-                        font-size:16px;
-                        font-family:Arial, Helvetica, sans-serif;
-                        font-weight:bold;
-                        color:#dc2626 !important;
-                        text-decoration:none !important;
-                        padding:12px 24px;
-                        border-radius:6px;
-                        background-color:#dc2626;">
-                Ver Mi Itinerario
-              </a>
-            </td>
-          </tr>
-        </table>
-
+        <!-- Botón seguro para email con degradado -->
+          <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
+            <tr>
+              <td bgcolor="#DC2626" style="border-radius:6px; text-align:center;">
+                <a href="${itineraryUrl}"
+                   target="_blank"
+                   style="display:inline-block;
+                          font-size:16px;
+                          font-family:Arial, Helvetica, sans-serif;
+                          font-weight:bold;
+                          color:#ffffff !important;
+                          text-decoration:none !important;
+                          padding:12px 24px;
+                          border-radius:6px;
+                          background: linear-gradient(135deg, rgb(220, 38, 38) 0%, rgb(185, 28, 28) 100%);
+                          background-color:#DC2626;">
+                  Ver Mi Itinerario
+                </a>
+              </td>
+            </tr>
+          </table>
       </div>
 
       <div style="margin: 32px 0; padding: 24px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #dc2626;">
