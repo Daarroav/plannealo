@@ -1,6 +1,6 @@
-import formData from 'form-data';
-import Mailgun from 'mailgun.js';
-import crypto from 'crypto';
+import formData from "form-data";
+import Mailgun from "mailgun.js";
+import crypto from "crypto";
 
 export class EmailService {
   private mg: any;
@@ -8,41 +8,47 @@ export class EmailService {
 
   constructor() {
     if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-      throw new Error('MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required');
+      throw new Error(
+        "MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required",
+      );
     }
-    
+
     const mailgun = new Mailgun(formData);
     this.mg = mailgun.client({
-      username: 'api',
+      username: "api",
       key: process.env.MAILGUN_API_KEY,
     });
     this.domain = process.env.MAILGUN_DOMAIN;
   }
 
-  async sendTravelShareEmail(travelData: any, recipientEmail: string, publicToken: string) {
+  async sendTravelShareEmail(
+    travelData: any,
+    recipientEmail: string,
+    publicToken: string,
+  ) {
     // Priority order: Production domain > Development domain > localhost
-    const baseUrl = process.env.PRODUCTION_DOMAIN 
+    const baseUrl = process.env.PRODUCTION_DOMAIN
       ? `https://${process.env.PRODUCTION_DOMAIN}`
-      : process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
-      : 'http://localhost:5000';
-    
+      : process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : "http://localhost:5000";
+
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
-    
+
     const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
-    
+
     try {
       const result = await this.mg.messages.create(this.domain, {
         from: "PLANNEALO <itinerarios@plannealo.com>",
         to: [recipientEmail],
-        subject: "🛩️Bienvenido a tu próximo viaje con Plannealo.",
+        subject: "Bienvenido a tu próximo viaje con Plannealo.",
         html: htmlContent,
-        text: this.generatePlainTextEmail(travelData, itineraryUrl)
+        text: this.generatePlainTextEmail(travelData, itineraryUrl),
       });
-      
+
       return result;
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error("Error sending email:", error);
       throw error;
     }
   }
@@ -176,8 +182,8 @@ export class EmailService {
 <body>
   <div class="email-container">
     <div class="header">
-      <h1>🛩️Bienvenido a tu próximo viaje con Plannealo.</h1>
-      <p>¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros! 🛩️🌎</p>
+      <h1>Bienvenido a tu próximo viaje con Plannealo.</h1>
+      <p>¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros!</p>
     </div>
     
     <div class="content">
@@ -190,33 +196,60 @@ export class EmailService {
           </div>
           <div class="detail-item">
             <span class="detail-label">Fecha de Inicio</span>
-            <span class="detail-value">${new Date(travel.startDate).toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            <span class="detail-value">${new Date(
+              travel.startDate,
+            ).toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Fecha de Fin</span>
-            <span class="detail-value">${new Date(travel.endDate).toLocaleDateString('es-ES', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+            <span class="detail-value">${new Date(
+              travel.endDate,
+            ).toLocaleDateString("es-ES", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}</span>
           </div>
-          ${travel.destination ? `
+          ${
+            travel.destination
+              ? `
           <div class="detail-item">
             <span class="detail-label">Destino</span>
             <span class="detail-value">${travel.destination}</span>
-          </div>` : ''}
+          </div>`
+              : ""
+          }
         </div>
       </div>
 
       <div class="cta-section">
         <p>Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:</p>
-        <a href="${itineraryUrl}" class="cta-button">Ver Mi Itinerario</a>
+        <!-- Botón seguro para email -->
+        <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
+          <tr>
+            <td bgcolor="#0073e6" style="border-radius:6px; text-align:center;">
+              <a href="${itineraryUrl}"
+                 target="_blank"
+                 style="display:inline-block;
+                        font-size:16px;
+                        font-family:Arial, Helvetica, sans-serif;
+                        font-weight:bold;
+                        color:#ffffff !important;
+                        text-decoration:none !important;
+                        padding:12px 24px;
+                        border-radius:6px;
+                        background-color:#0073e6;">
+                Ver Mi Itinerario
+              </a>
+            </td>
+          </tr>
+        </table>
       </div>
 
       <div style="margin: 32px 0; padding: 24px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #dc2626;">
@@ -278,9 +311,9 @@ PLANNEALO ha preparado todos los detalles de tu viaje.
 --- DETALLES DEL VIAJE ---
 Nombre: ${travel.name}
 Cliente: ${travel.clientName}
-Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString('es-ES')}
-Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString('es-ES')}
-${travel.destination ? `Destino: ${travel.destination}` : ''}
+Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString("es-ES")}
+Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString("es-ES")}
+${travel.destination ? `Destino: ${travel.destination}` : ""}
 
 Para ver tu itinerario completo, visita:
 ${itineraryUrl}
@@ -294,6 +327,6 @@ itinerarios@plannealo.com
   }
 
   generatePublicToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString("hex");
   }
 }
