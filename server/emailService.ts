@@ -234,18 +234,18 @@ export class EmailService {
         <!-- Botón seguro para email -->
         <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
           <tr>
-            <td bgcolor="#E60000" style="border-radius:6px; text-align:center;">
+            <td bgcolor="#dc2626" style="border-radius:6px; text-align:center;">
               <a href="${itineraryUrl}"
                  target="_blank"
                  style="display:inline-block;
                         font-size:16px;
                         font-family:Arial, Helvetica, sans-serif;
                         font-weight:bold;
-                        color:#ffffff !important;
+                        color:#dc2626 !important;
                         text-decoration:none !important;
                         padding:12px 24px;
                         border-radius:6px;
-                        background-color:#E60000;">
+                        background-color:#dc2626;">
                 Ver Mi Itinerario
               </a>
             </td>
