@@ -53,6 +53,10 @@ export default function TravelDetail() {
 
   console.info("Travel ID:", travelId);
 
+  const formatPhoneNumber = (phoneNumber: string) => {
+    return phoneNumber.replace(/\D/g, '').replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+  };
+
   const updateTravelMutation = useMutation({
     mutationFn: async (data: any) => {
       const startDate = new Date(data.startDate);
@@ -996,7 +1000,22 @@ export default function TravelDetail() {
                               <div>
                                 <span className="font-medium">Fin:</span> {activity.endTime || "N/A"}
                               </div>
+                              <div>
+                                <span className="font-medium">Lugar de inicio:</span> {activity.placeStart || "N/A"}
+                              </div>
+                              <div>
+                                <span className="font-medium">Lugar de fin:</span> {activity.placeEnd || "N/A"}
+                              </div>
+                             
+                             <div>
+                              <span className="font-medium">Contacto:</span> {activity.contactName || "N/A"}
+                             </div>
+                             <div>
+                              <span className="font-medium">Teléfono contacto:</span> {activity.contactPhone ? formatPhoneNumber(activity.contactPhone) : "N/A"}
+                             </div>
                             </div>
+                          
+                            
                             {activity.notes && (
                               <p className="text-sm text-muted-foreground mt-2 italic">{activity.notes}</p>
                             )}

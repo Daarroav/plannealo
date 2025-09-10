@@ -43,6 +43,8 @@ interface ActivityFormModalProps {
 export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingActivity }: ActivityFormModalProps) {
   const [activityDate, setActivityDate] = useState<Date>();
 
+  console.info("Editing activity:", editingActivity);
+  
   const form = useForm<ActivityForm>({
     resolver: zodResolver(activityFormSchema),
     defaultValues: {
@@ -80,10 +82,10 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
         startTime: editingActivity.startTime || timeStr,
         endTime: editingActivity.endTime || "",
         confirmationNumber: editingActivity.confirmationNumber || "",
-        contactName: "",
-        contactPhone: "",
-        startLocation: "",
-        endLocation: "",
+        contactName: editingActivity.contactName || "",
+        contactPhone: editingActivity.contactPhone || "",
+        startLocation: editingActivity.placeStart || "",
+        endLocation: editingActivity.placeEnd || "",
         conditions: editingActivity.conditions || "",
         notes: editingActivity.notes || "",
       });
@@ -119,6 +121,8 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
 
     // Get the most current form values
     const currentValues = form.getValues();
+
+    console.info("Form values:", currentValues);
     
     // Combine date and time for the activity
     const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
@@ -133,7 +137,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       endTime: currentValues.endTime,
       confirmationNumber: currentValues.confirmationNumber,
       conditions: currentValues.conditions,
-      notes: `${currentValues.contactName ? `Contacto: ${currentValues.contactName}` : ''}${currentValues.contactPhone ? ` - Tel: ${currentValues.contactPhone}` : ''}${currentValues.startLocation ? `\nUbicación inicio: ${currentValues.startLocation}` : ''}${currentValues.endLocation ? `\nUbicación fin: ${currentValues.endLocation}` : ''}${currentValues.notes ? `\n${currentValues.notes}` : ''}`.trim(),
+      notes: currentValues.notes,
+      contactName: currentValues.contactName,
+      contactPhone: currentValues.contactPhone, 
+      placeStart: currentValues.startLocation,
+      placeEnd: currentValues.endLocation,
     };
 
     onSubmit(submitData);

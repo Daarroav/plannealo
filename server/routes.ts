@@ -394,6 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const activities = await storage.getActivitiesByTravel(req.params.travelId);
+      console.info("Activities:", activities);
       res.json(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -426,6 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+   
     try {
       const activity = await storage.updateActivity(req.params.id, {
         ...req.body,

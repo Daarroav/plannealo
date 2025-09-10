@@ -19,6 +19,8 @@ import {
   FileText,
   ArrowLeft,
   Download,
+  Mail,
+  Globe,
 } from "lucide-react";
 
 interface TravelData {
@@ -951,12 +953,12 @@ export default function TravelPreview() {
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
             {/* Logo y información de la agencia */}
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">P</span>
+              <div className=" h-16 bg-white rounded-full flex items-center justify-center ">
+                <img src="http://127.0.0.1:3000/@fs/C:/xampp/htdocs/Proyectos/Arten/ViajePlan_180825/ViajePlan/attached_assets/LOGO_PNG_NEGRO-min_1755552589565.png" alt="Logo" className="w-auto h-14" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>
-                <p className="text-sm text-muted-foreground">Agencia de Viajes Profesional</p>
+                {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
+                <p className="text-sm text-muted-foreground">Agencia de Viajes</p>
                 <p className="text-xs text-muted-foreground">Especialistas en experiencias únicas</p>
               </div>
             </div>
@@ -966,8 +968,8 @@ export default function TravelPreview() {
               <h4 className="font-semibold text-foreground mb-2">Información de Contacto</h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p><strong>Email:</strong> plannealo@gmail.com</p>
-                <p><strong>Teléfono:</strong> +1 (555) 123-4567</p>
                 <p><strong>WhatsApp:</strong> +1 (555) 987-6543</p>
+                  <p><strong>Registro:</strong> RNT-54321</p>
                 <p><strong>Web:</strong> www.plannealo.com</p>
               </div>
             </div>
@@ -975,15 +977,10 @@ export default function TravelPreview() {
           
           {/* Línea separadora y información adicional */}
           <div className="mt-6 pt-4 border-t border-border text-center">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-muted-foreground">
-              <div>
-                <p><strong>Itinerario generado:</strong> {formatDate(new Date())}</p>
-              </div>
-              <div>
-                <p><strong>Licencia:</strong> IATA #12345</p>
-                <p><strong>Registro:</strong> RNT-54321</p>
-              </div>
-              <div>
+            <div className="flex flex-col items-center text-xs text-muted-foreground text-center">
+          
+             
+              <div className="text-center">
                 <p>Powered by Arten Digital</p>
                 <p>© 2024 PLANNEALO. Todos los derechos reservados.</p>
               </div>

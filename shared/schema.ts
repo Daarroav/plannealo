@@ -58,6 +58,10 @@ export const activities = pgTable("activities", {
   confirmationNumber: text("confirmation_number"),
   conditions: text("conditions"),
   notes: text("notes"),
+  contactName: text("contact_name"),
+  contactPhone: text("contact_phone"), 
+  placeStart: text("place_start"),
+  placeEnd: text("place_end"),
 });
 
 export const flights = pgTable("flights", {
