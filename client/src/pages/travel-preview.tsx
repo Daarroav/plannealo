@@ -659,7 +659,7 @@ export default function TravelPreview() {
         return (
           <div
             key={event.id}
-            className="border border-border rounded-lg p-4 bg-yellow-50 border-l-4 border-l-yellow-400"
+            className="border border-border rounded-lg p-4  border-l-4 border-l-yellow-400"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
@@ -673,13 +673,13 @@ export default function TravelPreview() {
                 Nota Importante
               </Badge>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg border-l-4 border-l-yellow-400">
+            <div className="p-3 rounded-lg ">
               <p className="whitespace-pre-wrap text-sm text-gray-800">
                 {event.data.content}
               </p>
             </div>
             {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-yellow-200">
+              <div className="mt-3 pt-3 border-t border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-2">
                   Documentos Adjuntos
                 </p>
@@ -842,19 +842,19 @@ export default function TravelPreview() {
                 return (
                   <div
                     key={dayIndex}
-                    className="border-b border-border pb-6 last:border-b-0 print:px-2"
+                    className="border-b-2 border-border pb-8 last:border-b-0 print:px-2"
                   >
-                    <div className="flex gap-6">
+                    <div className="flex flex-col  gap-3">
                       {/* Etiqueta del día - lado izquierdo */}
-                      <div className="flex-shrink-0 text-center w-20">
-                        <div className="bg-gray-900 text-white p-3 text-center">
-                          <div className="text-sm font-bold">
+                      <div className="flex text-center w-12">
+                        <div className="flex flex-row justify-between bg-gray-900 text-white px-3 py-1.5 rounded-sm text-center items-center w-auto gap-3 ">
+                          <div className="text-xs font-bold">
                             {dayLabel.dayOfWeek}
                           </div>
-                          <div className="text-xs font-medium">
+                          <div className="text-lg font-medium">
                             {dayLabel.month}
                           </div>
-                          <div className="text-2xl font-bold mt-1">
+                          <div className="text-lg font-bold mt-1">
                             {dayLabel.dayNumber}
                           </div>
                         </div>

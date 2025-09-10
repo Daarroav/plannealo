@@ -202,17 +202,7 @@ export function ShareTravelModal({
                   <span>Vista Previa</span>
                 </Button>
 
-                {/* Descargar PDF */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleDownloadPDF}
-                  disabled={isGeneratingPDF}
-                  className="flex items-center justify-center space-x-2"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{isGeneratingPDF ? "Generando PDF..." : "Descargar PDF"}</span>
-                </Button>
+             
               </div>
             </div>
           </div>
