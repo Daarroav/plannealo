@@ -12,5 +12,18 @@
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
+
+    <style>
+      @page {
+        margin: 0; /* quita márgenes que agregan los navegadores */
+      }
+      
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact; /* mantiene colores/fondos */
+          print-color-adjust: exact;
+        }
+      }
+    </style>
   </body>
 </html>
