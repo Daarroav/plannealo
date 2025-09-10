@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, FileText, X, Link } from "lucide-react";
 import { format } from "date-fns";
 import { insertInsuranceSchema } from "@shared/schema";
+
 
 // Form validation schema - extends the base schema with date string handling
 const insuranceFormSchema = insertInsuranceSchema.extend({
@@ -51,6 +52,8 @@ export function InsuranceFormModal({
 }: InsuranceFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
+  console.log("Initial data:", initialData);
+
   const form = useForm<InsuranceFormData>({
     resolver: zodResolver(insuranceFormSchema),
     defaultValues: {
@@ -87,7 +90,23 @@ export function InsuranceFormModal({
         attachments: initialData.attachments || [],
       });
       
-      setAttachedFiles(initialData.attachments || []);
+ 
+      if (Array.isArray(initialData.attachments) && initialData.attachments.length > 0) {
+        if (initialData.attachments?.length > 0) {
+          Promise.all(
+            initialData.attachments.map(async (url: string) => {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const filename = url.split('/').pop() || 'archivo';
+              return new File([blob], filename, { type: blob.type });
+            })
+          ).then((files) => {
+            setAttachedFiles(files); // 👈 actualiza tu estado
+          }).catch((err) => {
+            console.error("Error cargando archivos adjuntos:", err);
+          });
+        }
+      }
     } else {
       form.reset({
         provider: "",
@@ -105,18 +124,13 @@ export function InsuranceFormModal({
     }
   }, [initialData, form]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      const updatedFiles = [...attachedFiles, ...newFiles];
-      setAttachedFiles(updatedFiles);
-    }
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
   };
 
   const removeFile = (index: number) => {
-    const updatedFiles = attachedFiles.filter((_, i) => i !== index);
-    setAttachedFiles(updatedFiles);
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (data: InsuranceFormData) => {
@@ -168,6 +182,7 @@ export function InsuranceFormModal({
     form.reset();
     setAttachedFiles([]);
     onOpenChange(false);
+    setAttachedFiles([]);
   };
 
   return (
@@ -321,14 +336,17 @@ export function InsuranceFormModal({
               </div>
 
               {/* Lista de archivos seleccionados */}
+    
               {attachedFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Archivos seleccionados:</h4>
                   {attachedFiles.map((fileName, index) => (
                     <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
+                      <a href={URL.createObjectURL(fileName)} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-foreground">{fileName.name}</span>
+                        <span  className="text-sm text-foreground">{fileName.name}</span>
+                        </a>
                       </div>
                       <Button
                         type="button"

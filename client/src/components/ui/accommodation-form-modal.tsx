@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 import { useRef } from "react";
+import { FileText } from "lucide-react";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -46,6 +47,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log("Editing accommodation:", editingAccommodation);
   
 
   const form = useForm<AccommodationForm>({
@@ -559,12 +562,16 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
+        
             {attachedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Archivos adjuntos:</p>
                 {attachedFiles.map((file, index) => (
                   <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
-                    <span className="text-sm truncate">{file.name}</span>
+                    <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </a>
                     <Button
                       type="button"
                       variant="ghost"
