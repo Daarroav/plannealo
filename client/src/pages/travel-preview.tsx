@@ -22,6 +22,7 @@ import {
   Mail,
   Globe,
 } from "lucide-react";
+import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 interface TravelData {
   travel: any;
@@ -749,11 +750,10 @@ export default function TravelPreview() {
         <div className="absolute top-8 left-8 z-10">
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
+              <div className="w-auto  rounded-full flex items-center justify-center">
+                <img src={logoPng} alt="Logo" className="h-14" />
               </div>
               <div>
-                <div className="font-bold text-gray-900 text-lg">PLANNEALO</div>
                 <div className="text-gray-600 text-sm">Agencia de Viajes</div>
               </div>
             </div>
@@ -851,10 +851,10 @@ export default function TravelPreview() {
                           <div className="text-xs font-bold">
                             {dayLabel.dayOfWeek}
                           </div>
-                          <div className="text-lg font-medium">
+                          <div className="text-xs font-medium">
                             {dayLabel.month}
                           </div>
-                          <div className="text-lg font-bold mt-1">
+                          <div className="text-xs font-bold ">
                             {dayLabel.dayNumber}
                           </div>
                         </div>
@@ -954,7 +954,7 @@ export default function TravelPreview() {
             {/* Logo y información de la agencia */}
             <div className="flex items-center space-x-4">
               <div className=" h-16 bg-white rounded-full flex items-center justify-center ">
-                <img src="http://127.0.0.1:3000/@fs/C:/xampp/htdocs/Proyectos/Arten/ViajePlan_180825/ViajePlan/attached_assets/LOGO_PNG_NEGRO-min_1755552589565.png" alt="Logo" className="w-auto h-14" />
+                <img src={logoPng} alt="Logo" className="w-auto h-14" />
               </div>
               <div>
                 {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
