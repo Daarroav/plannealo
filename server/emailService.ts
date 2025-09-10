@@ -41,7 +41,7 @@ export class EmailService {
       const result = await this.mg.messages.create(this.domain, {
         from: "PLANNEALO <itinerarios@plannealo.com>",
         to: [recipientEmail],
-        subject: "Bienvenido a tu próximo viaje con Plannealo.",
+        subject: "Tu itinerario de viaje con Plannealo",
         html: htmlContent,
         text: this.generatePlainTextEmail(travelData, itineraryUrl),
       });
@@ -61,6 +61,7 @@ export class EmailService {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tu Itinerario - ${travel.name}</title>
+  <!-- Template Version: ${Date.now()} -->
   <style>
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
