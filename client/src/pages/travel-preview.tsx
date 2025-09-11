@@ -310,18 +310,18 @@ export default function TravelPreview() {
             </div>
             {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600"> <strong>Notas:</strong> {event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> {event.data.notes}</div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600"> <strong>Notas:</strong> Sin notas</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> Sin notas</div></div>
             )}
 
             {event.data.conditions ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600"> <strong>Condiciones y términos:</strong> {event.data.conditions}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> {event.data.conditions}</div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600"> <strong>Condiciones y términos:</strong> Sin condiciones</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> Sin condiciones</div></div>
             )}
           </div>
         );
@@ -483,7 +483,7 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
               </div>
             )}
           </div>
@@ -617,12 +617,12 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
               </div>
             )}
             {event.data.policies && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
                   <strong>Políticas:</strong> {event.data.policies}
                 </div>
               </div>
@@ -902,7 +902,7 @@ export default function TravelPreview() {
                       </h3>
                       <Badge>{insurance.policyType}</Badge>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground whitespace-pre-wrap">
                       <div>📋 Póliza: {insurance.policyNumber}</div>
                       <div>
                         📅 Válido desde:{" "}
@@ -916,13 +916,13 @@ export default function TravelPreview() {
                       )}
                     </div>
                     {insurance.policyDescription && (
-                      <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2">
+                      <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap">
                         <strong>Descripción:</strong>{" "}
                         {insurance.policyDescription}
                       </p>
                     )}
                     {insurance.notes && (
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap ">
                         <strong>Notas:</strong> {insurance.notes}
                       </p>
                     )}
