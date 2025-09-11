@@ -254,6 +254,8 @@ export default function TravelPreview() {
 
   const groupedEvents = groupEventsByDay(chronologicalEvents);
 
+  console.info(groupedEvents);
+
   const renderEventCard = (event: any) => {
     switch (event.type) {
       case "activity":
@@ -306,10 +308,20 @@ export default function TravelPreview() {
                 </div>
               )}
             </div>
-            {event.data.notes && (
+            {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600"> <strong>Notas:</strong> {event.data.notes}</div>
               </div>
+            ) : (
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600"> <strong>Notas:</strong> Sin notas</div></div>
+            )}
+
+            {event.data.conditions ? (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600"> <strong>Condiciones y términos:</strong> {event.data.conditions}</div>
+              </div>
+            ) : (
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600"> <strong>Condiciones y términos:</strong> Sin condiciones</div></div>
             )}
           </div>
         );
