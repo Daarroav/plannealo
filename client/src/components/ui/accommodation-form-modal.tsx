@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 import { useRef } from "react";
+import { FileText } from "lucide-react";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -46,6 +47,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  console.log("Editing accommodation:", editingAccommodation);
   
 
   const form = useForm<AccommodationForm>({
@@ -84,6 +87,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+
   };
 
   const removeFile = (index: number) => {
@@ -97,6 +101,12 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       fileInputRef.current.value = '';
     }
   };
+
+
+
+ 
+
+
 
   /*const handleSubmit = (data: AccommodationForm) => {
     // Combine date and time for check-in and check-out
@@ -156,6 +166,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('policies', currentValues.policies || '');
     formData.append('notes', currentValues.notes || '');
     formData.append('travelId', currentValues.travelId);
+    form
     
     // Add thumbnail file if exists
     if (thumbnail) {
@@ -183,6 +194,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   const handleClose = () => {
     form.reset();
+    removeThumbnail();
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
@@ -209,7 +221,38 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         confirmationNumber: editingAccommodation.confirmationNumber || "",
         policies: editingAccommodation.policies || "",
         notes: editingAccommodation.notes || "",
+        thumbnail: editingAccommodation.thumbnail || null,
+        attachments: editingAccommodation.attachments || [],
       });
+      if (editingAccommodation.thumbnail) {
+        // 👇 Descargar la imagen y convertirla en File
+        fetch(editingAccommodation.thumbnail)
+          .then(res => res.blob())
+          .then(blob => {
+            const file = new File([blob], "thumbnail.jpg", { type: blob.type });
+            setThumbnail(file);
+          })
+          .catch(err => console.error("Error cargando imagen:", err));
+      }
+
+      if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
+        if (editingAccommodation.attachments?.length > 0) {
+          Promise.all(
+            editingAccommodation.attachments.map(async (url) => {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const filename = url.split('/').pop() || 'archivo';
+              return new File([blob], filename, { type: blob.type });
+            })
+          ).then((files) => {
+            setAttachedFiles(files); // 👈 actualiza tu estado
+          }).catch((err) => {
+            console.error("Error cargando archivos adjuntos:", err);
+          });
+        }
+      }
+     
+      
     } else {
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
@@ -453,7 +496,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           {/* Thumbnail */}
           <hr />
           <div>
-            <Label>Imagen Alojamiento</Label>
+          <Label>Imagen Alojamiento</Label>
             <div className="mt-2">
               <input
                 type="file"
@@ -474,10 +517,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
-            {thumbnail && (
+            {thumbnail  && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium"> Imagen Previsualizada:</p>
-                <div className=" w-fit">
+                <div className=" w-fit relative">
+    
                   <img src={URL.createObjectURL(thumbnail)} alt="Thumbnail" className="max-w-full max-h-40" />
                   <Button
                     type="button"
@@ -518,12 +562,16 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
+        
             {attachedFiles.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Archivos adjuntos:</p>
                 {attachedFiles.map((file, index) => (
                   <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
-                    <span className="text-sm truncate">{file.name}</span>
+                    <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </a>
                     <Button
                       type="button"
                       variant="ghost"

@@ -9,20 +9,38 @@ import { AeroDataBoxService } from "./aeroDataBoxService";
 import multer from 'multer';  // Instalacion  para subir archivos
 import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
-
+import fs from "fs";  // Para crear carpetas
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
 
   // Configuración de multer para subir archivos
   const multerStorage = multer.diskStorage({
-    destination: 'uploads/', // Directorio donde se guardarán los archivos subidos
-    filename: function (req, file, cb) { // Nombre del archivo subido
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9); // Genera un nombre único
-      const ext = path.extname(file.originalname); // Obtiene la extensión del archivo
-      cb(null, file.fieldname + '-' + uniqueSuffix + ext); // Genera el nombre del archivo
+    destination: (req, file, cb) => {
+      let folder = 'uploads'; // Carpeta base
+
+      console.log("📁 Ruta original de la petición:", req.path); // 👈 Aquí lo imprimes
+  
+      if (/\/accommodations\b/.test(req.path)) folder += '/accommodations';
+      else if (/\/activities\b/.test(req.path)) folder += '/activities';
+      else if (/\/flights\b/.test(req.path)) folder += '/flights';
+      else if (/\/transports\b/.test(req.path)) folder += '/transports';
+      else if (/\/cruises\b/.test(req.path)) folder += '/cruises';
+      else if (/\/insurances\b/.test(req.path)) folder += '/insurances';
+      else if (/\/notes\b/.test(req.path)) folder += '/notes';
+      else if (/\/travels\b/.test(req.path)) folder += '/travels';
+      else folder += '/other';
+  
+      fs.mkdirSync(folder, { recursive: true });
+      cb(null, folder);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
     }
   });
+  
 
 
   const upload = multer({ 
@@ -278,13 +296,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const thumbnail = files.thumbnail?.[0] ? `/uploads/${files.thumbnail[0].filename}` : null;
-      const attachments = files.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      const thumbnail = files.thumbnail?.[0] ? `/uploads/accommodations/${files.thumbnail[0].filename}` : null;
+ 
+      const attachments = files.attachments ? files.attachments.map(file => `/uploads/accommodations/${file.filename}`) : [];
 
-      console.log("Request body:", req.body);
-      console.log("Thumbnail:", thumbnail);
+      console.log("Thumbnail prro:", thumbnail);
       console.log("Attachments:", attachments);
-      console.log("Travel ID:", req.params.travelId);
       
       // Validate that required fields are present
       if (!req.body.name || !req.body.type || !req.body.location || !req.body.checkIn || !req.body.checkOut || !req.body.roomType) {
@@ -330,12 +347,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle thumbnail upload
       if (files.thumbnail?.[0]) {
-        updateData.thumbnail = `/uploads/${files.thumbnail[0].filename}`;
+        updateData.thumbnail = `/uploads/accommodations/${files.thumbnail[0].filename}`;
+      }else{
+        updateData.thumbnail = '';
       }
       
       // Handle attachments upload
       if (files.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+        updateData.attachments = files.attachments.map(file => `/uploads/accommodations/${file.filename}`);
+      }else{
+        updateData.attachments = [];
       }
       
       // Convert dates if provided
@@ -373,6 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const activities = await storage.getActivitiesByTravel(req.params.travelId);
+      console.info("Activities:", activities);
       res.json(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -405,6 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+   
     try {
       const activity = await storage.updateActivity(req.params.id, {
         ...req.body,
@@ -482,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle attachments upload
       if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+        updateData.attachments = files.attachments.map(file => `/uploads/insurances/${file.filename}`);
       }
       
       const insurance = await storage.updateInsurance(req.params.id, {
@@ -629,7 +652,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Insurance Files:", req.files);
       
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/insurances/${file.filename}`) : [];
       
       // Ensure all required fields are present
       const { provider, policyNumber, policyType, effectiveDate } = req.body;
@@ -700,7 +723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Files:", req.files);
       
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/${file.filename}`) : [];
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/notes/${file.filename}`) : [];
       
       // Ensure all required fields are present
       const { title, noteDate, content, visibleToTravelers } = req.body;
@@ -751,7 +774,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Handle attachments upload
       if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/${file.filename}`);
+        updateData.attachments = files.attachments.map(file => `/uploads/notes/${file.filename}`);
       }
       
       // Convert date if provided

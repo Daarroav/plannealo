@@ -43,12 +43,14 @@ interface ActivityFormModalProps {
 export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingActivity }: ActivityFormModalProps) {
   const [activityDate, setActivityDate] = useState<Date>();
 
+  console.info("Editing activity:", editingActivity);
+  
   const form = useForm<ActivityForm>({
     resolver: zodResolver(activityFormSchema),
     defaultValues: {
       travelId,
       name: "",
-      type: "",
+      type:  "actividad",
       provider: "",
       activityDate: "",
       startTime: "",
@@ -70,7 +72,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       const dateStr = format(activityDateTime, "yyyy-MM-dd");
       const timeStr = format(activityDateTime, "HH:mm");
       
-      setActivityDate(activityDateTime);
+      setActivityDate(activityDateTime); // Se actualiza la fecha del calendario
       form.reset({
         travelId,
         name: editingActivity.name || "",
@@ -80,10 +82,10 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
         startTime: editingActivity.startTime || timeStr,
         endTime: editingActivity.endTime || "",
         confirmationNumber: editingActivity.confirmationNumber || "",
-        contactName: "",
-        contactPhone: "",
-        startLocation: "",
-        endLocation: "",
+        contactName: editingActivity.contactName || "",
+        contactPhone: editingActivity.contactPhone || "",
+        startLocation: editingActivity.placeStart || "",
+        endLocation: editingActivity.placeEnd || "",
         conditions: editingActivity.conditions || "",
         notes: editingActivity.notes || "",
       });
@@ -92,7 +94,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       form.reset({
         travelId,
         name: "",
-        type: "",
+        type: "actividad",
         provider: "",
         activityDate: "",
         startTime: "",
@@ -119,6 +121,8 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
 
     // Get the most current form values
     const currentValues = form.getValues();
+
+    console.info("Form values:", currentValues);
     
     // Combine date and time for the activity
     const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
@@ -133,7 +137,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       endTime: currentValues.endTime,
       confirmationNumber: currentValues.confirmationNumber,
       conditions: currentValues.conditions,
-      notes: `${currentValues.contactName ? `Contacto: ${currentValues.contactName}` : ''}${currentValues.contactPhone ? ` - Tel: ${currentValues.contactPhone}` : ''}${currentValues.startLocation ? `\nUbicación inicio: ${currentValues.startLocation}` : ''}${currentValues.endLocation ? `\nUbicación fin: ${currentValues.endLocation}` : ''}${currentValues.notes ? `\n${currentValues.notes}` : ''}`.trim(),
+      notes: currentValues.notes,
+      contactName: currentValues.contactName,
+      contactPhone: currentValues.contactPhone, 
+      placeStart: currentValues.startLocation,
+      placeEnd: currentValues.endLocation,
     };
 
     onSubmit(submitData);
@@ -148,15 +156,10 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   };
 
   const activityTypes = [
-    { value: "evento", label: "Evento" },
-    { value: "restaurante", label: "Restaurante" },
-    { value: "spa", label: "Spa" },
-    { value: "teatro", label: "Teatro" },
-    { value: "excursion", label: "Excursión" },
-    { value: "clases", label: "Clases" },
-    { value: "paseo", label: "Paseo" },
-    { value: "recorrido", label: "Recorrido" },
+    { value: "actividad", label: "Actividad" },
     { value: "tour", label: "Tour" },
+    { value: "restaurante", label: "Restaurante" },
+    { value: "excursion", label: "Excursión" },
     { value: "otro", label: "Otro" },
   ];
 
@@ -175,7 +178,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Actividad *</Label>
-              <Select onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
+              <Select defaultValue="actividad" onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>

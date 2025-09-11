@@ -19,7 +19,10 @@ import {
   FileText,
   ArrowLeft,
   Download,
+  Mail,
+  Globe,
 } from "lucide-react";
+import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 interface TravelData {
   travel: any;
@@ -83,6 +86,7 @@ export default function TravelPreview() {
   const handleGoBack = () => {
     window.close();
   };
+
 
   if (isLoading) {
     return (
@@ -250,6 +254,8 @@ export default function TravelPreview() {
 
   const groupedEvents = groupEventsByDay(chronologicalEvents);
 
+  console.info(groupedEvents);
+
   const renderEventCard = (event: any) => {
     switch (event.type) {
       case "activity":
@@ -302,10 +308,20 @@ export default function TravelPreview() {
                 </div>
               )}
             </div>
-            {event.data.notes && (
+            {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> {event.data.notes}</div>
               </div>
+            ) : (
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> Sin notas</div></div>
+            )}
+
+            {event.data.conditions ? (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> {event.data.conditions}</div>
+              </div>
+            ) : (
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> Sin condiciones</div></div>
             )}
           </div>
         );
@@ -467,7 +483,7 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
               </div>
             )}
           </div>
@@ -601,12 +617,12 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
               </div>
             )}
             {event.data.policies && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
                   <strong>Políticas:</strong> {event.data.policies}
                 </div>
               </div>
@@ -657,7 +673,7 @@ export default function TravelPreview() {
         return (
           <div
             key={event.id}
-            className="border border-border rounded-lg p-4 bg-yellow-50 border-l-4 border-l-yellow-400"
+            className="border border-border rounded-lg p-4  border-l-4 border-l-yellow-400"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
@@ -671,13 +687,13 @@ export default function TravelPreview() {
                 Nota Importante
               </Badge>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg border-l-4 border-l-yellow-400">
+            <div className="p-3 rounded-lg ">
               <p className="whitespace-pre-wrap text-sm text-gray-800">
                 {event.data.content}
               </p>
             </div>
             {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-yellow-200">
+              <div className="mt-3 pt-3 border-t border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-2">
                   Documentos Adjuntos
                 </p>
@@ -747,11 +763,10 @@ export default function TravelPreview() {
         <div className="absolute top-8 left-8 z-10">
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
+              <div className="w-auto  rounded-full flex items-center justify-center">
+                <img src={logoPng} alt="Logo" className="h-14" />
               </div>
               <div>
-                <div className="font-bold text-gray-900 text-lg">PLANNEALO</div>
                 <div className="text-gray-600 text-sm">Agencia de Viajes</div>
               </div>
             </div>
@@ -840,19 +855,19 @@ export default function TravelPreview() {
                 return (
                   <div
                     key={dayIndex}
-                    className="border-b border-border pb-6 last:border-b-0 print:px-2"
+                    className="border-b-2 border-border pb-8 last:border-b-0 print:px-2"
                   >
-                    <div className="flex gap-6">
+                    <div className="flex flex-col  gap-3">
                       {/* Etiqueta del día - lado izquierdo */}
-                      <div className="flex-shrink-0 text-center w-20">
-                        <div className="bg-gray-900 text-white p-3 text-center">
-                          <div className="text-sm font-bold">
+                      <div className="flex text-center w-12">
+                        <div className="flex flex-row justify-between bg-gray-900 text-white px-3 py-1.5 rounded-sm text-center items-center w-auto gap-3 ">
+                          <div className="text-xs font-bold">
                             {dayLabel.dayOfWeek}
                           </div>
                           <div className="text-xs font-medium">
                             {dayLabel.month}
                           </div>
-                          <div className="text-2xl font-bold mt-1">
+                          <div className="text-xs font-bold ">
                             {dayLabel.dayNumber}
                           </div>
                         </div>
@@ -887,7 +902,7 @@ export default function TravelPreview() {
                       </h3>
                       <Badge>{insurance.policyType}</Badge>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground whitespace-pre-wrap">
                       <div>📋 Póliza: {insurance.policyNumber}</div>
                       <div>
                         📅 Válido desde:{" "}
@@ -901,13 +916,13 @@ export default function TravelPreview() {
                       )}
                     </div>
                     {insurance.policyDescription && (
-                      <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2">
+                      <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap">
                         <strong>Descripción:</strong>{" "}
                         {insurance.policyDescription}
                       </p>
                     )}
                     {insurance.notes && (
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap ">
                         <strong>Notas:</strong> {insurance.notes}
                       </p>
                     )}
@@ -951,12 +966,12 @@ export default function TravelPreview() {
           <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
             {/* Logo y información de la agencia */}
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">P</span>
+              <div className=" h-16 bg-white rounded-full flex items-center justify-center ">
+                <img src={logoPng} alt="Logo" className="w-auto h-14" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>
-                <p className="text-sm text-muted-foreground">Agencia de Viajes Profesional</p>
+                {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
+                <p className="text-sm text-muted-foreground">Agencia de Viajes</p>
                 <p className="text-xs text-muted-foreground">Especialistas en experiencias únicas</p>
               </div>
             </div>
@@ -966,8 +981,8 @@ export default function TravelPreview() {
               <h4 className="font-semibold text-foreground mb-2">Información de Contacto</h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p><strong>Email:</strong> plannealo@gmail.com</p>
-                <p><strong>Teléfono:</strong> +1 (555) 123-4567</p>
                 <p><strong>WhatsApp:</strong> +1 (555) 987-6543</p>
+                  <p><strong>Registro:</strong> RNT-54321</p>
                 <p><strong>Web:</strong> www.plannealo.com</p>
               </div>
             </div>
@@ -975,15 +990,10 @@ export default function TravelPreview() {
           
           {/* Línea separadora y información adicional */}
           <div className="mt-6 pt-4 border-t border-border text-center">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-muted-foreground">
-              <div>
-                <p><strong>Itinerario generado:</strong> {formatDate(new Date())}</p>
-              </div>
-              <div>
-                <p><strong>Licencia:</strong> IATA #12345</p>
-                <p><strong>Registro:</strong> RNT-54321</p>
-              </div>
-              <div>
+            <div className="flex flex-col items-center text-xs text-muted-foreground text-center">
+          
+             
+              <div className="text-center">
                 <p>Powered by Arten Digital</p>
                 <p>© 2024 PLANNEALO. Todos los derechos reservados.</p>
               </div>

@@ -63,7 +63,24 @@ export function NoteFormModal({
         visibleToTravelers: editingNote.visibleToTravelers ?? true,
         attachments: editingNote.attachments || [],
       });
-      setAttachedFiles(editingNote.attachments || []);
+
+      if (Array.isArray(editingNote.attachments) && editingNote.attachments.length > 0) {
+        if (editingNote.attachments?.length > 0) {
+          Promise.all(
+            editingNote.attachments.map(async (url: string) => {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const filename = url.split('/').pop() || 'archivo';
+              return new File([blob], filename, { type: blob.type });
+            })
+          ).then((files) => {
+            setAttachedFiles(files); // 👈 actualiza tu estado
+          }).catch((err) => {
+            console.error("Error cargando archivos adjuntos:", err);
+          });
+        }
+      }
+
     } else {
       form.reset({
         title: "",
@@ -77,19 +94,15 @@ export function NoteFormModal({
     }
   }, [editingNote, form]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      const updatedFiles = [...attachedFiles, ...newFiles];
-      setAttachedFiles(updatedFiles);
-    }
-  };
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(e.target.files || []);
+      setAttachedFiles(prev => [...prev, ...files]);
+    };
+  
 
-  const removeFile = (index: number) => {
-    const updatedFiles = attachedFiles.filter((_, i) => i !== index);
-    setAttachedFiles(updatedFiles);
-  };
+    const removeFile = (index: number) => {
+      setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    };
 
   const handleSubmit = async (data: NoteFormData) => {
     // Force blur on any active input to ensure values are captured
@@ -264,8 +277,10 @@ export function NoteFormModal({
                   {attachedFiles.map((fileName, index) => (
                     <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-foreground">{fileName.name}</span>
+                        <a href={URL.createObjectURL(fileName)} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">{fileName.name}</span>
+                        </a>
                       </div>
                       <Button
                         type="button"

@@ -1,5 +1,5 @@
 {
-  "id": "0ae217ef-f50b-4fca-a954-93ada2e70cf1",
+  "id": "ba278043-5c10-4754-9cae-4d6cfee35cea",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -84,6 +84,12 @@
         "thumbnail": {
           "name": "thumbnail",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "attachments": {
+          "name": "attachments",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         }
@@ -652,6 +658,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "public_token": {
+          "name": "public_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "public_token_expiry": {
+          "name": "public_token_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_by": {
           "name": "created_by",
           "type": "varchar",
@@ -674,7 +698,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "travels_client_id_users_id_fk": {
+          "name": "travels_client_id_users_id_fk",
+          "tableFrom": "travels",
+          "tableTo": "users",
+          "columnsFrom": [
+            "client_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -716,6 +754,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'agent'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP"
         }
       },
       "indexes": {},

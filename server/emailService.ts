@@ -28,10 +28,11 @@ export class EmailService {
   ) {
     // Priority order: Production domain > Development domain > localhost
     const baseUrl = process.env.PRODUCTION_DOMAIN
-      ? `https://${process.env.PRODUCTION_DOMAIN}`
-      : process.env.REPLIT_DEV_DOMAIN
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : "http://localhost:5000";
+    ? `https://${process.env.PRODUCTION_DOMAIN}`
+    : process.env.REPLIT_DEV_DOMAIN
+    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+    : `http://localhost:${process.env.PORT || 3000}`;
+    
 
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
 
