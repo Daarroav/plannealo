@@ -1478,7 +1478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let publicTokenExpiry = travel.publicTokenExpiry;
       
       const now = new Date();
-      const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const oneMonthFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days
       
       if (!publicToken || !publicTokenExpiry || publicTokenExpiry < now) {
         publicToken = emailService.generatePublicToken();
