@@ -58,7 +58,17 @@ export default function TravelPreview() {
     enabled: !!id,
   });
 
-  console.info(data);
+ 
+  const formatRoomType = (roomType: string): JSX.Element => {
+    const [cantidad, ...tipoParts] = roomType.split(' ');
+    const tipo = tipoParts.join(' ');
+  
+    return (
+      <span>
+        <strong>#</strong> {cantidad} <strong> - Tipo</strong> {tipo}
+      </span>
+    );
+  };
 
   const formatDateTime = (dateTime: string | Date) => {
     const date = new Date(dateTime);
@@ -68,9 +78,9 @@ export default function TravelPreview() {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true, // 👈 Esto fuerza el formato AM/PM
     });
   };
-
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -206,6 +216,13 @@ export default function TravelPreview() {
 
   const chronologicalEvents = getAllEvents();
 
+  const formatPrice = (price: number): string => {
+    return price.toLocaleString('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    });
+  };
+
   // Agrupar eventos por día
   /*const groupEventsByDay = (events: any[]) => {
     const groups: { [key: string]: any[] } = {};
@@ -272,29 +289,43 @@ export default function TravelPreview() {
   };
   
 
-  const formatDayLabel = (date: Date) => {
-    const dayNames = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
-    const monthNames = [
-      "ENE",
-      "FEB",
-      "MAR",
-      "ABR",
-      "MAY",
-      "JUN",
-      "JUL",
-      "AGO",
-      "SEP",
-      "OCT",
-      "NOV",
-      "DIC",
+  const formatDayLabel = (date: Date): string => {
+    const dayNames = [
+      "domingo",
+      "lunes",
+      "martes",
+      "miércoles",
+      "jueves",
+      "viernes",
+      "sábado",
     ];
-
-    return {
-      dayOfWeek: dayNames[date.getDay()],
-      month: monthNames[date.getMonth()],
-      dayNumber: date.getDate(),
-    };
+  
+    const monthNames = [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
+    ];
+  
+    const dayName = dayNames[date.getDay()];
+    const dayNumber = date.getDate();
+    const monthName = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+  
+    return `${capitalize(dayName)} ${dayNumber} de ${monthName} de ${year}`;
   };
+  
+  const capitalize = (text: string): string =>
+    text.charAt(0).toUpperCase() + text.slice(1);
+  
 
   console.info(chronologicalEvents);
   const groupedEvents = groupEventsByDay(chronologicalEvents);
@@ -323,7 +354,7 @@ export default function TravelPreview() {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">{event.data.type}</div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -355,18 +386,18 @@ export default function TravelPreview() {
             </div>
             {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> {event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> <br /> {event.data.notes}</div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> Sin notas</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> <br /> Sin notas</div></div>
             )}
 
             {event.data.conditions ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> {event.data.conditions}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> <br /> {event.data.conditions}</div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> Sin condiciones</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> <br /> Sin condiciones</div></div>
             )}
           </div>
         );
@@ -471,7 +502,7 @@ export default function TravelPreview() {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">{event.data.type}</div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -619,7 +650,7 @@ export default function TravelPreview() {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">{event.data.type}</div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -647,7 +678,7 @@ export default function TravelPreview() {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   HABITACIÓN
                 </div>
-                <div className="text-gray-900">{event.data.roomType}</div>
+                <div className="text-gray-900"> {formatRoomType(event.data.roomType)}</div>
               </div>
               {event.data.confirmationNumber && (
                 <div>
@@ -659,16 +690,30 @@ export default function TravelPreview() {
                   </div>
                 </div>
               )}
+
+              {event.data.price && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    PRECIO
+                  </div>
+                  <div className="text-gray-900">
+                  {formatPrice(Number(event.data.price))}
+                  </div>
+                </div>
+              )}
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  <strong>Detalles Adicionales: </strong> <br />
+                  {event.data.notes}</div>
               </div>
             )}
             {event.data.policies && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <div className="text-sm text-gray-600 whitespace-pre-wrap">
-                  <strong>Políticas:</strong> {event.data.policies}
+                  <strong>Políticas de cancelación:</strong> <br />
+                  {event.data.policies}
                 </div>
               </div>
             )}
@@ -904,16 +949,10 @@ export default function TravelPreview() {
                   >
                     <div className="flex flex-col  gap-3">
                       {/* Etiqueta del día - lado izquierdo */}
-                      <div className="flex text-center w-12">
+                      <div className="flex text-center w-auto">
                         <div className="flex flex-row justify-between bg-gray-900 text-white px-3 py-1.5 rounded-sm text-center items-center w-auto gap-3 ">
                           <div className="text-xs font-bold">
-                            {dayLabel.dayOfWeek}
-                          </div>
-                          <div className="text-xs font-medium">
-                            {dayLabel.month}
-                          </div>
-                          <div className="text-xs font-bold ">
-                            {dayLabel.dayNumber}
+                            {dayLabel}
                           </div>
                         </div>
                       </div>
@@ -962,13 +1001,13 @@ export default function TravelPreview() {
                     </div>
                     {insurance.policyDescription && (
                       <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap">
-                        <strong>Descripción:</strong>{" "}
+                        <strong>Descripción:</strong>{" "} <br />
                         {insurance.policyDescription}
                       </p>
                     )}
                     {insurance.notes && (
                       <p className="mt-2 text-sm text-muted-foreground whitespace-pre-wrap ">
-                        <strong>Notas:</strong> {insurance.notes}
+                        <strong>Notas:</strong> <br /> {insurance.notes}
                       </p>
                     )}
                     {insurance.attachments &&
