@@ -163,6 +163,7 @@ export default function TravelDetail() {
     enabled: !!travelId,
   });
 
+
   const publishTravelMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest("PUT", `/api/travels/${travelId}`, {
@@ -617,13 +618,48 @@ export default function TravelDetail() {
   });
 
 
-  const formatDateTime = (date: Date | string | null, includeTime = false) => {
+  const formatDateTime = (
+    date: Date | string | null,
+    includeTime = false,
+    forceUTC = false
+  ): string => {
     if (!date) return "";
-    const dateObj = new Date(date);
+  
+    const d = new Date(date);
+  
+    // Formateamos por partes para controlar exactamente salida (dd MMM yyyy[, HH:mm])
+    const dateFmt = new Intl.DateTimeFormat("es-MX", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: forceUTC ? "UTC" : undefined,
+    });
+  
+    const parts = dateFmt.formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    let month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
+  
+    // Normalizar abreviatura de mes a "sep" en vez de "sept." (si aparece)
+    month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
+  
+    let result = `${day} ${month} ${year}`;
+  
     if (includeTime) {
-      return format(dateObj, "dd MMM yyyy, HH:mm", { locale: es });
+      const timeParts = new Intl.DateTimeFormat("es-MX", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: forceUTC ? "UTC" : undefined,
+      }).formatToParts(d);
+  
+      const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
+      const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+  
+      result += `, ${hour}:${minute}`;
     }
-    return format(dateObj, "dd MMM yyyy", { locale: es });
+  
+    return result;
   };
 
   // Handlers for editing
@@ -1380,7 +1416,7 @@ export default function TravelDetail() {
                               <h4 className="font-semibold text-foreground">{note.title}</h4>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              Fecha: {formatDateTime(note.noteDate)}
+                              Fecha: {formatDateTime(note.noteDate, false, true)}
                             </p>
                             <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                           </div>

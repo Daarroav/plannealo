@@ -108,6 +108,8 @@ export default function HomePage() {
     return matchesSearch && matchesStatus;
   });
 
+  console.log(filteredTravels);
+
   const handleEditTravel = (travelId: string) => {
     window.location.href = `/travel/${travelId}`;
   };

@@ -207,12 +207,18 @@ export default function TravelPreview() {
   const chronologicalEvents = getAllEvents();
 
   // Agrupar eventos por día
-  const groupEventsByDay = (events: any[]) => {
+  /*const groupEventsByDay = (events: any[]) => {
     const groups: { [key: string]: any[] } = {};
 
+    console.info("Events:", events);
+
     events.forEach((event) => {
-      const date = new Date(event.date);
-      const dayKey = date.toISOString().split("T")[0]; // YYYY-MM-DD format
+      const date = new Date(event.date); // Forzar UTC
+      const dayKey = date.toISOString().split("T")[0]; // YYYY-MM-DD format  // no usar 
+
+      console.info("Event Date:", event.date);
+      console.info("Day Key:", dayKey);
+        
 
       if (!groups[dayKey]) {
         groups[dayKey] = [];
@@ -226,7 +232,45 @@ export default function TravelPreview() {
         date: new Date(dateKey),
         events: groups[dateKey],
       }));
+  };*/
+
+  const groupEventsByDay = (events: any[]) => {
+    const groups: { [key: string]: any[] } = {};
+  
+    events.forEach((event) => {
+      const d = new Date(event.date); // Puede ser string o Date
+  
+      // 👇 Usamos siempre la fecha LOCAL
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+  
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD local
+  
+      if (!groups[dayKey]) groups[dayKey] = [];
+      groups[dayKey].push(event);
+    });
+  
+    return Object.keys(groups)
+      .sort()
+      .map((dateKey) => {
+        const [y, m, day] = dateKey.split("-").map(Number);
+  
+        // 👇 medianoche local (NO UTC)
+        const groupDate = new Date(y, m - 1, day);
+  
+        // Ordenar eventos dentro del día
+        groups[dateKey].sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+  
+        return {
+          date: groupDate,
+          events: groups[dateKey],
+        };
+      });
   };
+  
 
   const formatDayLabel = (date: Date) => {
     const dayNames = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
@@ -252,6 +296,7 @@ export default function TravelPreview() {
     };
   };
 
+  console.info(chronologicalEvents);
   const groupedEvents = groupEventsByDay(chronologicalEvents);
 
   console.info(groupedEvents);
@@ -973,7 +1018,9 @@ export default function TravelPreview() {
                 {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
                 <p className="text-sm text-muted-foreground">Agencia de Viajes</p>
                 <p className="text-xs text-muted-foreground">Especialistas en experiencias únicas</p>
+                <p className="text-xs text-muted-foreground font-semibold">Registro: RNT-54321</p>
               </div>
+              
             </div>
             
             {/* Información de contacto */}
@@ -982,7 +1029,7 @@ export default function TravelPreview() {
               <div className="text-sm text-muted-foreground space-y-1">
                 <p><strong>Email:</strong> plannealo@gmail.com</p>
                 <p><strong>WhatsApp:</strong> +1 (555) 987-6543</p>
-                  <p><strong>Registro:</strong> RNT-54321</p>
+                  
                 <p><strong>Web:</strong> www.plannealo.com</p>
               </div>
             </div>
