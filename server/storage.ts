@@ -166,9 +166,20 @@ export class DatabaseStorage implements IStorage {
 
   // Travel methods
   async createTravel(insertTravel: InsertTravel): Promise<Travel> {
+    // Aseguramos que las fechas sean objetos Date
+    const startDate = insertTravel.startDate instanceof Date 
+      ? insertTravel.startDate 
+      : new Date(insertTravel.startDate);
+      
+    const endDate = insertTravel.endDate instanceof Date 
+      ? insertTravel.endDate 
+      : new Date(insertTravel.endDate);
+    
+    // Normalizamos las fechas
     const normalized = {
       ...insertTravel,
-      startDate: DatabaseStorage.normalizeNoteDate(insertTravel.startDate),
+      startDate: DatabaseStorage.normalizeNoteDate(startDate),
+      endDate: DatabaseStorage.normalizeNoteDate(endDate),
     };
 
     const [travel] = await db

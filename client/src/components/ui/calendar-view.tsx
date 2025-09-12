@@ -75,6 +75,13 @@ export function CalendarView({ travels }: CalendarViewProps) {
     return days;
   }, [currentMonth, currentYear]);
 
+  // Función para normalizar fechas (ignorar horas)
+  const normalizeDate = (date: Date) => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  };
+
   // Get travels for a specific date
   const getTravelsForDate = (day: number) => {
     if (!day) return [];
@@ -85,8 +92,13 @@ export function CalendarView({ travels }: CalendarViewProps) {
       const startDate = new Date(travel.startDate);
       const endDate = new Date(travel.endDate);
       
+      // Normalizamos las fechas para comparar solo días
+      const normalizedTarget = normalizeDate(targetDate);
+      const normalizedStart = normalizeDate(startDate);
+      const normalizedEnd = normalizeDate(endDate);
+      
       // Check if the target date falls within the travel period
-      return targetDate >= startDate && targetDate <= endDate;
+      return normalizedTarget >= normalizedStart && normalizedTarget <= normalizedEnd;
     });
   };
 
