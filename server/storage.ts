@@ -166,9 +166,14 @@ export class DatabaseStorage implements IStorage {
 
   // Travel methods
   async createTravel(insertTravel: InsertTravel): Promise<Travel> {
+    const normalized = {
+      ...insertTravel,
+      startDate: DatabaseStorage.normalizeNoteDate(insertTravel.startDate),
+    };
+
     const [travel] = await db
       .insert(travels)
-      .values(insertTravel)
+      .values(normalized)
       .returning();
     return travel;
   }
@@ -196,6 +201,13 @@ export class DatabaseStorage implements IStorage {
 
   async updateTravel(id: string, updates: Partial<Travel>): Promise<Travel> {
 
+    if(updates.startDate){
+      updates.startDate = DatabaseStorage.normalizeNoteDate(updates.startDate) as any;
+    }
+    if(updates.endDate){
+      updates.endDate = DatabaseStorage.normalizeNoteDate(updates.endDate) as any;
+    }
+    
     const { startDate, endDate, ...rest } = updates;
     const [travel] = await db
       .update(travels)
@@ -406,15 +418,25 @@ export class DatabaseStorage implements IStorage {
     await db.delete(insurances).where(eq(insurances.id, id));
   }
 
+  
+
   // Note methods
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = randomUUID();
+  
+    const normalized = {
+      ...insertNote,
+      noteDate: DatabaseStorage.normalizeNoteDate(insertNote.noteDate),
+    };
+  
     const [note] = await db
       .insert(notes)
-      .values({ ...insertNote, id })
+      .values({ ...normalized, id })
       .returning();
+  
     return note;
   }
+  
 
   async getNotesByTravel(travelId: string): Promise<Note[]> {
     return await db.select()
@@ -423,16 +445,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateNote(id: string, updates: Partial<Note>): Promise<Note> {
+    if (updates.noteDate) {
+      updates.noteDate = DatabaseStorage.normalizeNoteDate(updates.noteDate) as any;
+    }
+  
     const [note] = await db
       .update(notes)
       .set(updates)
       .where(eq(notes.id, id))
       .returning();
+  
     if (!note) {
       throw new Error("Note not found");
     }
+  
     return note;
   }
+  
+
+  static normalizeNoteDate(input: string | Date): Date {
+    const d = new Date(input);
+    return new Date(Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate(),
+      12, 0, 0 // 👈 siempre fija a 12:00 UTC
+    ));
+  }
+  
 
   async deleteNote(id: string): Promise<void> {
     await db.delete(notes).where(eq(notes.id, id));
