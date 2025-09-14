@@ -341,6 +341,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+    console.info("Updating accommodation:", req.params, req.body);
+
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
