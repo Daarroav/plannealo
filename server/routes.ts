@@ -247,32 +247,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/travels/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const travel = await storage.getTravel(req.params.id);
-      if (!travel) {
-        return res.status(404).json({ message: "Travel not found" });
-      }
-
-      // Condiciones para el acceso al viaje
-      const isOwner = travel.createdBy === req.user!.id;
-      const isAdmin = req.user!.role === "admin";
-
-      if (!isOwner && !isAdmin) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const updated = await storage.updateTravel(req.params.id, req.body);
-      res.json(updated);
-    } catch (error) {
-      console.error("Error updating travel:", error);
-      res.status(500).json({ message: "Error updating travel" });
-    }
-  });
 
   // Accommodation routes
   app.get("/api/travels/:travelId/accommodations", async (req, res) => {
@@ -442,16 +416,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/flights/:id", async (req, res) => {
+  app.put("/api/flights/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/flights/${file.filename}`);
+      }
+      
       const flight = await storage.updateFlight(req.params.id, {
-        ...req.body,
-        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : undefined,
-        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : undefined,
+        ...updateData,
+        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
+        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
       });
       res.json(flight);
     } catch (error) {
@@ -460,16 +442,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/transports/:id", async (req, res) => {
+  app.put("/api/transports/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/transports/${file.filename}`);
+      }
+      
       const transport = await storage.updateTransport(req.params.id, {
-        ...req.body,
-        pickupDate: req.body.pickupDate ? new Date(req.body.pickupDate) : undefined,
-        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+        ...updateData,
+        pickupDate: updateData.pickupDate ? new Date(updateData.pickupDate) : undefined,
+        endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
       });
       res.json(transport);
     } catch (error) {
@@ -478,16 +468,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/cruises/:id", async (req, res) => {
+  app.put("/api/cruises/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/cruises/${file.filename}`);
+      }
+      
       const cruise = await storage.updateCruise(req.params.id, {
-        ...req.body,
-        departureDate: req.body.departureDate ? new Date(req.body.departureDate) : undefined,
-        arrivalDate: req.body.arrivalDate ? new Date(req.body.arrivalDate) : undefined,
+        ...updateData,
+        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
+        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
       });
       res.json(cruise);
     } catch (error) {
@@ -536,17 +534,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/flights", async (req, res) => {
+  app.post("/api/travels/:travelId/flights", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/flights/${file.filename}`) : [];
+      
       const validated = insertFlightSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
+        attachments: attachments,
       });
 
       const flight = await storage.createFlight(validated);
@@ -572,17 +574,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/transports", async (req, res) => {
+  app.post("/api/travels/:travelId/transports", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/transports/${file.filename}`) : [];
+      
       const validated = insertTransportSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         pickupDate: new Date(req.body.pickupDate),
         ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
+        attachments: attachments,
       });
 
       const transport = await storage.createTransport(validated);
@@ -608,17 +614,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/cruises", async (req, res) => {
+  app.post("/api/travels/:travelId/cruises", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/cruises/${file.filename}`) : [];
+      
       const validated = insertCruiseSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
+        attachments: attachments,
       });
 
       const cruise = await storage.createCruise(validated);
