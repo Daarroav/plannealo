@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
+import { FileUploader } from "./file-uploader";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -23,6 +24,7 @@ const flightFormSchema = insertFlightSchema.extend({
   departureTimeField: z.string().min(1, "La hora de salida es requerida"),
   arrivalDateField: z.string().min(1, "La fecha de llegada es requerida"),
   arrivalTimeField: z.string().min(1, "La hora de llegada es requerida"),
+  attachments: z.array(z.string()).optional(),
 }).omit({
   departureDate: true,
   arrivalDate: true,
@@ -95,6 +97,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [flightSearchOpen, setFlightSearchOpen] = useState(false);
   const [originAirport, setOriginAirport] = useState<Airport | null>(null);
   const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
@@ -112,6 +115,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       departureTerminal: "",
       arrivalTerminal: "",
       class: "",
+      attachments: [],
     },
   });
 
@@ -138,7 +142,24 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         departureTerminal: editingFlight.departureTerminal || "",
         arrivalTerminal: editingFlight.arrivalTerminal || "",
         class: editingFlight.class || "",
+        attachments: editingFlight.attachments || [],
       });
+      
+      // Load existing attachments as files
+      if (Array.isArray(editingFlight.attachments) && editingFlight.attachments.length > 0) {
+        Promise.all(
+          editingFlight.attachments.map(async (url: string) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const filename = url.split('/').pop() || 'archivo';
+            return new File([blob], filename, { type: blob.type });
+          })
+        ).then((files) => {
+          setAttachedFiles(files);
+        }).catch((err) => {
+          console.error("Error cargando archivos adjuntos:", err);
+        });
+      }
     } else {
       setDepartureDate(undefined);
       setArrivalDate(undefined);
@@ -156,7 +177,9 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         departureTerminal: "",
         arrivalTerminal: "",
         class: "",
+        attachments: [],
       });
+      setAttachedFiles([]);
     }
   }, [editingFlight, form, travelId]);
 
@@ -223,30 +246,42 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const departureDateTime = new Date(`${currentValues.departureDateField}T${currentValues.departureTimeField}:00`);
     const arrivalDateTime = new Date(`${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`);
 
-    const submitData = {
-      travelId: currentValues.travelId,
-      airline: currentValues.airline,
-      flightNumber: currentValues.flightNumber,
-      reservationNumber: currentValues.reservationNumber,
-      departureCity: currentValues.departureCity,
-      arrivalCity: currentValues.arrivalCity,
-      departureDate: departureDateTime.toISOString(),
-      arrivalDate: arrivalDateTime.toISOString(),
-      departureTerminal: currentValues.departureTerminal,
-      arrivalTerminal: currentValues.arrivalTerminal,
-      class: currentValues.class,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields
+    if (editingFlight) {
+      formData.append('id', editingFlight.id);
+    }
+    formData.append('travelId', currentValues.travelId);
+    formData.append('airline', currentValues.airline);
+    formData.append('flightNumber', currentValues.flightNumber);
+    formData.append('reservationNumber', currentValues.reservationNumber || '');
+    formData.append('departureCity', currentValues.departureCity || '');
+    formData.append('arrivalCity', currentValues.arrivalCity || '');
+    formData.append('departureDate', departureDateTime.toISOString());
+    formData.append('arrivalDate', arrivalDateTime.toISOString());
+    formData.append('departureTerminal', currentValues.departureTerminal || '');
+    formData.append('arrivalTerminal', currentValues.arrivalTerminal || '');
+    formData.append('class', currentValues.class || '');
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    onSubmit(submitData);
+    onSubmit(formData);
     form.reset();
     setDepartureDate(undefined);
     setArrivalDate(undefined);
+    setAttachedFiles([]);
   };
 
   const handleClose = () => {
     form.reset();
     setDepartureDate(undefined);
     setArrivalDate(undefined);
+    setAttachedFiles([]);
     onClose();
   };
 
@@ -539,6 +574,18 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 </p>
               )}
             </div>
+          </div>
+
+          {/* File Attachments */}
+          <div>
+            <Label>Documentos Adjuntos</Label>
+            <FileUploader
+              name="attachments"
+              defaultFiles={editingFlight?.attachments || []}
+              onFilesChange={setAttachedFiles}
+              maxFiles={10}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+            />
           </div>
 
           {/* Form Actions */}

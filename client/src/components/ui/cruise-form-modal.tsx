@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { insertCruiseSchema } from "@shared/schema";
+import { FileUploader } from "./file-uploader";
 
 // Form validation schema - extends the base schema with date string handling
 const cruiseFormSchema = insertCruiseSchema.extend({
@@ -15,6 +16,7 @@ const cruiseFormSchema = insertCruiseSchema.extend({
   departureTime: z.string().optional(),
   arrivalDate: z.string().min(1, "La fecha de llegada es requerida"), 
   arrivalTime: z.string().optional(),
+  attachments: z.array(z.string()).optional(),
 }).omit({
   travelId: true,
 });
@@ -34,6 +36,7 @@ export function CruiseFormModal({
   onSubmit, 
   isPending = false 
 }: CruiseFormModalProps) {
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const form = useForm<CruiseFormData>({
     resolver: zodResolver(cruiseFormSchema),
     defaultValues: {
@@ -46,6 +49,7 @@ export function CruiseFormModal({
       arrivalTime: "",
       arrivalPort: "",
       notes: "",
+      attachments: [],
     },
   });
 
@@ -72,23 +76,32 @@ export function CruiseFormModal({
       ? new Date(`${currentValues.arrivalDate}T${currentValues.arrivalTime}`)
       : new Date(currentValues.arrivalDate);
 
-    const processedData = {
-      cruiseLine: currentValues.cruiseLine,
-      confirmationNumber: currentValues.confirmationNumber || undefined,
-      departureDate: departureDateTime,
-      departurePort: currentValues.departurePort,
-      arrivalDate: arrivalDateTime,
-      arrivalPort: currentValues.arrivalPort,
-      notes: currentValues.notes || undefined,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields (no editing support yet, so no id)
+    formData.append('cruiseLine', currentValues.cruiseLine);
+    formData.append('confirmationNumber', currentValues.confirmationNumber || '');
+    formData.append('departureDate', departureDateTime.toISOString());
+    formData.append('departurePort', currentValues.departurePort);
+    formData.append('arrivalDate', arrivalDateTime.toISOString());
+    formData.append('arrivalPort', currentValues.arrivalPort);
+    formData.append('notes', currentValues.notes || '');
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    console.log("Processed data to send:", processedData);
-    onSubmit(processedData);
+    console.log("FormData to send:", formData);
+    onSubmit(formData);
     form.reset();
+    setAttachedFiles([]);
   };
 
   const handleClose = () => {
     form.reset();
+    setAttachedFiles([]);
     onOpenChange(false);
   };
 
@@ -210,6 +223,17 @@ export function CruiseFormModal({
               {...form.register("notes")}
               placeholder="Información adicional sobre el crucero..."
               className="min-h-[80px]"
+            />
+          </div>
+
+          {/* File Attachments */}
+          <div>
+            <Label>Documentos Adjuntos</Label>
+            <FileUploader
+              name="attachments"
+              onFilesChange={setAttachedFiles}
+              maxFiles={10}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
             />
           </div>
 

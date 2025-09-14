@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertTransportSchema } from "@shared/schema";
+import { FileUploader } from "./file-uploader";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
@@ -22,6 +23,7 @@ const transportFormSchema = insertTransportSchema.extend({
   pickupTimeField: z.string().min(1, "La hora de recogida es requerida"),
   endDateField: z.string().optional(),
   endTimeField: z.string().optional(),
+  attachments: z.array(z.string()).optional(),
 }).omit({
   pickupDate: true,
   endDate: true,
@@ -41,6 +43,7 @@ interface TransportFormModalProps {
 export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingTransport }: TransportFormModalProps) {
   const [pickupDate, setPickupDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const form = useForm<TransportForm>({
     resolver: zodResolver(transportFormSchema),
@@ -59,6 +62,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       dropoffLocation: "",
       confirmationNumber: "",
       notes: "",
+      attachments: [],
     },
   });
 
@@ -66,7 +70,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   React.useEffect(() => {
     if (editingTransport) {
       const pickupDateTime = new Date(editingTransport.pickupDate);
-      const endDateTime = editingTransport.endDate ? new Date(editingTransport.endDate) : null;
+      const endDateTime = editingTransport.endDate ? new Date(editingTransport.endDate) : undefined;
       
       setPickupDate(pickupDateTime);
       setEndDate(endDateTime);
@@ -86,7 +90,24 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         dropoffLocation: editingTransport.dropoffLocation || "",
         confirmationNumber: editingTransport.confirmationNumber || "",
         notes: editingTransport.notes || "",
+        attachments: editingTransport.attachments || [],
       });
+      
+      // Load existing attachments as files
+      if (Array.isArray(editingTransport.attachments) && editingTransport.attachments.length > 0) {
+        Promise.all(
+          editingTransport.attachments.map(async (url: string) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const filename = url.split('/').pop() || 'archivo';
+            return new File([blob], filename, { type: blob.type });
+          })
+        ).then((files) => {
+          setAttachedFiles(files);
+        }).catch((err) => {
+          console.error("Error cargando archivos adjuntos:", err);
+        });
+      }
     } else {
       setPickupDate(undefined);
       setEndDate(undefined);
@@ -105,7 +126,9 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         dropoffLocation: "",
         confirmationNumber: "",
         notes: "",
+        attachments: [],
       });
+      setAttachedFiles([]);
     }
   }, [editingTransport, form, travelId]);
 
@@ -129,31 +152,45 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       endDateTime = new Date(`${currentValues.endDateField}T${currentValues.endTimeField}:00`);
     }
 
-    const submitData = {
-      travelId: currentValues.travelId,
-      type: currentValues.type,
-      name: currentValues.name,
-      provider: currentValues.provider || undefined,
-      contactName: currentValues.contactName || undefined,
-      contactNumber: currentValues.contactNumber || undefined,
-      pickupDate: pickupDateTime,
-      pickupLocation: currentValues.pickupLocation,
-      endDate: endDateTime || undefined,
-      dropoffLocation: currentValues.dropoffLocation || undefined,
-      confirmationNumber: currentValues.confirmationNumber || undefined,
-      notes: currentValues.notes || undefined,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields
+    if (editingTransport) {
+      formData.append('id', editingTransport.id);
+    }
+    formData.append('travelId', currentValues.travelId);
+    formData.append('type', currentValues.type);
+    formData.append('name', currentValues.name);
+    formData.append('provider', currentValues.provider || '');
+    formData.append('contactName', currentValues.contactName || '');
+    formData.append('contactNumber', currentValues.contactNumber || '');
+    formData.append('pickupDate', pickupDateTime.toISOString());
+    formData.append('pickupLocation', currentValues.pickupLocation);
+    if (endDateTime) {
+      formData.append('endDate', endDateTime.toISOString());
+    }
+    formData.append('dropoffLocation', currentValues.dropoffLocation || '');
+    formData.append('confirmationNumber', currentValues.confirmationNumber || '');
+    formData.append('notes', currentValues.notes || '');
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    onSubmit(submitData);
+    onSubmit(formData);
     form.reset();
     setPickupDate(undefined);
     setEndDate(undefined);
+    setAttachedFiles([]);
   };
 
   const handleClose = () => {
     form.reset();
     setPickupDate(undefined);
     setEndDate(undefined);
+    setAttachedFiles([]);
     onClose();
   };
 
@@ -393,6 +430,18 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
               id="notes"
               {...form.register("notes")}
               placeholder="Información adicional, instrucciones especiales, etc."
+            />
+          </div>
+
+          {/* File Attachments */}
+          <div>
+            <Label>Documentos Adjuntos</Label>
+            <FileUploader
+              name="attachments"
+              defaultFiles={editingTransport?.attachments || []}
+              onFilesChange={setAttachedFiles}
+              maxFiles={10}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
             />
           </div>
 
