@@ -704,6 +704,12 @@ export default function TravelDetail() {
     setShowNoteModal(true);
   };
 
+  const formatPrice = (price: number): string => {
+    return price.toLocaleString('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+    });
+  };
 
   if (travelLoading) {
     return (
@@ -956,7 +962,7 @@ export default function TravelDetail() {
                                 <span className="font-medium">Habitación:</span> {accommodation.roomType || "N/A"}
                               </div>
                               <div>
-                                <span className="font-medium">Precio:</span> {accommodation.price || "N/A"}
+                                <span className="font-medium">Precio:</span> {formatPrice(Number(accommodation.price))}
                               </div>
                             </div>
                             {accommodation.notes && (

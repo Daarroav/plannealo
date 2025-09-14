@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Upload, FileText, X } from "lucide-react";
 import { insertNoteSchema } from "@shared/schema";
+import { FileUploader } from "./file-uploader";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
@@ -296,6 +297,14 @@ export function NoteFormModal({
               )}
             </div>
           </div>
+
+          <FileUploader
+            name="attachments"
+            defaultFiles={editingNote?.attachments || []}
+            onFilesChange={setAttachedFiles}
+            maxFiles={10}
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+          />
 
           {/* Buttons */}
           <div className="flex justify-end space-x-4 pt-4">

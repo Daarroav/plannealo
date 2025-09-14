@@ -62,6 +62,7 @@ export const activities = pgTable("activities", {
   contactPhone: text("contact_phone"), 
   placeStart: text("place_start"),
   placeEnd: text("place_end"),
+  attachments: text("attachments").array(), // Archivos adjuntos adicionales
 });
 
 export const flights = pgTable("flights", {
@@ -77,6 +78,7 @@ export const flights = pgTable("flights", {
   arrivalTerminal: text("arrival_terminal"),
   class: text("class").notNull(),
   reservationNumber: text("reservation_number").notNull(),
+  attachments: text("attachments").array(), // Archivos adjuntos adicionales
 });
 
 export const transports = pgTable("transports", {
@@ -93,6 +95,7 @@ export const transports = pgTable("transports", {
   dropoffLocation: text("dropoff_location"),
   confirmationNumber: text("confirmation_number"),
   notes: text("notes"),
+  attachments: text("attachments").array(), // Archivos adjuntos adicionales
 });
 
 export const cruises = pgTable("cruises", {
@@ -105,6 +108,7 @@ export const cruises = pgTable("cruises", {
   arrivalDate: timestamp("arrival_date").notNull(), // fecha y horario de desembarque
   arrivalPort: text("arrival_port").notNull(), // puerto de desembarque
   notes: text("notes"),
+  attachments: text("attachments").array(), // Archivos adjuntos adicionales
 });
 
 export const insurances = pgTable("insurances", {

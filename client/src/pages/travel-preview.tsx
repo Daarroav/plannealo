@@ -70,6 +70,10 @@ export default function TravelPreview() {
     );
   };
 
+const formatPhoneNumber = (phoneNumber: string) => {
+    return phoneNumber.replace(/\D/g, '').replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+  };
+
   const formatDateTime = (dateTime: string | Date) => {
     const date = new Date(dateTime);
     return date.toLocaleString("es-ES", {
@@ -380,6 +384,28 @@ export default function TravelPreview() {
                   </div>
                   <div className="text-gray-900">
                     {event.data.confirmationNumber}
+                  </div>
+                </div>
+              )}
+
+              {event.data.contactName && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    CONTACTO
+                  </div>
+                  <div className="text-gray-900">
+                    {event.data.contactName}
+                  </div>
+                </div>
+              )}
+
+              {event.data.contactPhone && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    Teléfono contacto
+                  </div>
+                  <div className="text-gray-900">
+                    {formatPhoneNumber(event.data.contactPhone)}
                   </div>
                 </div>
               )}

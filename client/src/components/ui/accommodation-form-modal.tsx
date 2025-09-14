@@ -223,6 +223,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         notes: editingAccommodation.notes || "",
         thumbnail: editingAccommodation.thumbnail || null,
         attachments: editingAccommodation.attachments || [],
+        
       });
       if (editingAccommodation.thumbnail) {
         // 👇 Descargar la imagen y convertirla en File
@@ -234,6 +235,13 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           })
           .catch(err => console.error("Error cargando imagen:", err));
       }
+
+      // 👇 sincroniza también el estado visual con formato
+      if (editingAccommodation.price) {
+        const formatted = formatNumber(editingAccommodation.price.toString());
+        setPrice(formatted);
+      } 
+      
 
       if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
         if (editingAccommodation.attachments?.length > 0) {
@@ -274,6 +282,28 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       });
     }
   }, [editingAccommodation, form, travelId]);
+
+
+  const [price, setPrice] = useState("");
+
+ 
+  const formatNumber = (val: string) => {
+    return val
+      .replace(/\D/g, "")
+      .replace(/([0-9])([0-9]{2})$/, "$1.$2")
+      .replace(/\B(?=(\d{3})+(?!\d)\.?)/g, ",");
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const formatted = formatNumber(raw);
+    setPrice(formatted);
+
+    // guardar valor numérico en el form
+    const numeric = parseFloat(formatted.replace(/,/g, ""));
+    form.setValue("price", isNaN(numeric) ? "" : numeric.toString());
+  };
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -461,14 +491,32 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               )}
             </div>
 
-            <div>
-              <Label htmlFor="price">Precio Total</Label>
+            <div className="w-full">
+            <label htmlFor="price" className="block mb-1 font-medium">
+              Precio Total
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                $
+              </span>
               <Input
                 id="price"
-                {...form.register("price")}
-                placeholder="Ej: $15,000 MXN"
+                type="text"
+                value={price}
+                onChange={handleChange}
+                placeholder="15,000.00"
+                className="pl-8" // 👈 padding extra para no encimarse con el $
               />
+              <input type="hidden" {...form.register("price")} />
             </div>
+            {form.formState.errors.price && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.price.message}
+              </p>
+            )}
+          </div>
+
+
           </div>
 
           {/* Policies */}
