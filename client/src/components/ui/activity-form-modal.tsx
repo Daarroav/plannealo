@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertActivitySchema } from "@shared/schema";
+import { FileUploader } from "@/components/ui/file-uploader";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
@@ -42,6 +43,7 @@ interface ActivityFormModalProps {
 
 export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingActivity }: ActivityFormModalProps) {
   const [activityDate, setActivityDate] = useState<Date>();
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   console.info("Editing activity:", editingActivity);
   
@@ -73,6 +75,19 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       const timeStr = format(activityDateTime, "HH:mm");
       
       setActivityDate(activityDateTime); // Se actualiza la fecha del calendario
+      
+      // Handle existing attachments for editing
+      if (editingActivity.attachments && editingActivity.attachments.length > 0) {
+        const existingFiles = editingActivity.attachments.map((url: string) => {
+          const filename = url.split('/').pop() || 'attachment';
+          const file = new File([], filename, { type: 'application/octet-stream' });
+          return file;
+        });
+        setAttachedFiles(existingFiles);
+      } else {
+        setAttachedFiles([]);
+      }
+      
       form.reset({
         travelId,
         name: editingActivity.name || "",
@@ -91,6 +106,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       });
     } else {
       setActivityDate(undefined);
+      setAttachedFiles([]);
       form.reset({
         travelId,
         name: "",
@@ -127,31 +143,43 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     // Combine date and time for the activity
     const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
 
-    const submitData = {
-      travelId: currentValues.travelId,
-      name: currentValues.name,
-      type: currentValues.type,
-      provider: currentValues.provider,
-      date: activityDateTime.toISOString(),
-      startTime: currentValues.startTime,
-      endTime: currentValues.endTime,
-      confirmationNumber: currentValues.confirmationNumber,
-      conditions: currentValues.conditions,
-      notes: currentValues.notes,
-      contactName: currentValues.contactName,
-      contactPhone: currentValues.contactPhone, 
-      placeStart: currentValues.startLocation,
-      placeEnd: currentValues.endLocation,
-    };
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add form fields
+    if (editingActivity) {
+      formData.append('id', editingActivity.id);
+    }
+    formData.append('travelId', currentValues.travelId);
+    formData.append('name', currentValues.name);
+    formData.append('type', currentValues.type);
+    formData.append('provider', currentValues.provider || '');
+    formData.append('date', activityDateTime.toISOString());
+    formData.append('startTime', currentValues.startTime);
+    formData.append('endTime', currentValues.endTime);
+    formData.append('confirmationNumber', currentValues.confirmationNumber || '');
+    formData.append('conditions', currentValues.conditions || '');
+    formData.append('notes', currentValues.notes || '');
+    formData.append('contactName', currentValues.contactName || '');
+    formData.append('contactPhone', currentValues.contactPhone || '');
+    formData.append('placeStart', currentValues.startLocation);
+    formData.append('placeEnd', currentValues.endLocation || '');
+    
+    // Add attached files
+    attachedFiles.forEach((file) => {
+      formData.append('attachments', file);
+    });
 
-    onSubmit(submitData);
+    onSubmit(formData);
     form.reset();
     setActivityDate(undefined);
+    setAttachedFiles([]);
   };
 
   const handleClose = () => {
     form.reset();
     setActivityDate(undefined);
+    setAttachedFiles([]);
     onClose();
   };
 
@@ -364,6 +392,18 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
               {...form.register("notes")}
               placeholder="Información adicional como instrucciones especiales, qué llevar, recomendaciones, etc."
               rows={3}
+            />
+          </div>
+
+          {/* File Attachments */}
+          <div>
+            <Label>Archivos Adjuntos</Label>
+            <FileUploader
+              name="attachments"
+              defaultFiles={editingActivity?.attachments || []}
+              onFilesChange={setAttachedFiles}
+              maxFiles={10}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
             />
           </div>
 

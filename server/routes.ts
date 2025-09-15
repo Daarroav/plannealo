@@ -371,16 +371,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/activities", async (req, res) => {
+  app.post("/api/travels/:travelId/activities", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/activities/${file.filename}`) : [];
+      
       const validated = insertActivitySchema.parse({
         ...req.body,
         travelId: req.params.travelId,
         date: new Date(req.body.date),
+        attachments: attachments,
       });
 
       const activity = await storage.createActivity(validated);
@@ -391,16 +395,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/activities/:id", async (req, res) => {
+  app.put("/api/activities/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
-   
     try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        updateData.attachments = files.attachments.map(file => `/uploads/activities/${file.filename}`);
+      }
+      
       const activity = await storage.updateActivity(req.params.id, {
-        ...req.body,
-        date: req.body.date ? new Date(req.body.date) : undefined,
+        ...updateData,
+        date: updateData.date ? new Date(updateData.date) : undefined,
       });
       res.json(activity);
     } catch (error) {
