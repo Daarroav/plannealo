@@ -248,16 +248,55 @@ export function NoteFormModal({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Documentos</h3>
             
-            <FileUploader
-            name="attachments"
-            defaultFiles={editingNote?.attachments || []}
-            onFilesChange={setAttachedFiles}
-            maxFiles={10}
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-          />
-          </div>
+            <div className="border-2 border-dashed border-border rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload" className="cursor-pointer">
+                    <span className="bg-accent hover:bg-accent/90 text-white px-4 py-2 rounded-md inline-block">
+                      Seleccionar Documentos
+                    </span>
+                  </Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    PDF, Word, imágenes (JPG, PNG), texto - Máximo 10 archivos
+                  </p>
+                </div>
+              </div>
 
-         
+              {/* Lista de archivos seleccionados */}
+              {attachedFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Documentos seleccionados:</h4>
+                  {attachedFiles.map((fileName, index) => (
+                    <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <a href={URL.createObjectURL(fileName)} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">{fileName.name}</span>
+                        </a>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Buttons */}
           <div className="flex justify-end space-x-4 pt-4">
