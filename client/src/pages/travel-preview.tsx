@@ -347,7 +347,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Camera className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Actividad
@@ -437,7 +437,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Plane className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold w-fit">
                   Vuelo: {event.data.departureCity} → {event.data.arrivalCity}
                 </h3>
               </div>
@@ -505,6 +505,34 @@ const formatPhoneNumber = (phoneNumber: string) => {
                 </div>
               </div>
             </div>
+
+            {event.data.attachments && event.data.attachments.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Documentos Adjuntos
+                </p>
+                <div className="space-y-1">
+                  {event.data.attachments.map(
+                    (fileName: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <a 
+                          href={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                        </a>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -517,7 +545,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Car className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Transporte
@@ -585,7 +613,38 @@ const formatPhoneNumber = (phoneNumber: string) => {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Notas
+                </p>
                 <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
+              </div>
+            )}
+
+            {event.data.attachments && event.data.attachments.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Documentos Adjuntos
+                </p>
+                <div className="space-y-1">
+                  {event.data.attachments.map(
+                    (fileName: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <a 
+                          href={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                        </a>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -600,7 +659,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Ship className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-lg font-semibold w-fit">
                   {event.data.cruiseLine}
                 </h3>
               </div>
@@ -650,7 +709,38 @@ const formatPhoneNumber = (phoneNumber: string) => {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Notas
+                </p>
                 <div className="text-sm text-gray-600">{event.data.notes}</div>
+              </div>
+            )}
+
+            {event.data.attachments && event.data.attachments.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Documentos Adjuntos
+                </p>
+                <div className="space-y-1">
+                  {event.data.attachments.map(
+                    (fileName: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 text-sm"
+                      >
+                        <FileText className="w-4 h-4 text-gray-600" />
+                        <a 
+                          href={fileName}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                        </a>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -665,7 +755,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Bed className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Alojamiento
@@ -794,7 +884,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <StickyNote className="w-4 h-4 text-yellow-600" />
-                <h3 className="text-lg font-semibold">{event.data.title}</h3>
+                <h3 className="text-lg font-semibold w-fit">{event.data.title}</h3>
               </div>
               <Badge
                 variant="secondary"
@@ -891,7 +981,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
 
         {/* Contenido de la portada */}
         <div className="relative z-10 text-white px-8 max-w-4xl mx-auto">
-          <h1 className="text-6xl font-bold mb-8 print:text-5xl drop-shadow-2xl">
+          <h1 className="text-6xl font-bold mb-8 print:text-5xl drop-shadow-2xl mt-44 print:mt-0 sm:mt-0">
             {travel.name}
           </h1>
           <h2 className="text-3xl font-light mb-6 print:text-2xl drop-shadow-xl">
@@ -1019,7 +1109,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         {formatDateTime(insurance.effectiveDate)}
                       </div>
                       {insurance.emergencyNumber && (
-                        <div>📞 Emergencias: {insurance.emergencyNumber}</div>
+                        <div>📞 Emergencias: {formatPhoneNumber(insurance.emergencyNumber)}</div>
                       )}
                       {insurance.importantInfo && (
                         <div>ℹ️ {insurance.importantInfo}</div>

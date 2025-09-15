@@ -772,10 +772,10 @@ export default function TravelDetail() {
       {/* Travel Detail Header */}
       <div className="bg-background border-b border-border sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex flex-col sm:flex-row  justify-between h-auto gap-2 sm:h-16 pb-2 sm:pb-0">
             
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 w-full sm:w-auto">
               <Button variant="ghost" size="icon" onClick={() => setLocation("/")}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
@@ -787,7 +787,7 @@ export default function TravelDetail() {
 
         
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end px-4 sm:px-0">
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
                 {travel.status === "published" ? "Publicado" : "Borrador"}
               </Badge>
