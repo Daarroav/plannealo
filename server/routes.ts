@@ -91,7 +91,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/reports", async (req, res) => {
 
-    console.info("Fetching reports");
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "No autenticado" });
     }
@@ -186,8 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
-    console.info("Updating travel:", req.params, req.body);
-
+   
 
     try {
       const travel= await storage.getTravel(req.params.id); // Get travel by id
@@ -206,7 +204,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updated = await storage.updateTravel(req.params.id, req.body);
 
       // Update name and mail client
-      console.info("Updating client when updating travel:", travel.clientId, req.body.clientName, req.body.clientEmail);
       if(req.body.clientName || req.body.clientEmail){
         await storage.updateUser(travel.clientId!, {
           name: req.body.clientName,
@@ -221,7 +218,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/travels/:id", async (req, res) => {
-    console.info("Fetching travel:", req.params.id);
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
@@ -315,8 +311,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
-    console.info("Updating accommodation:", req.params, req.body);
-
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -370,7 +364,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const activities = await storage.getActivitiesByTravel(req.params.travelId);
-      console.info("Activities:", activities);
       res.json(activities);
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -421,10 +414,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+ 
+
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       
+      console.info("Files:", files);
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/flights/${file.filename}`);

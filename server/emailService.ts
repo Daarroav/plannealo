@@ -184,8 +184,12 @@ export class EmailService {
 <body>
   <div class="email-container">
     <div class="header">
-      <h1>Bienvenido a tu próximo viaje con Plannealo.</h1>
-      <p>¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros!</p>
+      <h1 style="margin:0 0 8px 0; font-size:28px; font-weight:700; color:#ffffff; mso-line-height-rule:exactly;">
+        Bienvenido a tu próximo viaje con Plannealo.
+      </h1>
+      <p style="margin:0; font-size:16px; color:#ffffff; opacity:0.9; mso-line-height-rule:exactly;">
+        ¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros!
+      </p>
     </div>
     
     <div class="content">
@@ -236,20 +240,21 @@ export class EmailService {
           <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
             <tr>
               <td bgcolor="#DC2626" style="border-radius:6px; text-align:center;">
-                <a href="${itineraryUrl}"
-                   target="_blank"
-                   style="display:inline-block;
-                          font-size:16px;
-                          font-family:Arial, Helvetica, sans-serif;
-                          font-weight:bold;
-                          color:#ffffff !important;
-                          text-decoration:none !important;
-                          padding:12px 24px;
-                          border-radius:6px;
-                          background: linear-gradient(135deg, rgb(220, 38, 38) 0%, rgb(185, 28, 28) 100%);
-                          background-color:#DC2626;">
-                  Ver Mi Itinerario
-                </a>
+               <a href="${itineraryUrl}"
+                target="_blank"
+                style="display:inline-block;
+                        font-size:16px;
+                        font-family:Arial, Helvetica, sans-serif;
+                        font-weight:bold;
+                        color:#ffffff;
+                        text-decoration:none;
+                        padding:12px 24px;
+                        border-radius:6px;
+                        background: linear-gradient(135deg, rgb(220, 38, 38) 0%, rgb(185, 28, 28) 100%);
+                        background-color:#DC2626;
+                        mso-style-priority:100 !important;">
+                Ver Mi Itinerario
+              </a>
               </td>
             </tr>
           </table>

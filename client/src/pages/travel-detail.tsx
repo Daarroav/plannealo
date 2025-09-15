@@ -153,6 +153,8 @@ export default function TravelDetail() {
     enabled: !!travelId,
   });
 
+
+
   const { data: insurances = [] } = useQuery<Insurance[]>({
     queryKey: ["/api/travels", travelId, "insurances"],
     enabled: !!travelId,
@@ -1498,12 +1500,13 @@ export default function TravelDetail() {
       {/* Cruise Form Modal */}
       <CruiseFormModal
         open={showCruiseModal}
-        onOpenChange={(open) => {
-          setShowCruiseModal(open);
-          if (!open) setEditingCruise(null);
+        onOpenChange={() => {
+          setShowCruiseModal(false);
+          setEditingCruise(null);
         }}
         onSubmit={createCruiseMutation.mutate}
         isPending={createCruiseMutation.isPending}
+        editingCruise={editingCruise}
       />
 
       {/* Insurance Form Modal */}

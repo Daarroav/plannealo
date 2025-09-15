@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { insertCruiseSchema } from "@shared/schema";
 import { FileUploader } from "./file-uploader";
+import React from "react";
 
 // Form validation schema - extends the base schema with date string handling
 const cruiseFormSchema = insertCruiseSchema.extend({
@@ -28,30 +29,87 @@ interface CruiseFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   isPending?: boolean;
+  editingCruise?: any;
 }
 
 export function CruiseFormModal({ 
   open, 
   onOpenChange, 
   onSubmit, 
-  isPending = false 
+  isPending = false,
+  editingCruise
 }: CruiseFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const form = useForm<CruiseFormData>({
     resolver: zodResolver(cruiseFormSchema),
     defaultValues: {
-      cruiseLine: "",
-      confirmationNumber: "",
-      departureDate: "",
-      departureTime: "",
-      departurePort: "",
-      arrivalDate: "",
-      arrivalTime: "",
-      arrivalPort: "",
-      notes: "",
+      cruiseLine: editingCruise?.cruiseLine || "",
+      confirmationNumber: editingCruise?.confirmationNumber || "",
+      departureDate: editingCruise?.departureDate || "",
+      departureTime: editingCruise?.departureTime || "",
+      departurePort: editingCruise?.departurePort || "",
+      arrivalDate: editingCruise?.arrivalDate || "",
+      arrivalTime: editingCruise?.arrivalTime || "",
+      arrivalPort: editingCruise?.arrivalPort || "",
+      notes: editingCruise?.notes || "",
       attachments: [],
     },
   });
+
+
+  // Pre-llenar formulario cuando se está editando
+  React.useEffect(() => {
+      if (editingCruise) {
+        const depDateTime = new Date(editingCruise.departureDate);
+        const arrDateTime = new Date(editingCruise.arrivalDate);
+        
+        form.reset({
+          cruiseLine: editingCruise.cruiseLine || "",
+          confirmationNumber: editingCruise.confirmationNumber || "",
+          departureDate: editingCruise.departureDate || "",
+          departureTime: editingCruise.departureTime || "",
+          departurePort: editingCruise.departurePort || "",
+          arrivalDate: editingCruise.arrivalDate || "",
+          arrivalTime: editingCruise.arrivalTime || "",
+          arrivalPort: editingCruise.arrivalPort || "",
+          notes: editingCruise.notes || "",
+          attachments: editingCruise.attachments || [],
+        });
+        
+        // Load existing attachments as files
+        if (Array.isArray(editingCruise.attachments) && editingCruise.attachments.length > 0) {
+          Promise.all(
+            editingCruise.attachments.map(async (url: string) => {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const filename = url.split('/').pop() || 'archivo';
+              return new File([blob], filename, { type: blob.type });
+            })
+          ).then((files) => {
+            setAttachedFiles(files);
+          }).catch((err) => {
+            console.error("Error cargando archivos adjuntos:", err);
+          });
+        }
+      } else {
+        form.reset({
+          cruiseLine: "",
+          confirmationNumber: "",
+          departureDate: "",
+          departureTime: "",
+          departurePort: "",
+          arrivalDate: "",
+          arrivalTime: "",
+          arrivalPort: "",
+          notes: "",
+          attachments: [],
+        });
+        setAttachedFiles([]);
+      }
+    }, [editingCruise, form]);
+
+
+  console.log("Editing cruise now:", editingCruise);
 
   const handleSubmit = async (data: CruiseFormData) => {
     // Force blur on any active input to ensure values are captured
@@ -231,6 +289,7 @@ export function CruiseFormModal({
             <Label>Documentos Adjuntos</Label>
             <FileUploader
               name="attachments"
+              defaultFiles={editingCruise?.attachments || []}
               onFilesChange={setAttachedFiles}
               maxFiles={10}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
