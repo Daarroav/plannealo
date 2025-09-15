@@ -63,14 +63,22 @@ export function CruiseFormModal({
         const depDateTime = new Date(editingCruise.departureDate);
         const arrDateTime = new Date(editingCruise.arrivalDate);
         
+        // Extract date in YYYY-MM-DD format for date inputs
+        const depDateStr = depDateTime.toISOString().split('T')[0];
+        const arrDateStr = arrDateTime.toISOString().split('T')[0];
+        
+        // Extract time in HH:MM format for time inputs
+        const depTimeStr = depDateTime.toTimeString().slice(0, 5);
+        const arrTimeStr = arrDateTime.toTimeString().slice(0, 5);
+        
         form.reset({
           cruiseLine: editingCruise.cruiseLine || "",
           confirmationNumber: editingCruise.confirmationNumber || "",
-          departureDate: editingCruise.departureDate || "",
-          departureTime: editingCruise.departureTime || "",
+          departureDate: depDateStr,
+          departureTime: depTimeStr,
           departurePort: editingCruise.departurePort || "",
-          arrivalDate: editingCruise.arrivalDate || "",
-          arrivalTime: editingCruise.arrivalTime || "",
+          arrivalDate: arrDateStr,
+          arrivalTime: arrTimeStr,
           arrivalPort: editingCruise.arrivalPort || "",
           notes: editingCruise.notes || "",
           attachments: editingCruise.attachments || [],
@@ -126,13 +134,13 @@ export function CruiseFormModal({
 
     // Combine date and time for departure
     const departureDateTime = currentValues.departureTime 
-      ? new Date(`${currentValues.departureDate}T${currentValues.departureTime}`)
-      : new Date(currentValues.departureDate);
+      ? new Date(`${currentValues.departureDate}T${currentValues.departureTime}:00`)
+      : new Date(`${currentValues.departureDate}T09:00:00`);
 
     // Combine date and time for arrival
     const arrivalDateTime = currentValues.arrivalTime 
-      ? new Date(`${currentValues.arrivalDate}T${currentValues.arrivalTime}`)
-      : new Date(currentValues.arrivalDate);
+      ? new Date(`${currentValues.arrivalDate}T${currentValues.arrivalTime}:00`)
+      : new Date(`${currentValues.arrivalDate}T18:00:00`);
 
     // Create FormData
     const formData = new FormData();
