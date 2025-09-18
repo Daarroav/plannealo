@@ -37,32 +37,31 @@ interface TravelData {
 
 export default function TravelPreview() {
   const { id } = useParams<{ id: string }>();
-  
+
   // Obtener el token de los query parameters si existe
   const searchParams = new URLSearchParams(window.location.search);
-  const publicToken = searchParams.get('token');
+  const publicToken = searchParams.get("token");
 
   const { data, isLoading, error } = useQuery<TravelData>({
     queryKey: ["/api/travels", id, "full", publicToken],
     queryFn: async () => {
       const url = new URL(`/api/travels/${id}/full`, window.location.origin);
       if (publicToken) {
-        url.searchParams.set('token', publicToken);
+        url.searchParams.set("token", publicToken);
       }
       const response = await fetch(url.toString());
       if (!response.ok) {
-        throw new Error('Failed to fetch travel data');
+        throw new Error("Failed to fetch travel data");
       }
       return response.json();
     },
     enabled: !!id,
   });
 
- 
   const formatRoomType = (roomType: string): JSX.Element => {
-    const [cantidad, ...tipoParts] = roomType.split(' ');
-    const tipo = tipoParts.join(' ');
-  
+    const [cantidad, ...tipoParts] = roomType.split(" ");
+    const tipo = tipoParts.join(" ");
+
     return (
       <span>
         <strong>#</strong> {cantidad} <strong> - Tipo</strong> {tipo}
@@ -70,8 +69,10 @@ export default function TravelPreview() {
     );
   };
 
-const formatPhoneNumber = (phoneNumber: string) => {
-    return phoneNumber.replace(/\D/g, '').replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3');
+  const formatPhoneNumber = (phoneNumber: string) => {
+    return phoneNumber
+      .replace(/\D/g, "")
+      .replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
   };
 
   const formatDateTime = (dateTime: string | Date) => {
@@ -100,7 +101,6 @@ const formatPhoneNumber = (phoneNumber: string) => {
   const handleGoBack = () => {
     window.close();
   };
-
 
   if (isLoading) {
     return (
@@ -221,9 +221,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
   const chronologicalEvents = getAllEvents();
 
   const formatPrice = (price: number): string => {
-    return price.toLocaleString('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
+    return price.toLocaleString("es-MX", {
+      style: "currency",
+      currency: "MXN",
     });
   };
 
@@ -257,41 +257,40 @@ const formatPhoneNumber = (phoneNumber: string) => {
 
   const groupEventsByDay = (events: any[]) => {
     const groups: { [key: string]: any[] } = {};
-  
+
     events.forEach((event) => {
       const d = new Date(event.date); // Puede ser string o Date
-  
+
       // 👇 Usamos siempre la fecha LOCAL
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
-  
+
       const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD local
-  
+
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
     });
-  
+
     return Object.keys(groups)
       .sort()
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
-  
+
         // 👇 medianoche local (NO UTC)
         const groupDate = new Date(y, m - 1, day);
-  
+
         // Ordenar eventos dentro del día
         groups[dateKey].sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
         );
-  
+
         return {
           date: groupDate,
           events: groups[dateKey],
         };
       });
   };
-  
 
   const formatDayLabel = (date: Date): string => {
     const dayNames = [
@@ -303,7 +302,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
       "viernes",
       "sábado",
     ];
-  
+
     const monthNames = [
       "enero",
       "febrero",
@@ -318,18 +317,17 @@ const formatPhoneNumber = (phoneNumber: string) => {
       "noviembre",
       "diciembre",
     ];
-  
+
     const dayName = dayNames[date.getDay()];
     const dayNumber = date.getDate();
     const monthName = monthNames[date.getMonth()];
     const year = date.getFullYear();
-  
+
     return `${capitalize(dayName)} ${dayNumber} de ${monthName} de ${year}`;
   };
-  
+
   const capitalize = (text: string): string =>
     text.charAt(0).toUpperCase() + text.slice(1);
-  
 
   console.info(chronologicalEvents);
   const groupedEvents = groupEventsByDay(chronologicalEvents);
@@ -347,7 +345,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Camera className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">
+                  {event.data.name}
+                </h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Actividad
@@ -358,7 +358,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900 capitalize">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">
+                  {event.data.type}
+                </div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -393,9 +395,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
                   <div className="font-medium text-gray-600 uppercase text-xs">
                     CONTACTO
                   </div>
-                  <div className="text-gray-900">
-                    {event.data.contactName}
-                  </div>
+                  <div className="text-gray-900">{event.data.contactName}</div>
                 </div>
               )}
 
@@ -412,18 +412,36 @@ const formatPhoneNumber = (phoneNumber: string) => {
             </div>
             {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> <br /> {event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {" "}
+                  <strong>Notas:</strong> <br /> {event.data.notes}
+                </div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Notas:</strong> <br /> Sin notas</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {" "}
+                  <strong>Notas:</strong> <br /> Sin notas
+                </div>
+              </div>
             )}
 
             {event.data.conditions ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> <br /> {event.data.conditions}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {" "}
+                  <strong>Condiciones y términos:</strong> <br />{" "}
+                  {event.data.conditions}
+                </div>
               </div>
             ) : (
-              <div className="mt-3 pt-3 border-t border-gray-200"><div className="text-sm text-gray-600 whitespace-pre-wrap"> <strong>Condiciones y términos:</strong> <br /> Sin condiciones</div></div>
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {" "}
+                  <strong>Condiciones y términos:</strong> <br /> Sin
+                  condiciones
+                </div>
+              </div>
             )}
           </div>
         );
@@ -519,13 +537,15 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <a 
+                        <a
                           href={fileName}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                          {fileName
+                            .replace("/uploads/", "")
+                            .replace(/^.*\//, "")}
                         </a>
                       </div>
                     ),
@@ -545,7 +565,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Car className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">
+                  {event.data.name}
+                </h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Transporte
@@ -556,7 +578,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900 capitalize">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">
+                  {event.data.type}
+                </div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -613,10 +637,10 @@ const formatPhoneNumber = (phoneNumber: string) => {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Notas
-                </p>
-                <div className="text-sm text-gray-600 whitespace-pre-wrap">{event.data.notes}</div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Notas</p>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  {event.data.notes}
+                </div>
               </div>
             )}
 
@@ -633,13 +657,15 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <a 
+                        <a
                           href={fileName}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                          {fileName
+                            .replace("/uploads/", "")
+                            .replace(/^.*\//, "")}
                         </a>
                       </div>
                     ),
@@ -709,9 +735,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Notas
-                </p>
+                <p className="text-sm font-medium text-gray-700 mb-2">Notas</p>
                 <div className="text-sm text-gray-600">{event.data.notes}</div>
               </div>
             )}
@@ -729,13 +753,15 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <a 
+                        <a
                           href={fileName}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                          {fileName
+                            .replace("/uploads/", "")
+                            .replace(/^.*\//, "")}
                         </a>
                       </div>
                     ),
@@ -755,7 +781,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <Bed className="w-4 h-4 text-accent" />
-                <h3 className="text-lg font-semibold w-fit">{event.data.name}</h3>
+                <h3 className="text-lg font-semibold w-fit">
+                  {event.data.name}
+                </h3>
               </div>
               <Badge variant="secondary" className="text-xs">
                 Alojamiento
@@ -766,7 +794,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   TIPO
                 </div>
-                <div className="text-gray-900 capitalize">{event.data.type}</div>
+                <div className="text-gray-900 capitalize">
+                  {event.data.type}
+                </div>
               </div>
               <div>
                 <div className="font-medium text-gray-600 uppercase text-xs">
@@ -794,7 +824,10 @@ const formatPhoneNumber = (phoneNumber: string) => {
                 <div className="font-medium text-gray-600 uppercase text-xs">
                   HABITACIÓN
                 </div>
-                <div className="text-gray-900"> {formatRoomType(event.data.roomType)}</div>
+                <div className="text-gray-900">
+                  {" "}
+                  {formatRoomType(event.data.roomType)}
+                </div>
               </div>
               {event.data.confirmationNumber && (
                 <div>
@@ -813,7 +846,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
                     PRECIO
                   </div>
                   <div className="text-gray-900">
-                  {formatPrice(Number(event.data.price))}
+                    {formatPrice(Number(event.data.price))}
                   </div>
                 </div>
               )}
@@ -822,7 +855,8 @@ const formatPhoneNumber = (phoneNumber: string) => {
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <div className="text-sm text-gray-600 whitespace-pre-wrap">
                   <strong>Detalles Adicionales: </strong> <br />
-                  {event.data.notes}</div>
+                  {event.data.notes}
+                </div>
               </div>
             )}
             {event.data.policies && (
@@ -835,12 +869,16 @@ const formatPhoneNumber = (phoneNumber: string) => {
             )}
             {event.data.thumbnail && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <img 
-                  src={event.data.thumbnail.startsWith('/uploads/') ? event.data.thumbnail : `/uploads/${event.data.thumbnail}`}
+                <img
+                  src={
+                    event.data.thumbnail.startsWith("/uploads/")
+                      ? event.data.thumbnail
+                      : `/uploads/${event.data.thumbnail}`
+                  }
                   alt={`Imagen de ${event.data.name}`}
                   className="w-full h-48 object-cover rounded-lg"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.style.display = "none";
                   }}
                 />
               </div>
@@ -858,13 +896,15 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <a 
+                        <a
                           href={fileName}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                          {fileName
+                            .replace("/uploads/", "")
+                            .replace(/^.*\//, "")}
                         </a>
                       </div>
                     ),
@@ -884,7 +924,9 @@ const formatPhoneNumber = (phoneNumber: string) => {
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
                 <StickyNote className="w-4 h-4 text-yellow-600" />
-                <h3 className="text-lg font-semibold w-fit">{event.data.title}</h3>
+                <h3 className="text-lg font-semibold w-fit">
+                  {event.data.title}
+                </h3>
               </div>
               <Badge
                 variant="secondary"
@@ -911,13 +953,19 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         className="flex items-center space-x-2 text-sm"
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
-                        <a 
-                          href={fileName.startsWith('/uploads/') ? fileName : `/uploads/${fileName}`}
+                        <a
+                          href={
+                            fileName.startsWith("/uploads/")
+                              ? fileName
+                              : `/uploads/${fileName}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                          {fileName
+                            .replace("/uploads/", "")
+                            .replace(/^.*\//, "")}
                         </a>
                       </div>
                     ),
@@ -1002,16 +1050,18 @@ const formatPhoneNumber = (phoneNumber: string) => {
               </span>
             </div>
           </div>
-          
+
           {/* Información del agente de viajes en la portada */}
           <div className="bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
-            <h3 className="text-lg font-semibold mb-3 text-center">Su Agente de Viajes</h3>
+            <h3 className="text-lg font-semibold mb-3 text-center">
+              Su Agente de Viajes
+            </h3>
             <div className="text-center space-y-2">
               <p className="text-sm opacity-90">
                 <strong>Email:</strong> plannealo@gmail.com
               </p>
               <p className="text-sm opacity-90">
-                <strong>Teléfono:</strong> +1 (555) 123-4567
+                <strong>Teléfono:</strong> +52 444 547 3471
               </p>
               <p className="text-xs opacity-75 mt-3">
                 Estamos aquí para hacer de tu viaje una experiencia inolvidable
@@ -1067,9 +1117,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
                       {/* Etiqueta del día - lado izquierdo */}
                       <div className="flex text-center w-auto">
                         <div className="flex flex-row justify-between bg-gray-900 text-white px-3 py-1.5 rounded-sm text-center items-center w-auto gap-3 ">
-                          <div className="text-xs font-bold">
-                            {dayLabel}
-                          </div>
+                          <div className="text-xs font-bold">{dayLabel}</div>
                         </div>
                       </div>
 
@@ -1109,7 +1157,10 @@ const formatPhoneNumber = (phoneNumber: string) => {
                         {formatDateTime(insurance.effectiveDate)}
                       </div>
                       {insurance.emergencyNumber && (
-                        <div>📞 Emergencias: {formatPhoneNumber(insurance.emergencyNumber)}</div>
+                        <div>
+                          📞 Emergencias:{" "}
+                          {formatPhoneNumber(insurance.emergencyNumber)}
+                        </div>
                       )}
                       {insurance.importantInfo && (
                         <div>ℹ️ {insurance.importantInfo}</div>
@@ -1117,7 +1168,7 @@ const formatPhoneNumber = (phoneNumber: string) => {
                     </div>
                     {insurance.policyDescription && (
                       <p className="mt-2 text-sm text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap">
-                        <strong>Descripción:</strong>{" "} <br />
+                        <strong>Descripción:</strong> <br />
                         {insurance.policyDescription}
                       </p>
                     )}
@@ -1140,13 +1191,19 @@ const formatPhoneNumber = (phoneNumber: string) => {
                                   className="flex items-center space-x-2 text-sm"
                                 >
                                   <FileText className="w-4 h-4 text-muted-foreground" />
-                                  <a 
-                                    href={fileName.startsWith('/uploads/') ? fileName : `/uploads/${fileName}`}
+                                  <a
+                                    href={
+                                      fileName.startsWith("/uploads/")
+                                        ? fileName
+                                        : `/uploads/${fileName}`
+                                    }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 underline"
                                   >
-                                    {fileName.replace('/uploads/', '').replace(/^.*\//, '')}
+                                    {fileName
+                                      .replace("/uploads/", "")
+                                      .replace(/^.*\//, "")}
                                   </a>
                                 </div>
                               ),
@@ -1171,30 +1228,41 @@ const formatPhoneNumber = (phoneNumber: string) => {
               </div>
               <div>
                 {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
-                <p className="text-sm text-muted-foreground">Agencia de Viajes</p>
-                <p className="text-xs text-muted-foreground">Especialistas en experiencias únicas</p>
-                <p className="text-xs text-muted-foreground font-semibold">Registro: RNT-54321</p>
+                <p className="text-sm text-muted-foreground">
+                  Agencia de Viajes
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Especialistas en experiencias únicas
+                </p>
+                <p className="text-xs text-muted-foreground font-semibold">
+                  Registro: RNT-54321
+                </p>
               </div>
-              
             </div>
-            
+
             {/* Información de contacto */}
             <div className="text-center lg:text-right">
-              <h4 className="font-semibold text-foreground mb-2">Información de Contacto</h4>
+              <h4 className="font-semibold text-foreground mb-2">
+                Información de Contacto
+              </h4>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p><strong>Email:</strong> plannealo@gmail.com</p>
-                <p><strong>WhatsApp:</strong> +1 (555) 987-6543</p>
-                  
-                <p><strong>Web:</strong> www.plannealo.com</p>
+                <p>
+                  <strong>Email:</strong> plannealo@gmail.com
+                </p>
+                <p>
+                  <strong>WhatsApp:</strong> +52 444 547 3471
+                </p>
+
+                <p>
+                  <strong>Web:</strong> www.plannealo.com
+                </p>
               </div>
             </div>
           </div>
-          
+
           {/* Línea separadora y información adicional */}
           <div className="mt-6 pt-4 border-t border-border text-center">
             <div className="flex flex-col items-center text-xs text-muted-foreground text-center">
-          
-             
               <div className="text-center">
                 <p>Powered by Arten Digital</p>
                 <p>© 2024 PLANNEALO. Todos los derechos reservados.</p>
