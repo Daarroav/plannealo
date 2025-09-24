@@ -3,14 +3,6 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-
-// Disable HTTP caching for API responses to prevent 304 Not Modified issues
-app.set('etag', false);
-app.use('/api', (req, res, next) => {
-  res.set('Cache-Control', 'no-store');
-  next();
-});
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

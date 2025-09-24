@@ -34,17 +34,10 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
-      cache: "no-store", // Disable HTTP caching to prevent 304 responses
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
       return null;
-    }
-
-    // Handle 304 Not Modified responses by returning cached data
-    if (res.status === 304) {
-      // For 304, return empty array as fallback since we can't access cached data here
-      return [] as any;
     }
 
     await throwIfResNotOk(res);

@@ -359,8 +359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkIn: new Date(req.body.checkIn),
         checkOut: new Date(req.body.checkOut),
         thumbnail: thumbnail,
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       });
 
       const accommodation = await storage.createAccommodation(validated);
@@ -392,8 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'accommodations');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       // Convert dates if provided
@@ -459,8 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         travelId: req.params.travelId,
         date: new Date(req.body.date),
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       });
 
       const activity = await storage.createActivity(validated);
@@ -487,8 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'activities');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       const activity = await storage.updateActivity(req.params.id, {
@@ -524,8 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelId: req.params.travelId,
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       });
 
       const flight = await storage.createFlight(validated);
@@ -552,8 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'flights');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       const flight = await storage.updateFlight(req.params.id, {
@@ -590,8 +584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelId: req.params.travelId,
         pickupDate: new Date(req.body.pickupDate),
         ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       });
 
       const transport = await storage.createTransport(validated);
@@ -618,8 +611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'transports');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       const transport = await storage.updateTransport(req.params.id, {
@@ -656,8 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         travelId: req.params.travelId,
         departureDate: new Date(req.body.departureDate),
         arrivalDate: new Date(req.body.arrivalDate),
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       });
 
       const cruise = await storage.createCruise(validated);
@@ -684,8 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'cruises');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       const cruise = await storage.updateCruise(req.params.id, {
@@ -742,8 +732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         importantInfo: req.body.importantInfo || null,
         policyDescription: req.body.policyDescription || null,
         notes: req.body.notes || null,
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       };
 
       console.log("Insurance data before validation:", insuranceData);
@@ -780,8 +769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'insurances');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       const insurance = await storage.updateInsurance(req.params.id, {
@@ -847,8 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         noteDate: noteDate, // Let the schema handle the date transformation
         content: content,
         visibleToTravelers: visibleToTravelers === 'true',
-        attachments: attachments, // Mantener retrocompatibilidad escribiendo en ambas columnas
-        newAttachments: attachments,
+        attachments: attachments,
       };
 
       console.log("Note data before validation:", noteData);
@@ -886,8 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const attachment = await uploadFileToObjectStorage(file, 'notes');
           attachments.push(attachment);
         }
-        updateData.newAttachments = attachments;
-        updateData.attachments = attachments; // Mantener retrocompatibilidad
+        updateData.attachments = attachments;
       }
 
       // Convert date if provided

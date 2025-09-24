@@ -124,44 +124,44 @@ export default function TravelDetail() {
 
   // Get travel details
   const { data: travel, isLoading: travelLoading } = useQuery<Travel>({
-    queryKey: [`/api/travels/${travelId}`],
+    queryKey: ["/api/travels", travelId],
     enabled: !!travelId,
   });
 
   const { data: accommodations = [] } = useQuery<Accommodation[]>({
-    queryKey: [`/api/travels/${travelId}/accommodations`],
+    queryKey: ["/api/travels", travelId, "accommodations"],
     enabled: !!travelId,
   });
 
   const { data: activities = [] } = useQuery<Activity[]>({
-    queryKey: [`/api/travels/${travelId}/activities`],
+    queryKey: ["/api/travels", travelId, "activities"],
     enabled: !!travelId,
   });
 
   const { data: flights = [] } = useQuery<Flight[]>({
-    queryKey: [`/api/travels/${travelId}/flights`],
+    queryKey: ["/api/travels", travelId, "flights"],
     enabled: !!travelId,
   });
 
   const { data: transports = [] } = useQuery<Transport[]>({
-    queryKey: [`/api/travels/${travelId}/transports`],
+    queryKey: ["/api/travels", travelId, "transports"],
     enabled: !!travelId,
   });
 
   const { data: cruises = [] } = useQuery<Cruise[]>({
-    queryKey: [`/api/travels/${travelId}/cruises`],
+    queryKey: ["/api/travels", travelId, "cruises"],
     enabled: !!travelId,
   });
 
 
 
   const { data: insurances = [] } = useQuery<Insurance[]>({
-    queryKey: [`/api/travels/${travelId}/insurances`],
+    queryKey: ["/api/travels", travelId, "insurances"],
     enabled: !!travelId,
   });
 
   const { data: notes = [] } = useQuery<Note[]>({
-    queryKey: [`/api/travels/${travelId}/notes`],
+    queryKey: ["/api/travels", travelId, "notes"],
     enabled: !!travelId,
   });
 
@@ -174,7 +174,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId] });
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
@@ -221,7 +221,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId] });
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
       toast({
         title: "Imagen actualizada",
@@ -296,7 +296,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
@@ -324,7 +324,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "activities"] });
       setShowActivityModal(false);
       setEditingActivity(null);
       toast({
@@ -352,7 +352,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
       setShowFlightModal(false);
       setEditingFlight(null);
       toast({
@@ -380,7 +380,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
       setShowTransportModal(false);
       setEditingTransport(null);
       toast({
@@ -408,7 +408,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "cruises"] });
       setShowCruiseModal(false);
       setEditingCruise(null);
       toast({
@@ -436,7 +436,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "insurances"] });
       setShowInsuranceModal(false);
       setEditingInsurance(null);
       toast({
@@ -464,7 +464,7 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/notes`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "notes"] });
       setShowNoteModal(false);
       setEditingNote(null);
       toast({
@@ -487,7 +487,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "accommodations"] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
@@ -510,7 +510,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "activities"] });
       setShowActivityModal(false);
       setEditingActivity(null);
       toast({
@@ -533,7 +533,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "flights"] });
       setShowFlightModal(false);
       setEditingFlight(null);
       toast({
@@ -556,7 +556,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "transports"] });
       setShowTransportModal(false);
       setEditingTransport(null);
       toast({
@@ -579,7 +579,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "cruises"] });
       setShowCruiseModal(false);
       setEditingCruise(null);
       toast({
@@ -602,7 +602,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "insurances"] });
       setShowInsuranceModal(false);
       setEditingInsurance(null);
       toast({

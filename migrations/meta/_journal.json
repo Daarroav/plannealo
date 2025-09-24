@@ -22,27 +22,6 @@
       "when": 1757876721228,
       "tag": "0002_late_proudstar",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1758000000000,
-      "tag": "0003_fix_attachments_conversion",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1758000001000,
-      "tag": "0004_fix_attachments_final",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1758000002000,
-      "tag": "0005_json_to_jsonb_conversion",
-      "breakpoints": true
     }
   ]
 }

@@ -243,12 +243,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       } 
       
 
-      // Usar la nueva columna newAttachments o fallback a attachments para retrocompatibilidad
-      const attachmentsToLoad = editingAccommodation.newAttachments || editingAccommodation.attachments || [];
-      if (Array.isArray(attachmentsToLoad) && attachmentsToLoad.length > 0) {
-        if (attachmentsToLoad.length > 0) {
+      if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
+        if (editingAccommodation.attachments?.length > 0) {
           Promise.all(
-            attachmentsToLoad.map(async (attachment: string | { path: string; originalName: string }) => {
+            editingAccommodation.attachments.map(async (attachment: string | { path: string; originalName: string }) => {
               // Manejar tanto el formato antiguo (string) como el nuevo (objeto)
               const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
               const originalName = typeof attachment === 'string' 
