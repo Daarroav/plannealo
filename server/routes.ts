@@ -17,12 +17,18 @@ const objectStorageClient = new ObjectStorageService();
 
 // Helper function to upload file to Object Storage
 async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
-  const fileName = `${folder}/${Date.now()}_${file.originalname}`;
-  const result = await objectStorageClient.uploadFromBuffer(fileName, file.buffer);
-  if (!result.ok) {
-    throw new Error(`Failed to upload file to object storage: ${result.error}`);
+  const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+  const uploadResult = await fetch(uploadURL, {
+    method: 'PUT',
+    body: file.buffer,
+    headers: {
+      'Content-Type': file.mimetype,
+    },
+  });
+  if (!uploadResult.ok) {
+    throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
-  return `/uploads/${fileName}`;
+  return objectStorageClient.normalizeObjectEntityPath(uploadURL);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
