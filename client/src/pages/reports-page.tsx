@@ -10,14 +10,9 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 
 interface TravelStats {
-  totalTravels: number;
-  publishedTravels: number;
-  draftTravels: number;
-  cancelledTravels: number;
-  sentTravels: number;
-  completedTravels: number;
-  totalClients: number; // si lo tienes disponible en la API
-  travels?: Travel[]; // opcional, si quieres pasar el listado completo
+  activeTrips: number;
+  drafts: number;
+  clients: number;
 }
 
 
@@ -42,17 +37,15 @@ export default function ReportsPage() {
   if (!stats) return <p>Cargando...</p>; // <-- Aquí prevenimos el error
 
   const data = {
-    labels: ["Publicados", "Enviados", "Cancelados", "Concluidos"],
+    labels: ["Viajes Activos", "Borradores"],
     datasets: [
       {
         label: "Viajes",
         data: [
-          stats?.publishedTravels,
-          stats?.sentTravels,
-          stats?.cancelledTravels,
-          stats?.completedTravels,
+          stats?.activeTrips,
+          stats?.drafts,
         ],
-        backgroundColor: ["#93c5fd", "#fde047", "#fca5a5", "#86efac"],
+        backgroundColor: ["#93c5fd", "#fde047"],
         hoverOffset: 8,
       },
     ],
@@ -89,39 +82,24 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
         <StatsCard
-            title="Viajes Publicados"
-            value={stats?.publishedTravels || 0}
+            title="Viajes Activos"
+            value={stats?.activeTrips || 0}
             icon={Plane}
             iconBgColor="bg-blue-100"
             iconTextColor="text-blue-600"
         />
 
-        {/* <StatsCard
-            title="Viajes Borradores"
-            value={stats?.draftTravels || 0}
-            icon={Plane}
-            iconBgColor="bg-yellow-100"
-            iconTextColor="text-yellow-600"
-        /> */}
         <StatsCard
-            title="Viajes Cancelados"
-            value={stats?.cancelledTravels || 0}
-            icon={Plane}
-            iconBgColor="bg-red-100"
-            iconTextColor="text-red-600"
-        />
-
-        <StatsCard
-            title="Viajes Enviados"
-            value={stats?.sentTravels || 0}
+            title="Borradores"
+            value={stats?.drafts || 0}
             icon={Plane}
             iconBgColor="bg-yellow-100"
             iconTextColor="text-yellow-600"
         />
 
         <StatsCard
-            title="Viajes Concluidos"
-            value={stats?.completedTravels || 0}
+            title="Total de Clientes"
+            value={stats?.clients || 0}
             icon={Plane}
             iconBgColor="bg-green-100"
             iconTextColor="text-green-600"
