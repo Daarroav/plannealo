@@ -246,7 +246,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
         if (editingAccommodation.attachments?.length > 0) {
           Promise.all(
-            editingAccommodation.attachments.map(async (attachment) => {
+            editingAccommodation.attachments.map(async (attachment: string | { path: string; originalName: string }) => {
               // Manejar tanto el formato antiguo (string) como el nuevo (objeto)
               const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
               const originalName = typeof attachment === 'string' 
