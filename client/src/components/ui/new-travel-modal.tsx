@@ -65,8 +65,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
     if (!isOpen) return;
     
     if (travel) {
-      // Solo actualizamos el formulario si tenemos la información del usuario o si estamos editando
-      // Esto evita que se sobrescriba el email con un valor vacío mientras se carga la información
+      // Si el viaje tiene clientId, esperamos a que cargue la información del usuario
       if (travel.clientId && !travelInfoUser && isLoadingUser) {
         return; // Esperamos a que cargue la información del usuario
       }
@@ -74,7 +73,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
       const initialValues = {
         name: travel.name,
         clientName: travel.clientName,
-        clientEmail: travelInfoUser?.username || "", // Usamos el username del usuario como email
+        clientEmail: travel.clientId ? (travelInfoUser?.username || "") : "", // Solo usamos travelInfoUser si hay clientId
         startDate: travel.startDate
           ? new Date(travel.startDate).toISOString().substring(0, 10)
           : "",
@@ -101,7 +100,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
     // Limpiar la imagen seleccionada al abrir/cerrar el modal
     setSelectedImage(null);
     setImagePreview(null);
-  }, [isOpen, travel, travelInfoUser]);
+  }, [isOpen, travel, travelInfoUser, isLoadingUser]);
 
   const handleImageSelect = () => {
     fileInputRef.current?.click();
