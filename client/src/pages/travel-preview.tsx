@@ -451,12 +451,10 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento de actividad.pdf`
-                        : attachment.originalName || 'Documento.pdf';
+                    (attachment: any, index: number) => {
+                      // Los attachments ya vienen como objetos con path y originalName
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || 'Documento.pdf';
 
                       return (
                         <div
@@ -468,8 +466,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -573,12 +569,9 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf`
-                        : attachment.originalName || 'Documento-vuelo.pdf';
+                    (attachment: any, index: number) => {
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf`;
 
                       return (
                         <div
@@ -590,8 +583,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -705,12 +696,9 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento de transporte ${event.data.name}.pdf`
-                        : attachment.originalName || 'Documento-transporte.pdf';
+                    (attachment: any, index: number) => {
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || `Documento de transporte ${event.data.name}.pdf`;
 
                       return (
                         <div
@@ -722,8 +710,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -813,12 +799,9 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento de crucero ${event.data.cruiseLine}.pdf`
-                        : attachment.originalName || 'Documento-crucero.pdf';
+                    (attachment: any, index: number) => {
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || `Documento de crucero ${event.data.cruiseLine}.pdf`;
 
                       return (
                         <div
@@ -830,8 +813,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -970,12 +951,9 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento de alojamiento ${event.data.name}.pdf`
-                        : attachment.originalName || 'Documento-alojamiento.pdf';
+                    (attachment: any, index: number) => {
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || `Documento de alojamiento ${event.data.name}.pdf`;
 
                       return (
                         <div
@@ -987,8 +965,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -1039,11 +1015,9 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { path: string; originalName: string }, index: number) => {
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                      const originalName = typeof attachment === 'string'
-                        ? attachment.split('/').pop() || `Documento-${event.data.title || 'nota'}.pdf`
-                        : attachment.originalName || 'Documento-nota.pdf';
+                    (attachment: any, index: number) => {
+                      const attachmentUrl = attachment.path || attachment;
+                      const originalName = attachment.originalName || `Documento-${event.data.title || 'nota'}.pdf`;
 
                       return (
                         <div
@@ -1055,8 +1029,6 @@ export default function TravelPreview() {
                             href={
                               attachmentUrl.startsWith("/objects/")
                                 ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
                                 : `/api/objects/uploads/${attachmentUrl}`
                             }
                             target="_blank"
@@ -1284,11 +1256,9 @@ export default function TravelPreview() {
                           </p>
                           <div className="space-y-1">
                             {insurance.attachments.map(
-                              (attachment: string | { path: string; originalName: string }, index: number) => {
-                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-                                const originalName = typeof attachment === 'string'
-                                  ? attachment.split('/').pop() || `Documento de seguro ${insurance.provider}.pdf`
-                                  : attachment.originalName || 'Documento-seguro.pdf';
+                              (attachment: any, index: number) => {
+                                const attachmentUrl = attachment.path || attachment;
+                                const originalName = attachment.originalName || `Documento de seguro ${insurance.provider}.pdf`;
 
                                 return (
                                   <div
@@ -1298,8 +1268,8 @@ export default function TravelPreview() {
                                     <FileText className="w-4 h-4 text-muted-foreground" />
                                     <a
                                       href={
-                                        attachmentUrl.startsWith("/uploads/")
-                                          ? `/api/objects${attachmentUrl}`
+                                        attachmentUrl.startsWith("/objects/")
+                                          ? `/api${attachmentUrl}`
                                           : `/api/objects/uploads/${attachmentUrl}`
                                       }
                                       target="_blank"
