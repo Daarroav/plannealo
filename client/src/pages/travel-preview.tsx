@@ -451,11 +451,11 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento de actividad.pdf` // Fallback para attachments antiguos
+                        ? attachment.split('/').pop() || `Documento de actividad.pdf`
                         : attachment.originalName || 'Documento.pdf';
 
                       return (
@@ -573,11 +573,11 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf` // Fallback para attachments antiguos
+                        ? attachment.split('/').pop() || `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf`
                         : attachment.originalName || 'Documento-vuelo.pdf';
 
                       return (
@@ -705,11 +705,11 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento de transporte ${event.data.name}.pdf` // Fallback para attachments antiguos
+                        ? attachment.split('/').pop() || `Documento de transporte ${event.data.name}.pdf`
                         : attachment.originalName || 'Documento-transporte.pdf';
 
                       return (
@@ -813,11 +813,11 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento de crucero ${event.data.cruiseLine}.pdf` // Fallback para attachments antiguos
+                        ? attachment.split('/').pop() || `Documento de crucero ${event.data.cruiseLine}.pdf`
                         : attachment.originalName || 'Documento-crucero.pdf';
 
                       return (
@@ -970,11 +970,11 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento de alojamiento ${event.data.name}.pdf` // Fallback para attachments antiguos
+                        ? attachment.split('/').pop() || `Documento de alojamiento ${event.data.name}.pdf`
                         : attachment.originalName || 'Documento-alojamiento.pdf';
 
                       return (
@@ -1039,10 +1039,10 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                    (attachment: string | { path: string; originalName: string }, index: number) => {
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                       const originalName = typeof attachment === 'string'
-                        ? `Documento-${event.data.title || 'nota'}.pdf`
+                        ? attachment.split('/').pop() || `Documento-${event.data.title || 'nota'}.pdf`
                         : attachment.originalName || 'Documento-nota.pdf';
 
                       return (
@@ -1284,10 +1284,10 @@ export default function TravelPreview() {
                           </p>
                           <div className="space-y-1">
                             {insurance.attachments.map(
-                              (attachment: string | { url: string; originalName: string }, index: number) => {
-                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                              (attachment: string | { path: string; originalName: string }, index: number) => {
+                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
                                 const originalName = typeof attachment === 'string'
-                                  ? `Documento de seguro ${insurance.provider}.pdf` // Fallback para attachments antiguos
+                                  ? attachment.split('/').pop() || `Documento de seguro ${insurance.provider}.pdf`
                                   : attachment.originalName || 'Documento-seguro.pdf';
 
                                 return (
