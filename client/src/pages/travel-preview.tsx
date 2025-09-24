@@ -451,28 +451,36 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      // Extraer la URL y el nombre original
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento de actividad.pdf` // Fallback para attachments antiguos
+                        : attachment.originalName || 'Documento.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento adjunto - {event.data.name || "Actividad"}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -565,28 +573,36 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      // Extraer la URL y el nombre original
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf` // Fallback para attachments antiguos
+                        : attachment.originalName || 'Documento-vuelo.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento de vuelo - {event.data.airline} {event.data.flightNumber}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -689,28 +705,36 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      // Extraer la URL y el nombre original
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento de transporte ${event.data.name}.pdf` // Fallback para attachments antiguos
+                        : attachment.originalName || 'Documento-transporte.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento de transporte - {event.data.name}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -789,28 +813,36 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      // Extraer la URL y el nombre original
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento de crucero ${event.data.cruiseLine}.pdf` // Fallback para attachments antiguos
+                        : attachment.originalName || 'Documento-crucero.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento de crucero - {event.data.cruiseLine}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -938,28 +970,36 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      // Extraer la URL y el nombre original
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento de alojamiento ${event.data.name}.pdf` // Fallback para attachments antiguos
+                        : attachment.originalName || 'Documento-alojamiento.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento de alojamiento - {event.data.name}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -999,28 +1039,35 @@ export default function TravelPreview() {
                 </p>
                 <div className="space-y-1">
                   {event.data.attachments.map(
-                    (fileName: string, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <FileText className="w-4 h-4 text-gray-600" />
-                        <a
-                          href={
-                            fileName.startsWith("/objects/")
-                              ? `/api${fileName}`
-                              : fileName.startsWith("/uploads/")
-                              ? `/api/objects${fileName}`
-                              : `/api/objects/uploads/${fileName}`
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
+                    (attachment: string | { url: string; originalName: string }, index: number) => {
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const originalName = typeof attachment === 'string'
+                        ? `Documento-${event.data.title || 'nota'}.pdf`
+                        : attachment.originalName || 'Documento-nota.pdf';
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm"
                         >
-                          Documento adjunto - {event.data.name || "Actividad"}
-                        </a>
-                      </div>
-                    ),
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <a
+                            href={
+                              attachmentUrl.startsWith("/objects/")
+                                ? `/api${attachmentUrl}`
+                                : attachmentUrl.startsWith("/uploads/")
+                                ? `/api/objects${attachmentUrl}`
+                                : `/api/objects/uploads/${attachmentUrl}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {originalName}
+                          </a>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
               </div>
@@ -1237,26 +1284,33 @@ export default function TravelPreview() {
                           </p>
                           <div className="space-y-1">
                             {insurance.attachments.map(
-                              (fileName: string, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center space-x-2 text-sm"
-                                >
-                                  <FileText className="w-4 h-4 text-muted-foreground" />
-                                  <a
-                                    href={
-                                      fileName.startsWith("/uploads/")
-                                        ? `/api/objects${fileName}`
-                                        : `/api/objects/uploads/${fileName}`
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 underline"
+                              (attachment: string | { url: string; originalName: string }, index: number) => {
+                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                                const originalName = typeof attachment === 'string'
+                                  ? `Documento de seguro ${insurance.provider}.pdf` // Fallback para attachments antiguos
+                                  : attachment.originalName || 'Documento-seguro.pdf';
+
+                                return (
+                                  <div
+                                    key={index}
+                                    className="flex items-center space-x-2 text-sm"
                                   >
-                                    Documento adjunto - {insurance.provider}
-                                  </a>
-                                </div>
-                              ),
+                                    <FileText className="w-4 h-4 text-muted-foreground" />
+                                    <a
+                                      href={
+                                        attachmentUrl.startsWith("/uploads/")
+                                          ? `/api/objects${attachmentUrl}`
+                                          : `/api/objects/uploads/${attachmentUrl}`
+                                      }
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      {originalName}
+                                    </a>
+                                  </div>
+                                );
+                              },
                             )}
                           </div>
                         </div>
