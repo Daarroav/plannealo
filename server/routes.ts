@@ -254,13 +254,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const thumbnail = files.thumbnail?.[0] ? `/uploads/accommodations/${files.thumbnail[0].filename}` : null;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      let thumbnail: string | null = null;
+      let attachments: string[] = [];
 
-      const attachments = files.attachments ? files.attachments.map(file => `/uploads/accommodations/${file.filename}`) : [];
+      // Handle thumbnail upload
+      if (files?.thumbnail?.[0]) {
+        thumbnail = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
+      }
 
-      console.log("Thumbnail prro:", thumbnail);
-      console.log("Attachments:", attachments);
+      // Handle attachments upload
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
+          attachments.push(objectPath);
+        }
+      }
 
       // Validate that required fields are present
       if (!req.body.name || !req.body.type || !req.body.location || !req.body.checkIn || !req.body.checkOut || !req.body.roomType) {
@@ -302,20 +311,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
       // Handle thumbnail upload
-      if (files.thumbnail?.[0]) {
-        updateData.thumbnail = `/uploads/accommodations/${files.thumbnail[0].filename}`;
-      }else{
-        updateData.thumbnail = '';
+      if (files?.thumbnail?.[0]) {
+        updateData.thumbnail = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
       }
 
       // Handle attachments upload
-      if (files.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/accommodations/${file.filename}`);
-      }else{
-        updateData.attachments = [];
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
       }
 
       // Convert dates if provided
@@ -367,7 +377,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/activities/${file.filename}`) : [];
+      let attachments: string[] = [];
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'activities');
+          attachments.push(objectPath);
+        }
+      }
 
       const validated = insertActivitySchema.parse({
         ...req.body,
@@ -395,7 +413,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle attachments upload
       if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/activities/${file.filename}`);
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'activities');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
       }
 
       const activity = await storage.updateActivity(req.params.id, {
@@ -756,7 +779,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Files:", req.files);
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/notes/${file.filename}`) : [];
+      let attachments: string[] = [];
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'notes');
+          attachments.push(objectPath);
+        }
+      }
 
       // Ensure all required fields are present
       const { title, noteDate, content, visibleToTravelers } = req.body;
@@ -807,7 +838,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle attachments upload
       if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/notes/${file.filename}`);
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'notes');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
       }
 
       // Convert date if provided
