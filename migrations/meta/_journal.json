@@ -22,6 +22,13 @@
       "when": 1757876721228,
       "tag": "0002_late_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758000000000,
+      "tag": "0003_fix_attachments_conversion",
+      "breakpoints": true
     }
   ]
 }
