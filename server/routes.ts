@@ -15,6 +15,16 @@ import { Buffer } from 'buffer';
 // Initialize ObjectStorageService
 const objectStorageClient = new ObjectStorageService();
 
+// Helper function to upload file to Object Storage
+async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
+  const fileName = `${folder}/${Date.now()}_${file.originalname}`;
+  const result = await objectStorageClient.uploadFromBuffer(fileName, file.buffer);
+  if (!result.ok) {
+    throw new Error(`Failed to upload file to object storage: ${result.error}`);
+  }
+  return `/uploads/${fileName}`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
 
@@ -399,133 +409,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/flights/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const updateData = { ...req.body };
-
-      // Handle attachments upload
-      if (req.body.attachments && Array.isArray(req.body.attachments)) {
-        updateData.attachments = [];
-        for (const attachment of req.body.attachments) {
-          if (attachment && attachment !== '') {
-            const buffer = Buffer.from(attachment.data, 'base64');
-            const fileName = `flights/${Date.now()}_${attachment.name}`;
-            const result = await objectStorageClient.uploadFromBuffer(fileName, buffer);
-            if (result.ok) {
-              updateData.attachments.push(`/uploads/${fileName}`);
-            }
-          }
-        }
-      }
-
-      const flight = await storage.updateFlight(req.params.id, {
-        ...updateData,
-        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
-        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
-      });
-      res.json(flight);
-    } catch (error) {
-      console.error("Error updating flight:", error);
-      res.status(400).json({ message: "Error updating flight" });
-    }
-  });
-
-  app.put("/api/transports/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
-      // Handle attachments upload
-      if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/transports/${file.filename}`);
-      }
-
-      const transport = await storage.updateTransport(req.params.id, {
-        ...updateData,
-        pickupDate: updateData.pickupDate ? new Date(updateData.pickupDate) : undefined,
-        endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
-      });
-      res.json(transport);
-    } catch (error) {
-      console.error("Error updating transport:", error);
-      res.status(400).json({ message: "Error updating transport" });
-    }
-  });
-
-  app.put("/api/cruises/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
-      // Handle attachments upload
-      if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/cruises/${file.filename}`);
-      }
-
-      const cruise = await storage.updateCruise(req.params.id, {
-        ...updateData,
-        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
-        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
-      });
-      res.json(cruise);
-    } catch (error) {
-      console.error("Error updating cruise:", error);
-      res.status(400).json({ message: "Error updating cruise" });
-    }
-  });
-
-  app.put("/api/insurances/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
-      // Handle attachments upload
-      if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/insurances/${file.filename}`);
-      }
-
-      const insurance = await storage.updateInsurance(req.params.id, {
-        ...updateData,
-        effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
-      });
-      res.json(insurance);
-    } catch (error) {
-      console.error("Error updating insurance:", error);
-      res.status(400).json({ message: "Error updating insurance" });
-    }
-  });
-
-  // Flight routes
-  app.get("/api/travels/:travelId/flights", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const flights = await storage.getFlightsByTravel(req.params.travelId);
-      res.json(flights);
-    } catch (error) {
-      console.error("Error fetching flights:", error);
-      res.status(500).json({ message: "Error fetching flights" });
-    }
-  });
-
   app.post("/api/travels/:travelId/flights", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
@@ -533,7 +416,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/flights/${file.filename}`) : [];
+
+      const attachments = [];
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'flights');
+          attachments.push(objectPath);
+        }
+      }
 
       const validated = insertFlightSchema.parse({
         ...req.body,
@@ -551,18 +441,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Transport routes
-  app.get("/api/travels/:travelId/transports", async (req, res) => {
+  app.put("/api/flights/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
-      const transports = await storage.getTransportsByTravel(req.params.travelId);
-      res.json(transports);
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'flights');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const flight = await storage.updateFlight(req.params.id, {
+        ...updateData,
+        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
+        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
+      });
+      res.json(flight);
     } catch (error) {
-      console.error("Error fetching transports:", error);
-      res.status(500).json({ message: "Error fetching transports" });
+      console.error("Error updating flight:", error);
+      res.status(400).json({ message: "Error updating flight" });
     }
   });
 
@@ -573,7 +479,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/transports/${file.filename}`) : [];
+
+      const attachments = [];
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'transports');
+          attachments.push(objectPath);
+        }
+      }
 
       const validated = insertTransportSchema.parse({
         ...req.body,
@@ -591,18 +504,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Cruise routes
-  app.get("/api/travels/:travelId/cruises", async (req, res) => {
+  app.put("/api/transports/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
-      const cruises = await storage.getCruisesByTravel(req.params.travelId);
-      res.json(cruises);
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'transports');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const transport = await storage.updateTransport(req.params.id, {
+        ...updateData,
+        pickupDate: updateData.pickupDate ? new Date(updateData.pickupDate) : undefined,
+        endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
+      });
+      res.json(transport);
     } catch (error) {
-      console.error("Error fetching cruises:", error);
-      res.status(500).json({ message: "Error fetching cruises" });
+      console.error("Error updating transport:", error);
+      res.status(400).json({ message: "Error updating transport" });
     }
   });
 
@@ -613,7 +542,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/cruises/${file.filename}`) : [];
+
+      const attachments = [];
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'cruises');
+          attachments.push(objectPath);
+        }
+      }
 
       const validated = insertCruiseSchema.parse({
         ...req.body,
@@ -631,18 +567,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Insurance routes
-  app.get("/api/travels/:travelId/insurances", async (req, res) => {
+  app.put("/api/cruises/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
     try {
-      const insurances = await storage.getInsurancesByTravel(req.params.travelId);
-      res.json(insurances);
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'cruises');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const cruise = await storage.updateCruise(req.params.id, {
+        ...updateData,
+        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
+        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
+      });
+      res.json(cruise);
     } catch (error) {
-      console.error("Error fetching insurances:", error);
-      res.status(500).json({ message: "Error fetching insurances" });
+      console.error("Error updating cruise:", error);
+      res.status(400).json({ message: "Error updating cruise" });
     }
   });
 
@@ -656,7 +608,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Insurance Files:", req.files);
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const attachments = files?.attachments ? files.attachments.map(file => `/uploads/insurances/${file.filename}`) : [];
+
+      const attachments = [];
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'insurances');
+          attachments.push(objectPath);
+        }
+      }
 
       // Ensure all required fields are present
       const { provider, policyNumber, policyType, effectiveDate } = req.body;
@@ -698,6 +657,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       res.status(400).json({ message: "Error creating insurance" });
+    }
+  });
+
+  app.put("/api/insurances/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const objectPath = await uploadFileToObjectStorage(file, 'insurances');
+          attachments.push(objectPath);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const insurance = await storage.updateInsurance(req.params.id, {
+        ...updateData,
+        effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
+      });
+      res.json(insurance);
+    } catch (error) {
+      console.error("Error updating insurance:", error);
+      res.status(400).json({ message: "Error updating insurance" });
     }
   });
 
