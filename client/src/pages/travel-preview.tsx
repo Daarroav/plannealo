@@ -572,7 +572,13 @@ export default function TravelPreview() {
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
-                          href={fileName.startsWith("/objects/") || fileName.startsWith("/uploads/") ? `/api/objects${fileName}` : `/api/objects/uploads/${fileName}`}
+                          href={
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
+                              ? `/api/objects${fileName}`
+                              : `/api/objects/uploads/${fileName}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
@@ -690,7 +696,13 @@ export default function TravelPreview() {
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
-                          href={fileName.startsWith("/objects/") || fileName.startsWith("/uploads/") ? `/api/objects${fileName}` : `/api/objects/uploads/${fileName}`}
+                          href={
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
+                              ? `/api/objects${fileName}`
+                              : `/api/objects/uploads/${fileName}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
@@ -784,7 +796,13 @@ export default function TravelPreview() {
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
-                          href={fileName.startsWith("/objects/") || fileName.startsWith("/uploads/") ? `/api/objects${fileName}` : `/api/objects/uploads/${fileName}`}
+                          href={
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
+                              ? `/api/objects${fileName}`
+                              : `/api/objects/uploads/${fileName}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
@@ -899,7 +917,9 @@ export default function TravelPreview() {
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <img
                   src={
-                    event.data.thumbnail.startsWith("/objects/") || event.data.thumbnail.startsWith("/uploads/")
+                    event.data.thumbnail.startsWith("/objects/")
+                      ? `/api${event.data.thumbnail}`
+                      : event.data.thumbnail.startsWith("/uploads/")
                       ? `/api/objects${event.data.thumbnail}`
                       : `/api/objects/uploads/${event.data.thumbnail}`
                   }
@@ -987,7 +1007,9 @@ export default function TravelPreview() {
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
                           href={
-                            fileName.startsWith("/objects/") || fileName.startsWith("/uploads/")
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
                               ? `/api/objects${fileName}`
                               : `/api/objects/uploads/${fileName}`
                           }
