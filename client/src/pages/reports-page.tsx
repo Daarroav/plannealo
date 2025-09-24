@@ -120,7 +120,7 @@ export default function ReportsPage() {
             icon={Plane}
             iconBgColor="bg-purple-100"
             iconTextColor="text-purple-600"
-        /></StatsCard>
+        />
         </div>
 
     
