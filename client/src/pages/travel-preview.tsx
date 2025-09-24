@@ -239,7 +239,7 @@ export default function TravelPreview() {
 
       console.info("Event Date:", event.date);
       console.info("Day Key:", dayKey);
-        
+
 
       if (!groups[dayKey]) {
         groups[dayKey] = [];
@@ -459,7 +459,9 @@ export default function TravelPreview() {
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
                           href={
-                            fileName.startsWith("/objects/") || fileName.startsWith("/uploads/")
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
                               ? `/api/objects${fileName}`
                               : `/api/objects/uploads/${fileName}`
                           }
@@ -931,7 +933,13 @@ export default function TravelPreview() {
                       >
                         <FileText className="w-4 h-4 text-gray-600" />
                         <a
-                          href={fileName.startsWith("/objects/") || fileName.startsWith("/uploads/") ? `/api/objects${fileName}` : `/api/objects/uploads/${fileName}`}
+                          href={
+                            fileName.startsWith("/objects/")
+                              ? `/api${fileName}`
+                              : fileName.startsWith("/uploads/")
+                              ? `/api/objects${fileName}`
+                              : `/api/objects/uploads/${fileName}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
@@ -1265,10 +1273,10 @@ export default function TravelPreview() {
                 <p className="text-sm text-muted-foreground">
                   Agencia de Viajes
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Especialistas en experiencias únicas
                 </p>
-                <p className="text-xs text-muted-foreground font-semibold">
+                <p className="text-sm text-muted-foreground font-semibold">
                   Registro: RNT-54321
                 </p>
               </div>
