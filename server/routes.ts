@@ -29,6 +29,18 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
     throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
   const path = objectStorageClient.normalizeObjectEntityPath(uploadURL);
+  
+  // Set metadata with correct content type
+  try {
+    const objectFile = await objectStorageClient.getObjectEntityFile(path);
+    await objectFile.setMetadata({
+      contentType: file.mimetype,
+    });
+  } catch (error) {
+    console.error('Error setting file metadata:', error);
+    // Continue even if metadata setting fails
+  }
+  
   return {
     path,
     originalName: file.originalname
@@ -455,20 +467,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'attachments');
+          attachments.push(attachment);
         }
       }
 
@@ -531,20 +531,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'attachments');
+          attachments.push(attachment);
         }
       }
 
@@ -607,20 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'attachments');
+          attachments.push(attachment);
         }
       }
 
@@ -686,20 +662,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'attachments');
+          attachments.push(attachment);
         }
       }
 
