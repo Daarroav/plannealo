@@ -27,7 +27,7 @@ export default function ReportsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/reports");
+        const res = await fetch("/api/stats");
         if (!res.ok) throw new Error("Error fetching reports");
         const data: TravelStats = await res.json();
         setStats(data);
