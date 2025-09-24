@@ -14,34 +14,9 @@ import fs from "fs";  // Para crear carpetas
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
 
-  // Configuración de multer para subir archivos
-  const multerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      let folder = 'uploads'; // Carpeta base
-
-      console.log("📁 Ruta original de la petición:", req.path); // 👈 Aquí lo imprimes
+  // Configuración de multer para subir archivos al Object Storage
+  const multerStorage = multer.memoryStorage(); // Usar memoria en lugar de disco
   
-      if (/\/accommodations\b/.test(req.path)) folder += '/accommodations';
-      else if (/\/activities\b/.test(req.path)) folder += '/activities';
-      else if (/\/flights\b/.test(req.path)) folder += '/flights';
-      else if (/\/transports\b/.test(req.path)) folder += '/transports';
-      else if (/\/cruises\b/.test(req.path)) folder += '/cruises';
-      else if (/\/insurances\b/.test(req.path)) folder += '/insurances';
-      else if (/\/notes\b/.test(req.path)) folder += '/notes';
-      else if (/\/travels\b/.test(req.path)) folder += '/travels';
-      else folder += '/other';
-  
-      fs.mkdirSync(folder, { recursive: true });
-      cb(null, folder);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = path.extname(file.originalname);
-      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-    }
-  });
-  
-
 
   const upload = multer({ 
     storage: multerStorage, // Configuración de multer para subir archivos
@@ -127,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Error fetching travels" });
     }
   });
-  
+
 
   app.post("/api/travels", async (req, res) => {
     if (!req.isAuthenticated()) {
@@ -137,24 +112,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log("Request body:", req.body);
     try {
       const { clientEmail, ...travelData } = req.body;
-      
+
       // Verificar si el cliente ya existe
       let client = await storage.getUserByUsername(clientEmail);
       console.log("Client:", client);
-      
+
       // Si no existe, crear un nuevo usuario cliente
       if (!client) {
         // Generar una contraseña temporal segura
         const tempPassword = Math.random().toString(36).slice(-8);
 
-        
+
         client = await storage.createUser({
           username: clientEmail,
           password: tempPassword, // La contraseña se hasheará en el storage
           name: req.body.clientName,
           role: 'client',
         });
-        
+
         // Aquí podrías enviar un correo al cliente con sus credenciales
         // await emailService.sendWelcomeEmail(clientEmail, tempPassword);
       }
@@ -185,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
-   
+
 
     try {
       const travel= await storage.getTravel(req.params.id); // Get travel by id
@@ -267,12 +242,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const thumbnail = files.thumbnail?.[0] ? `/uploads/accommodations/${files.thumbnail[0].filename}` : null;
- 
+
       const attachments = files.attachments ? files.attachments.map(file => `/uploads/accommodations/${file.filename}`) : [];
 
       console.log("Thumbnail prro:", thumbnail);
       console.log("Attachments:", attachments);
-      
+
       // Validate that required fields are present
       if (!req.body.name || !req.body.type || !req.body.location || !req.body.checkIn || !req.body.checkOut || !req.body.roomType) {
         return res.status(400).json({ 
@@ -288,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-      
+
       const validated = insertAccommodationSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
@@ -314,21 +289,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      
+
       // Handle thumbnail upload
       if (files.thumbnail?.[0]) {
         updateData.thumbnail = `/uploads/accommodations/${files.thumbnail[0].filename}`;
       }else{
         updateData.thumbnail = '';
       }
-      
+
       // Handle attachments upload
       if (files.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/accommodations/${file.filename}`);
       }else{
         updateData.attachments = [];
       }
-      
+
       // Convert dates if provided
       if (updateData.checkIn) {
         updateData.checkIn = new Date(updateData.checkIn);
@@ -379,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/activities/${file.filename}`) : [];
-      
+
       const validated = insertActivitySchema.parse({
         ...req.body,
         travelId: req.params.travelId,
@@ -403,12 +378,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/activities/${file.filename}`);
       }
-      
+
       const activity = await storage.updateActivity(req.params.id, {
         ...updateData,
         date: updateData.date ? new Date(updateData.date) : undefined,
@@ -425,18 +400,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
- 
+
 
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       console.info("Files:", files);
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/flights/${file.filename}`);
       }
-      
+
       const flight = await storage.updateFlight(req.params.id, {
         ...updateData,
         departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
@@ -457,12 +432,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/transports/${file.filename}`);
       }
-      
+
       const transport = await storage.updateTransport(req.params.id, {
         ...updateData,
         pickupDate: updateData.pickupDate ? new Date(updateData.pickupDate) : undefined,
@@ -483,12 +458,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/cruises/${file.filename}`);
       }
-      
+
       const cruise = await storage.updateCruise(req.params.id, {
         ...updateData,
         departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
@@ -509,12 +484,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/insurances/${file.filename}`);
       }
-      
+
       const insurance = await storage.updateInsurance(req.params.id, {
         ...updateData,
         effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
@@ -549,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/flights/${file.filename}`) : [];
-      
+
       const validated = insertFlightSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
@@ -589,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/transports/${file.filename}`) : [];
-      
+
       const validated = insertTransportSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
@@ -629,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/cruises/${file.filename}`) : [];
-      
+
       const validated = insertCruiseSchema.parse({
         ...req.body,
         travelId: req.params.travelId,
@@ -669,13 +644,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Raw insurance req.body:", req.body);
       console.log("Insurance Files:", req.files);
-      
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/insurances/${file.filename}`) : [];
-      
+
       // Ensure all required fields are present
       const { provider, policyNumber, policyType, effectiveDate } = req.body;
-      
+
       // Check for empty strings and missing values
       if (!provider || !policyNumber || policyNumber.trim() === '' || !policyType || !effectiveDate) {
         return res.status(400).json({ 
@@ -684,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: "Todos los campos obligatorios deben completarse: provider, policyNumber, policyType, effectiveDate"
         });
       }
-      
+
       const insuranceData = {
         travelId: req.params.travelId,
         provider: provider,
@@ -697,9 +672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: req.body.notes || null,
         attachments: attachments,
       };
-      
+
       console.log("Insurance data before validation:", insuranceData);
-      
+
       const validated = insertInsuranceSchema.parse(insuranceData);
 
       const insurance = await storage.createInsurance(validated);
@@ -740,20 +715,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Raw req.body:", req.body);
       console.log("Files:", req.files);
-      
+
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const attachments = files?.attachments ? files.attachments.map(file => `/uploads/notes/${file.filename}`) : [];
-      
+
       // Ensure all required fields are present
       const { title, noteDate, content, visibleToTravelers } = req.body;
-      
+
       if (!title || !noteDate || !content) {
         return res.status(400).json({ 
           message: "Missing required fields", 
           received: { title, noteDate, content } 
         });
       }
-      
+
       const noteData = {
         travelId: req.params.id,
         title: title,
@@ -762,9 +737,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         visibleToTravelers: visibleToTravelers === 'true',
         attachments: attachments,
       };
-      
+
       console.log("Note data before validation:", noteData);
-      
+
       const validated = insertNoteSchema.parse(noteData);
 
       const note = await storage.createNote(validated);
@@ -790,12 +765,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      
+
       // Handle attachments upload
       if (files?.attachments) {
         updateData.attachments = files.attachments.map(file => `/uploads/notes/${file.filename}`);
       }
-      
+
       // Convert date if provided
       if (updateData.noteDate) {
         updateData.noteDate = new Date(updateData.noteDate);
@@ -852,7 +827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { origin, destination, date } = req.query;
-      
+
       if (!origin || !destination || !date) {
         return res.status(400).json({ 
           message: "Parameters 'origin', 'destination', and 'date' are required" 
@@ -864,7 +839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         destination as string, 
         date as string
       );
-      
+
       res.json(result);
     } catch (error) {
       console.error("Error searching flights:", error);
@@ -909,12 +884,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!travel) {
           return res.status(404).json({ error: "Travel not found or token invalid" });
         }
-        
+
         // Verificar que el token no haya expirado
         if (travel.publicTokenExpiry && travel.publicTokenExpiry < new Date()) {
           return res.status(403).json({ error: "Access link has expired" });
         }
-        
+
         // Verificar que el ID coincida con el token
         if (travel.id !== req.params.id) {
           return res.status(404).json({ error: "Travel not found" });
@@ -994,7 +969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/travels/:id/generate-pdf", async (req, res) => {
     const puppeteer = await import('puppeteer');
     let browser;
-    
+
     try {
       const travel = await storage.getTravel(req.params.id);
       if (!travel) {
@@ -1345,7 +1320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         const page = await browser.newPage();
         await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-        
+
         const pdfBuffer = await page.pdf({
           format: 'A4',
           printBackground: true,
@@ -1360,15 +1335,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Set headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
-        
+
         res.send(pdfBuffer);
       } catch (puppeteerError: any) {
         console.warn('Puppeteer failed, falling back to printable HTML:', puppeteerError.message);
-        
+
         // Fallback: return HTML optimized for printing/PDF conversion
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.setHeader('Content-Disposition', `inline; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
-        
+
         // Add print-specific CSS and auto-print script
         const printableHtml = htmlContent.replace(
           '</head>',
@@ -1386,10 +1361,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           </script>
           </head>`
         );
-        
+
         res.send(printableHtml);
       }
-      
+
     } catch (error) {
       console.error("Error generating PDF:", error);
       res.status(500).json({ error: "Error generating PDF" });
@@ -1418,7 +1393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectPath = req.path.replace("/api", "");
       const objectStorageService = new ObjectStorageService();
       const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-      
+
       // Check if user can access this object
       const canAccess = await objectStorageService.canAccessObjectEntity({
         userId: req.user?.id,
@@ -1491,18 +1466,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Crear servicio de email
       const emailService = new EmailService();
-      
+
       // Generar token público si no existe o si ha expirado
       let publicToken = travel.publicToken;
       let publicTokenExpiry = travel.publicTokenExpiry;
-      
+
       const now = new Date();
       const oneMonthFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days
-      
+
       if (!publicToken || !publicTokenExpiry || publicTokenExpiry < now) {
         publicToken = emailService.generatePublicToken();
         publicTokenExpiry = oneMonthFromNow;
-        
+
         // Actualizar el viaje con el nuevo token
         await storage.updateTravel(travelId, {
           publicToken,
@@ -1531,7 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   const httpServer = createServer(app);
   return httpServer;
