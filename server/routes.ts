@@ -10,15 +10,19 @@ import multer from 'multer';  // Instalacion  para subir archivos
 import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
 import fs from "fs";  // Para crear carpetas
+import { Buffer } from 'buffer';
+
+// Initialize ObjectStorageService
+const objectStorageClient = new ObjectStorageService();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
 
   // Configuración de multer para subir archivos al Object Storage
   const multerStorage = multer.memoryStorage(); // Usar memoria en lugar de disco
-  
 
-  const upload = multer({ 
+
+  const upload = multer({
     storage: multerStorage, // Configuración de multer para subir archivos
     limits: {
       fileSize: 5 * 1024 * 1024 // Límite de 5MB
@@ -147,9 +151,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(travel);
     } catch (error) {
       console.error("Error creating travel:", error);
-      res.status(400).json({ 
+      res.status(400).json({
         message: "Error creating travel",
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
@@ -250,8 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate that required fields are present
       if (!req.body.name || !req.body.type || !req.body.location || !req.body.checkIn || !req.body.checkOut || !req.body.roomType) {
-        return res.status(400).json({ 
-          message: "Missing required fields", 
+        return res.status(400).json({
+          message: "Missing required fields",
           received: Object.keys(req.body),
           missing: {
             name: !req.body.name,
@@ -395,21 +399,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/flights/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+  app.put("/api/flights/:id", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.sendStatus(401);
     }
 
-
-
     try {
       const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      console.info("Files:", files);
       // Handle attachments upload
-      if (files?.attachments) {
-        updateData.attachments = files.attachments.map(file => `/uploads/flights/${file.filename}`);
+      if (req.body.attachments && Array.isArray(req.body.attachments)) {
+        updateData.attachments = [];
+        for (const attachment of req.body.attachments) {
+          if (attachment && attachment !== '') {
+            const buffer = Buffer.from(attachment.data, 'base64');
+            const fileName = `flights/${Date.now()}_${attachment.name}`;
+            const result = await objectStorageClient.uploadFromBuffer(fileName, buffer);
+            if (result.ok) {
+              updateData.attachments.push(`/uploads/${fileName}`);
+            }
+          }
+        }
       }
 
       const flight = await storage.updateFlight(req.params.id, {
@@ -653,8 +663,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check for empty strings and missing values
       if (!provider || !policyNumber || policyNumber.trim() === '' || !policyType || !effectiveDate) {
-        return res.status(400).json({ 
-          message: "Missing required fields", 
+        return res.status(400).json({
+          message: "Missing required fields",
           received: { provider, policyNumber, policyType, effectiveDate },
           details: "Todos los campos obligatorios deben completarse: provider, policyNumber, policyType, effectiveDate"
         });
@@ -682,9 +692,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error creating insurance:", error);
       if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          details: error.errors 
+        return res.status(400).json({
+          message: "Validation error",
+          details: error.errors
         });
       }
       res.status(400).json({ message: "Error creating insurance" });
@@ -723,9 +733,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { title, noteDate, content, visibleToTravelers } = req.body;
 
       if (!title || !noteDate || !content) {
-        return res.status(400).json({ 
-          message: "Missing required fields", 
-          received: { title, noteDate, content } 
+        return res.status(400).json({
+          message: "Missing required fields",
+          received: { title, noteDate, content }
         });
       }
 
@@ -747,9 +757,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error creating note:", error);
       if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          details: error.errors 
+        return res.status(400).json({
+          message: "Validation error",
+          details: error.errors
         });
       }
       res.status(400).json({ message: "Error creating note" });
@@ -829,14 +839,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { origin, destination, date } = req.query;
 
       if (!origin || !destination || !date) {
-        return res.status(400).json({ 
-          message: "Parameters 'origin', 'destination', and 'date' are required" 
+        return res.status(400).json({
+          message: "Parameters 'origin', 'destination', and 'date' are required"
         });
       }
 
       const result = await AeroDataBoxService.searchFlightsBetweenAirports(
-        origin as string, 
-        destination as string, 
+        origin as string,
+        destination as string,
         date as string
       );
 
@@ -955,9 +965,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      res.json({ 
-        success: true, 
-        message: "Itinerario enviado exitosamente" 
+      res.json({
+        success: true,
+        message: "Itinerario enviado exitosamente"
       });
     } catch (error) {
       console.error("Error sharing travel:", error);
@@ -1017,17 +1027,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           <title>Itinerario - ${travel.name}</title>
           <style>
             @page { margin: 40px; }
-            body { 
-              font-family: Arial, sans-serif; 
-              margin: 0; 
-              padding: 0; 
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
               line-height: 1.4;
               font-size: 11px;
               color: #333;
             }
-            .header { 
-              text-align: center; 
-              margin-bottom: 40px; 
+            .header {
+              text-align: center;
+              margin-bottom: 40px;
               padding-bottom: 20px;
               display: flex;
               align-items: center;
@@ -1057,12 +1067,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               margin: 15px 0;
               color: #666;
             }
-            .cover-image { 
-              width: 100%; 
-              max-width: 500px; 
-              height: 250px; 
-              object-fit: cover; 
-              margin: 20px auto; 
+            .cover-image {
+              width: 100%;
+              max-width: 500px;
+              height: 250px;
+              object-fit: cover;
+              margin: 20px auto;
               display: block;
               border: 1px solid #ddd;
             }
@@ -1305,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Try to generate PDF using Puppeteer, fallback to HTML if it fails
       try {
-        browser = await puppeteer.launch({ 
+        browser = await puppeteer.launch({
           headless: true,
           args: [
             '--no-sandbox',
@@ -1492,16 +1502,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         publicToken
       );
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: "Itinerario enviado exitosamente",
         tokenExpiry: publicTokenExpiry
       });
     } catch (error: any) {
       console.error("Error sharing travel:", error);
-      res.status(500).json({ 
-        error: "Error al enviar el itinerario", 
-        details: error.message 
+      res.status(500).json({
+        error: "Error al enviar el itinerario",
+        details: error.message
       });
     }
   });
