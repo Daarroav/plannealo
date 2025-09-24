@@ -34,7 +34,18 @@ export default function ReportsPage() {
     fetchStats();
   }, []);
 
-  if (!stats) return <p>Cargando...</p>; // <-- Aquí prevenimos el error
+  if (!stats) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <NavigationHeader />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <p className="text-center text-lg">Cargando estadísticas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log("Stats data received:", stats);
 
   const data = {
     labels: ["Viajes Activos", "Borradores"],
@@ -42,16 +53,14 @@ export default function ReportsPage() {
       {
         label: "Viajes",
         data: [
-          stats?.activeTrips,
-          stats?.drafts,
+          stats.activeTrips,
+          stats.drafts,
         ],
         backgroundColor: ["#93c5fd", "#fde047"],
         hoverOffset: 8,
       },
     ],
   };
-
-  if (!stats) return <p>Sin datos...</p>;
 
   return (
 
@@ -83,7 +92,7 @@ export default function ReportsPage() {
 
         <StatsCard
             title="Viajes Activos"
-            value={stats?.activeTrips || 0}
+            value={stats.activeTrips}
             icon={Plane}
             iconBgColor="bg-blue-100"
             iconTextColor="text-blue-600"
@@ -91,7 +100,7 @@ export default function ReportsPage() {
 
         <StatsCard
             title="Borradores"
-            value={stats?.drafts || 0}
+            value={stats.drafts}
             icon={Plane}
             iconBgColor="bg-yellow-100"
             iconTextColor="text-yellow-600"
@@ -99,11 +108,19 @@ export default function ReportsPage() {
 
         <StatsCard
             title="Total de Clientes"
-            value={stats?.clients || 0}
+            value={stats.clients}
             icon={Plane}
             iconBgColor="bg-green-100"
             iconTextColor="text-green-600"
         />
+
+        <StatsCard
+            title="Total de Viajes"
+            value={stats.activeTrips + stats.drafts}
+            icon={Plane}
+            iconBgColor="bg-purple-100"
+            iconTextColor="text-purple-600"
+        /></StatsCard>
         </div>
 
     
