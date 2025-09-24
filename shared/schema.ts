@@ -44,6 +44,7 @@ export const accommodations = pgTable("accommodations", {
   notes: text("notes"),
   thumbnail: text("thumbnail"),
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 export const activities = pgTable("activities", {
@@ -63,6 +64,7 @@ export const activities = pgTable("activities", {
   placeStart: text("place_start"),
   placeEnd: text("place_end"),
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 export const flights = pgTable("flights", {
@@ -79,6 +81,7 @@ export const flights = pgTable("flights", {
   class: text("class").notNull(),
   reservationNumber: text("reservation_number").notNull(),
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 export const transports = pgTable("transports", {
@@ -96,6 +99,7 @@ export const transports = pgTable("transports", {
   confirmationNumber: text("confirmation_number"),
   notes: text("notes"),
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 export const cruises = pgTable("cruises", {
@@ -109,6 +113,7 @@ export const cruises = pgTable("cruises", {
   arrivalPort: text("arrival_port").notNull(), // puerto de desembarque
   notes: text("notes"),
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 export const insurances = pgTable("insurances", {
@@ -122,6 +127,7 @@ export const insurances = pgTable("insurances", {
   importantInfo: text("important_info"), // Información importante
   policyDescription: text("policy_description"), // Descripción de la política
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
   notes: text("notes"), // Notas adicionales
 });
 
@@ -133,6 +139,7 @@ export const notes = pgTable("notes", {
   content: text("content").notNull(), // Texto con notas
   visibleToTravelers: boolean("visible_to_travelers").notNull().default(true), // Visible para viajeros
   attachments: jsonb("attachments").$type<{ path: string; originalName: string }[]>().default([]), // Archivos adjuntos con nombre original
+  newAttachments: jsonb("new_attachments").$type<{ path: string; originalName: string }[]>().default([]), // Nueva columna para archivos adjuntos
 });
 
 // Insert schemas
