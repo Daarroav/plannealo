@@ -83,7 +83,7 @@ export default function TravelPreview() {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true, // 👈 Esto fuerza el formato AM/PM
+      hour12: true, // 👈 Esto forza el formato AM/PM
     });
   };
   const formatDate = (date: string | Date) => {
@@ -235,7 +235,7 @@ export default function TravelPreview() {
 
     events.forEach((event) => {
       const date = new Date(event.date); // Forzar UTC
-      const dayKey = date.toISOString().split("T")[0]; // YYYY-MM-DD format  // no usar 
+      const dayKey = date.toISOString().split("T")[0]; // YYYY-MM-DD format  // no usar
 
       console.info("Event Date:", event.date);
       console.info("Day Key:", dayKey);
@@ -469,9 +469,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento adjunto - {event.data.name || "Actividad"}
                         </a>
                       </div>
                     ),
@@ -579,9 +577,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento de vuelo - {event.data.airline} {event.data.flightNumber}
                         </a>
                       </div>
                     ),
@@ -699,9 +695,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento de transporte - {event.data.name}
                         </a>
                       </div>
                     ),
@@ -795,9 +789,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento de crucero - {event.data.cruiseLine}
                         </a>
                       </div>
                     ),
@@ -944,9 +936,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento de alojamiento - {event.data.name}
                         </a>
                       </div>
                     ),
@@ -1005,9 +995,7 @@ export default function TravelPreview() {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 underline"
                         >
-                          {fileName
-                            .replace("/uploads/", "")
-                            .replace(/^.*\//, "")}
+                          Documento adjunto - {event.data.name || "Actividad"}
                         </a>
                       </div>
                     ),
@@ -1243,9 +1231,7 @@ export default function TravelPreview() {
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 underline"
                                   >
-                                    {fileName
-                                      .replace("/uploads/", "")
-                                      .replace(/^.*\//, "")}
+                                    Documento adjunto - {insurance.provider}
                                   </a>
                                 </div>
                               ),
