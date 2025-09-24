@@ -65,6 +65,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   setupAuth(app);
 
+  // Admin endpoint to fix content-type for existing files
+  app.post("/api/admin/fix-file-metadata", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autorizado" });
+    }
+
+    try {
+      const { filePath } = req.body;
+      if (!filePath) {
+        return res.status(400).json({ error: "filePath es requerido" });
+      }
+
+      const objectFile = await objectStorageClient.getObjectEntityFile(filePath);
+      
+      // Determinar content-type basado en extensión
+      let contentType = 'application/octet-stream';
+      if (filePath.toLowerCase().endsWith('.pdf')) {
+        contentType = 'application/pdf';
+      } else if (filePath.toLowerCase().endsWith('.jpg') || filePath.toLowerCase().endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+      } else if (filePath.toLowerCase().endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (filePath.toLowerCase().endsWith('.docx')) {
+        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      } else if (filePath.toLowerCase().endsWith('.doc')) {
+        contentType = 'application/msword';
+      }
+
+      await objectFile.setMetadata({
+        contentType: contentType,
+      });
+
+      res.json({ 
+        message: "Metadata actualizada exitosamente", 
+        filePath, 
+        contentType 
+      });
+    } catch (error) {
+      console.error("Error actualizando metadata del archivo:", error);
+      res.status(500).json({ error: "Error actualizando metadata del archivo" });
+    }
+  });
+
   // Travel routes
   // Obtener estadísticas de clientes
   app.get("/api/clients/stats", async (req, res) => {
