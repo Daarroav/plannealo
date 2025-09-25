@@ -739,14 +739,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
+      const [accommodations, activities, flights, transports] = await Promise.all([
         storage.getAccommodationsByTravel(req.params.id),
         storage.getActivitiesByTravel(req.params.id),
         storage.getFlightsByTravel(req.params.id),
-        storage.getTransportsByTravel(req.params.id),
-        storage.getCruisesByTravel(req.params.id),
-        storage.getInsurancesByTravel(req.params.id),
-        storage.getNotesByTravel(req.params.id)
+        storage.getTransportsByTravel(req.params.id)
       ]);
 
       res.json({
@@ -754,10 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         accommodations,
         activities,
         flights,
-        transports,
-        cruises,
-        insurances,
-        notes
+        transports
       });
     } catch (error) {
       console.error("Error fetching full travel data:", error);
@@ -811,18 +805,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get all travel data
-      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
+      const [accommodations, activities, flights, transports] = await Promise.all([
         storage.getAccommodationsByTravel(req.params.id),
         storage.getActivitiesByTravel(req.params.id),
         storage.getFlightsByTravel(req.params.id),
-        storage.getTransportsByTravel(req.params.id),
-        storage.getCruisesByTravel(req.params.id),
-        storage.getInsurancesByTravel(req.params.id),
-        storage.getNotesByTravel(req.params.id)
+        storage.getTransportsByTravel(req.params.id)
       ]);
-
-      // Filter notes to only show those visible to travelers
-      const visibleNotes = notes.filter(note => note.visibleToTravelers);
 
       // Create a simple HTML content for PDF generation
       const formatDate = (date: Date) => {
@@ -1016,7 +1004,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'CHECK-IN': formatDateTime(acc.checkIn),
             'CHECK-OUT': formatDateTime(acc.checkOut)
           },
-          notes: acc.notes,
           location: acc.location
         })),
         ...activities.map(activity => ({
@@ -1030,7 +1017,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'START': formatDateTime(activity.date) + (activity.startTime ? ` ${activity.startTime}` : ''),
             'FINISH': activity.endTime || ''
           },
-          notes: activity.notes
         })),
         ...flights.map(flight => ({
           type: 'flight',
@@ -1042,7 +1028,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'DEPARTURE': formatDateTime(flight.departureDate),
             'ARRIVAL': formatDateTime(flight.arrivalDate)
           },
-          notes: '',
           location: `${flight.departureCity} - ${flight.arrivalCity}`
         })),
         ...transports.map(transport => ({
@@ -1056,7 +1041,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'START': formatDateTime(transport.pickupDate),
             'FINISH': transport.endDate ? formatDateTime(transport.endDate) : ''
           },
-          notes: transport.notes,
           location: `${transport.pickupLocation} - ${transport.dropoffLocation || ''}`
         }))
       ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -1100,7 +1084,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </div>
                 `).join('')}
               </div>
-              ${activity.notes ? `<div class="notes">${activity.notes}</div>` : ''}
             </div>
           `;
         });
@@ -1108,27 +1091,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         htmlContent += `</div>`;
       });
 
-      // Add remaining notes section
-      if (visibleNotes.length > 0) {
-        htmlContent += `
-          <div class="day-section">
-            <div class="day-header">
-              <div class="day-box">
-                <span class="day-month">NOTAS</span>
-              </div>
-              <div style="flex: 1;"><strong>Información Adicional</strong></div>
-            </div>
-        `;
-        visibleNotes.forEach(note => {
-          htmlContent += `
-            <div class="activity-item">
-              <div class="activity-title">${note.title}</div>
-              <div class="notes">${note.content}</div>
-            </div>
-          `;
-        });
-        htmlContent += `</div>`;
-      }
 
       // Add footer
       htmlContent += `
