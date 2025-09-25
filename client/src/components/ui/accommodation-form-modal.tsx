@@ -47,6 +47,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,6 +95,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   const removeFile = (index: number) => {
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setRemovedExistingAttachments(prev => [...prev, index]);
   };
 
   const removeThumbnail = () => {
@@ -188,6 +193,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         formData.append('attachments', file);
       });
     }
+
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
   
     // Enviar el formData directamente
     try {
@@ -197,6 +207,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
       setThumbnail(null);
       setThumbnailRemoved(false);
     } catch (error) {
@@ -211,6 +222,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     setPrice("");
     // Reset file input
     if (fileInputRef.current) {
@@ -258,6 +270,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       // Reset attached files state - don't try to convert existing URLs to File objects
       // This prevents overwriting when only updating thumbnail
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     } else {
       // Reset all states for new accommodation
       setCheckInDate(undefined);
@@ -266,6 +279,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setThumbnail(null);
       setPrice("");
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
       
       form.reset({
         travelId,
@@ -653,13 +667,32 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 <p className="text-sm font-medium">Archivos adjuntos:</p>
                 
                 {/* Show existing attachments */}
-                {editingAccommodation?.attachments?.map((url, index) => (
+                {editingAccommodation?.attachments
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index, filteredArray) => (
                   <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
                       <FileText className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">Archivo existente {index + 1}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">Existente</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Existente</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          // Find the original index in the unfiltered array
+                          const originalIndex = editingAccommodation.attachments?.indexOf(url) ?? -1;
+                          if (originalIndex !== -1) {
+                            removeExistingAttachment(originalIndex);
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 
