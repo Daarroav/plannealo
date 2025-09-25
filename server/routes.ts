@@ -1489,7 +1489,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/objects/*", async (req, res) => {
     try {
       const objectPath = req.path.replace("/api", "");
+      console.log("Serving object path:", objectPath);
+      
       const objectStorageService = new ObjectStorageService();
+      
+      // Check if environment variables are set
+      try {
+        objectStorageService.getPrivateObjectDir();
+        objectStorageService.getPublicObjectSearchPaths();
+      } catch (envError: any) {
+        console.error("Environment configuration error:", envError.message);
+        return res.status(500).json({ 
+          error: "Server configuration error", 
+          details: envError.message 
+        });
+      }
+      
       const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
       // Check if user can access this object
@@ -1508,7 +1523,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Object not found" });
       }
       console.error("Error serving object:", error);
-      res.status(500).json({ error: "Error serving object" });
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        objectPath: req.path.replace("/api", "")
+      });
+      res.status(500).json({ 
+        error: "Error serving object",
+        details: error.message 
+      });
     }
   });
 
