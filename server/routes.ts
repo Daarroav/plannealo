@@ -945,6 +945,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  
+
   // Statistics endpoint
   app.get("/api/stats", async (req, res) => {
     if (!req.isAuthenticated()) {
