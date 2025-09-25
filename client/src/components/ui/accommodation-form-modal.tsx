@@ -174,7 +174,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('policies', currentValues.policies || '');
     formData.append('notes', currentValues.notes || '');
     formData.append('travelId', currentValues.travelId);
-    form
     
     // Handle thumbnail logic more explicitly
     if (thumbnail) {
@@ -187,7 +186,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     // If no changes to thumbnail, don't send thumbnail data
     
     // Only add new attached files to formData if they exist
-    // Existing attachments will be preserved on the server side
     if (attachedFiles.length > 0) {
       attachedFiles.forEach((file, index) => {
         formData.append('attachments', file);
@@ -197,6 +195,17 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     // Send information about removed existing attachments
     if (removedExistingAttachments.length > 0) {
       formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+      console.log('Sending removed attachments:', removedExistingAttachments);
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingAccommodation?.attachments) {
+      const remainingAttachments = editingAccommodation.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
     }
   
     // Enviar el formData directamente

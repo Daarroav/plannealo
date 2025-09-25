@@ -362,15 +362,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove the removeThumbnail flag from updateData as it's not a database field
       delete updateData.removeThumbnail;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+          console.log("Preserving existing attachments:", existingAttachments);
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
-          attachments.push(objectPath);
+          newAttachments.push(objectPath);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
+        console.log("Added new attachments:", newAttachments);
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+        console.log("Final attachments array:", finalAttachments);
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       // Convert dates if provided
       if (updateData.checkIn) {
@@ -463,15 +488,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'activities');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       const activity = await storage.updateActivity(req.params.id, {
         ...updateData,
@@ -535,15 +582,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'flights');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       const flight = await storage.updateFlight(req.params.id, {
         ...updateData,
@@ -608,15 +677,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'transports');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       const transport = await storage.updateTransport(req.params.id, {
         ...updateData,
@@ -681,15 +772,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'cruises');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       const cruise = await storage.updateCruise(req.params.id, {
         ...updateData,
@@ -784,15 +897,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'insurances');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       const insurance = await storage.updateInsurance(req.params.id, {
         ...updateData,
@@ -888,15 +1023,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle attachments upload
+      // Handle attachments update with proper deletion support
+      let finalAttachments = [];
+
+      // Start with existing attachments if provided
+      if (req.body.existingAttachments) {
+        try {
+          const existingAttachments = JSON.parse(req.body.existingAttachments);
+          finalAttachments = [...existingAttachments];
+        } catch (error) {
+          console.error("Error parsing existing attachments:", error);
+        }
+      }
+
+      // Add new uploaded files
       if (files?.attachments) {
-        const attachments = [];
+        const newAttachments = [];
         for (const file of files.attachments) {
           const attachment = await uploadFileToObjectStorage(file, 'notes');
-          attachments.push(attachment);
+          newAttachments.push(attachment);
         }
-        updateData.attachments = attachments;
+        finalAttachments = [...finalAttachments, ...newAttachments];
       }
+
+      // Update attachments array if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Clean up form data fields that shouldn't be in the database
+      delete updateData.existingAttachments;
+      delete updateData.removedExistingAttachments;
 
       // Convert date if provided
       if (updateData.noteDate) {
