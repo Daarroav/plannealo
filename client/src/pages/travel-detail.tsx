@@ -131,26 +131,41 @@ export default function TravelDetail() {
   const { data: accommodations = [] } = useQuery<Accommodation[]>({
     queryKey: [`/api/travels/${travelId}/accommodations`],
     enabled: !!travelId,
+    onSuccess: (data) => {
+      console.log("Accommodations loaded:", data);
+    },
   });
 
   const { data: activities = [] } = useQuery<Activity[]>({
     queryKey: [`/api/travels/${travelId}/activities`],
     enabled: !!travelId,
+    onSuccess: (data) => {
+      console.log("Activities loaded:", data);
+    },
   });
 
   const { data: flights = [] } = useQuery<Flight[]>({
     queryKey: [`/api/travels/${travelId}/flights`],
     enabled: !!travelId,
+    onSuccess: (data) => {
+      console.log("Flights loaded:", data);
+    },
   });
 
   const { data: transports = [] } = useQuery<Transport[]>({
     queryKey: [`/api/travels/${travelId}/transports`],
     enabled: !!travelId,
+    onSuccess: (data) => {
+      console.log("Transports loaded:", data);
+    },
   });
 
   const { data: cruises = [] } = useQuery<Cruise[]>({
     queryKey: [`/api/travels/${travelId}/cruises`],
     enabled: !!travelId,
+    onSuccess: (data) => {
+      console.log("Cruises loaded:", data);
+    },
   });
 
 
