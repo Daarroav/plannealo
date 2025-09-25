@@ -141,18 +141,18 @@ export default function HomePage() {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatsCard
-            title="Viajes Activos"
+            title="Viajes Publicados"
             value={stats?.activeTrips || 0}
             icon={Plane}
-            iconBgColor="bg-blue-100"
-            iconTextColor="text-blue-600"
+            iconBgColor="bg-green-100"
+            iconTextColor="text-green-600"
           />
           <StatsCard
             title="Clientes"
             value={stats?.clients || 0}
             icon={Users}
-            iconBgColor="bg-green-100"
-            iconTextColor="text-green-600"
+            iconBgColor="bg-blue-100"
+            iconTextColor="text-blue-600"
           />
           <StatsCard
             title="Borradores"
