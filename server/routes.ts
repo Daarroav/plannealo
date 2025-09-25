@@ -16,7 +16,7 @@ import { Buffer } from 'buffer';
 const objectStorageClient = new ObjectStorageService();
 
 // Helper function to upload file to Object Storage
-async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<{path: string, originalName: string}> {
+async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
   const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
   const uploadResult = await fetch(uploadURL, {
     method: 'PUT',
@@ -28,11 +28,7 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
   if (!uploadResult.ok) {
     throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
-  const path = objectStorageClient.normalizeObjectEntityPath(uploadURL);
-  return {
-    path,
-    originalName: file.originalname
-  };
+  return objectStorageClient.normalizeObjectEntityPath(uploadURL);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -266,19 +262,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       let thumbnail: string | null = null;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
 
       // Handle thumbnail upload
       if (files?.thumbnail?.[0]) {
-        const thumbnailResult = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
-        thumbnail = thumbnailResult.path;
+        thumbnail = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
       }
 
       // Handle attachments upload
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'accommodations');
-          attachments.push(attachment);
+          const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
+          attachments.push(objectPath);
         }
       }
 
@@ -333,8 +328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (files?.attachments) {
         const attachments = [];
         for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'accommodations');
-          attachments.push(attachment);
+          const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
+          attachments.push(objectPath);
         }
         updateData.attachments = attachments;
       }
@@ -388,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
       
       // Handle attachments upload
       if (files?.attachments) {
@@ -450,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
 
       // Upload attachments to Object Storage
       if (files?.attachments) {
@@ -464,10 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
           if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
+            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
           }
         }
       }
@@ -526,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
 
       // Upload attachments to Object Storage
       if (files?.attachments) {
@@ -540,10 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
           if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
+            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
           }
         }
       }
@@ -602,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
 
       // Upload attachments to Object Storage
       if (files?.attachments) {
@@ -616,10 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
           if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
+            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
           }
         }
       }
@@ -681,7 +667,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Insurance Files:", req.files);
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
 
       // Upload attachments to Object Storage
       if (files?.attachments) {
@@ -695,10 +681,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           });
           if (uploadResult.ok) {
-            attachments.push({
-              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
-              originalName: file.originalname
-            });
+            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
           }
         }
       }
@@ -802,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Files:", req.files);
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
+      let attachments: string[] = [];
       
       // Handle attachments upload
       if (files?.attachments) {
