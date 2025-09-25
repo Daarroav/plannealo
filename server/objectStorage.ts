@@ -1,6 +1,7 @@
 import { Storage, File } from "@google-cloud/storage";
 import { Response } from "express";
 import { randomUUID } from "crypto";
+import path from "path";
 // Simple implementation without ACL for now
 export interface ObjectAclPolicy {
   owner: string;
@@ -10,6 +11,66 @@ export interface ObjectAclPolicy {
 export enum ObjectPermission {
   READ = "read",
   WRITE = "write",
+}
+
+// File type detection utilities
+function getContentTypeFromExtension(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    '.pdf': 'application/pdf',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.ppt': 'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.txt': 'text/plain',
+    '.csv': 'text/csv',
+    '.zip': 'application/zip',
+    '.rar': 'application/x-rar-compressed',
+    '.mp4': 'video/mp4',
+    '.avi': 'video/x-msvideo',
+    '.mov': 'video/quicktime',
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+  };
+  
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+function isPDFFile(contentType: string, fileName?: string): boolean {
+  // Check by content type
+  if (contentType === 'application/pdf') {
+    return true;
+  }
+  
+  // Check by file extension if available
+  if (fileName && path.extname(fileName).toLowerCase() === '.pdf') {
+    return true;
+  }
+  
+  return false;
+}
+
+function isImageFile(contentType: string, fileName?: string): boolean {
+  // Check by content type
+  if (contentType.startsWith('image/')) {
+    return true;
+  }
+  
+  // Check by file extension if available
+  if (fileName) {
+    const ext = path.extname(fileName).toLowerCase();
+    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'].includes(ext);
+  }
+  
+  return false;
 }
 
 // Simplified functions for basic object storage
@@ -149,17 +210,53 @@ export class ObjectStorageService {
     try {
       // Get file metadata
       const [metadata] = await file.getMetadata();
+      
       // Get the ACL policy for the object.
       const aclPolicy = await getObjectAclPolicy(file);
       const isPublic = aclPolicy?.visibility === "public";
-      // Set appropriate headers
-      res.set({
-        "Content-Type": metadata.contentType || "application/octet-stream",
-        "Content-Length": metadata.size,
-        "Cache-Control": `${
-          isPublic ? "public" : "private"
-        }, max-age=${cacheTtlSec}`,
-      });
+      
+      // Get original filename from metadata if available
+      const originalName = metadata?.metadata?.originalName;
+      
+      // Determine content type - prioritize stored metadata, fallback to extension detection
+      let contentType = metadata.contentType;
+      if (!contentType || contentType === 'application/octet-stream') {
+        if (originalName) {
+          contentType = getContentTypeFromExtension(originalName);
+        } else {
+          contentType = getContentTypeFromExtension(file.name);
+        }
+      }
+      
+      // Set base headers
+      const headers: Record<string, string> = {
+        "Content-Type": contentType,
+        "Cache-Control": `${isPublic ? "public" : "private"}, max-age=${cacheTtlSec}`,
+      };
+      
+      // Add Content-Length if available
+      if (metadata.size) {
+        headers["Content-Length"] = metadata.size.toString();
+      }
+      
+      // Handle PDFs specifically - force inline viewing
+      if (isPDFFile(contentType, originalName)) {
+        headers["Content-Disposition"] = `inline; filename="${originalName || 'document.pdf'}"`;
+        headers["X-Content-Type-Options"] = "nosniff";
+        // Ensure PDF content type is set correctly
+        headers["Content-Type"] = "application/pdf";
+      }
+      // Handle images - inline viewing
+      else if (isImageFile(contentType, originalName)) {
+        headers["Content-Disposition"] = `inline; filename="${originalName || 'image'}"`;
+      }
+      // Handle other file types - download by default
+      else {
+        headers["Content-Disposition"] = `attachment; filename="${originalName || 'download'}"`;
+      }
+      
+      // Set all headers
+      res.set(headers);
 
       // Stream the file to the response
       const stream = file.createReadStream();

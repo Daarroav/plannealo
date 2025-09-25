@@ -17,12 +17,21 @@ const objectStorageClient = new ObjectStorageService();
 
 // Helper function to upload file to Object Storage
 async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
+  // Ensure correct content type is set, especially for PDFs
+  let contentType = file.mimetype;
+  
+  // Additional validation for PDFs based on file extension
+  if (file.originalname.toLowerCase().endsWith('.pdf') && file.mimetype !== 'application/pdf') {
+    contentType = 'application/pdf';
+    console.log(`Corrected content type for ${file.originalname}: ${file.mimetype} -> ${contentType}`);
+  }
+  
   const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
   const uploadResult = await fetch(uploadURL, {
     method: 'PUT',
     body: file.buffer,
     headers: {
-      'Content-Type': file.mimetype,
+      'Content-Type': contentType,
     },
   });
   if (!uploadResult.ok) {
@@ -31,13 +40,16 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
 
   const normalizedPath = objectStorageClient.normalizeObjectEntityPath(uploadURL);
   
-  // Set metadata with original filename
+  // Set metadata with original filename and corrected content type
   try {
     const objectFile = await objectStorageClient.getObjectEntityFile(normalizedPath);
     await objectFile.setMetadata({
+      contentType: contentType,
       metadata: {
         originalName: file.originalname,
         uploadedAt: new Date().toISOString(),
+        fileType: contentType,
+        folder: folder,
       }
     });
   } catch (error) {

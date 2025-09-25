@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, File, Image, Download } from "lucide-react";
 import { useFileMetadata } from "@/hooks/useFileMetadata";
 
 interface AttachmentLinkProps {
@@ -19,6 +19,34 @@ export function AttachmentLink({ filePath, fallbackName = "Documento", className
   
   const displayName = metadata?.originalName || fallbackName;
   
+  // Determine file type and appropriate icon
+  const getFileIcon = () => {
+    if (!metadata?.contentType && !displayName) {
+      return <FileText className="h-4 w-4 flex-shrink-0" />;
+    }
+    
+    const contentType = metadata?.contentType || '';
+    const fileName = displayName.toLowerCase();
+    
+    // PDF files
+    if (contentType === 'application/pdf' || fileName.endsWith('.pdf')) {
+      return <FileText className="h-4 w-4 flex-shrink-0 text-red-600" />;
+    }
+    
+    // Image files
+    if (contentType.startsWith('image/') || 
+        ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].some(ext => fileName.endsWith(ext))) {
+      return <Image className="h-4 w-4 flex-shrink-0 text-green-600" />;
+    }
+    
+    // Other files
+    return <File className="h-4 w-4 flex-shrink-0" />;
+  };
+  
+  // Special handling for PDF files
+  const isPDF = metadata?.contentType === 'application/pdf' || 
+                displayName.toLowerCase().endsWith('.pdf');
+  
   return (
     <a
       href={downloadUrl}
@@ -29,9 +57,13 @@ export function AttachmentLink({ filePath, fallbackName = "Documento", className
         hover:underline transition-colors ${className || ''}
       `}
       data-testid={`link-attachment-${filePath.split('/').pop()}`}
+      title={isPDF ? "Click para ver PDF en nueva pestaña" : "Click para abrir archivo"}
     >
-      <FileText className="h-4 w-4 flex-shrink-0" />
-      {isLoading ? "Cargando..." : displayName}
+      {getFileIcon()}
+      <span className="flex-1">
+        {isLoading ? "Cargando..." : displayName}
+        {isPDF && <span className="text-xs text-gray-500 ml-1">(PDF)</span>}
+      </span>
     </a>
   );
 }
