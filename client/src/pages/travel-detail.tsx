@@ -74,6 +74,7 @@ export default function TravelDetail() {
   const [editingTransport, setEditingTransport] = useState<Transport | null>(null);
   const [editingCruise, setEditingCruise] = useState<Cruise | null>(null);
   const [editingInsurance, setEditingInsurance] = useState<Insurance | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
 
