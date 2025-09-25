@@ -128,12 +128,15 @@ export default function TravelDetail() {
     enabled: !!travelId,
   });
 
-  const { data: accommodations = [] } = useQuery<Accommodation[]>({
+  const { data: accommodations = [], isLoading: accommodationsLoading, error: accommodationsError } = useQuery<Accommodation[]>({
     queryKey: [`/api/travels/${travelId}/accommodations`],
     enabled: !!travelId,
     onSuccess: (data) => {
       console.log("Accommodations loaded:", data);
       console.log("Accommodations count:", data.length);
+    },
+    onError: (error) => {
+      console.error("Error loading accommodations:", error);
     },
   });
 
@@ -929,7 +932,28 @@ export default function TravelDetail() {
                 </div>
 
                 <div className="space-y-6">
-                  {accommodations.length === 0 ? (
+                  {accommodationsLoading ? (
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <div className="animate-spin w-8 h-8 border-4 border-accent border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p className="text-muted-foreground">Cargando alojamientos...</p>
+                      </CardContent>
+                    </Card>
+                  ) : accommodationsError ? (
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <Bed className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-foreground mb-2">Error al cargar alojamientos</h3>
+                        <p className="text-muted-foreground mb-6">Ocurrió un error al cargar los alojamientos</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] })}
+                        >
+                          Reintentar
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : accommodations.length === 0 ? (
                     <Card>
                       <CardContent className="p-8 text-center">
                         <Bed className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
