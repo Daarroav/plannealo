@@ -28,7 +28,24 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
   if (!uploadResult.ok) {
     throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
-  return objectStorageClient.normalizeObjectEntityPath(uploadURL);
+
+  const normalizedPath = objectStorageClient.normalizeObjectEntityPath(uploadURL);
+  
+  // Set metadata with original filename
+  try {
+    const objectFile = await objectStorageClient.getObjectEntityFile(normalizedPath);
+    await objectFile.setMetadata({
+      metadata: {
+        originalName: file.originalname,
+        uploadedAt: new Date().toISOString(),
+      }
+    });
+  } catch (error) {
+    console.error('Failed to set metadata for uploaded file:', error);
+    // Continue anyway, the file is still uploaded
+  }
+
+  return normalizedPath;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
