@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
+import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AeroDataBoxService } from "./aeroDataBoxService";
@@ -626,69 +626,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/travels/:travelId/cruises", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      let attachments: {path: string, originalName: string}[] = [];
-
-      // Upload attachments to Object Storage
-      if (files?.attachments) {
-        for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'attachments');
-          attachments.push(attachment);
-        }
-      }
-
-      const validated = insertCruiseSchema.parse({
-        ...req.body,
-        travelId: req.params.travelId,
-        departureDate: new Date(req.body.departureDate),
-        arrivalDate: new Date(req.body.arrivalDate),
-        attachments: attachments,
-      });
-
-      const cruise = await storage.createCruise(validated);
-      res.status(201).json(cruise);
-    } catch (error) {
-      console.error("Error creating cruise:", error);
-      res.status(400).json({ message: "Error creating cruise" });
-    }
-  });
-
-  app.put("/api/cruises/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
-    try {
-      const updateData = { ...req.body };
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-
-      // Handle attachments upload
-      if (files?.attachments) {
-        const attachments = [];
-        for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'cruises');
-          attachments.push(attachment);
-        }
-        updateData.attachments = attachments;
-      }
-
-      const cruise = await storage.updateCruise(req.params.id, {
-        ...updateData,
-        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
-        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
-      });
-      res.json(cruise);
-    } catch (error) {
-      console.error("Error updating cruise:", error);
-      res.status(400).json({ message: "Error updating cruise" });
-    }
-  });
 
   app.post("/api/travels/:travelId/insurances", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
     if (!req.isAuthenticated()) {

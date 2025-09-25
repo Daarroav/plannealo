@@ -11,9 +11,6 @@ import {
   activities,
   flights,
   transports,
-  cruises,
-  insurances,
-  notes,
   User,
   InsertUser,
   Travel,
@@ -25,13 +22,7 @@ import {
   Flight,
   InsertFlight,
   Transport,
-  InsertTransport,
-  Cruise,
-  InsertCruise,
-  Insurance,
-  InsertInsurance,
-  Note,
-  InsertNote
+  InsertTransport
 } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
@@ -75,24 +66,6 @@ export interface IStorage {
   getTransportsByTravel(travelId: string): Promise<Transport[]>;
   updateTransport(id: string, transport: Partial<Transport>): Promise<Transport>;
   deleteTransport(id: string): Promise<void>;
-
-  // Cruise methods
-  createCruise(cruise: InsertCruise): Promise<Cruise>;
-  getCruisesByTravel(travelId: string): Promise<Cruise[]>;
-  updateCruise(id: string, cruise: Partial<Cruise>): Promise<Cruise>;
-  deleteCruise(id: string): Promise<void>;
-
-  // Insurance methods
-  createInsurance(insurance: InsertInsurance): Promise<Insurance>;
-  getInsurancesByTravel(travelId: string): Promise<Insurance[]>;
-  updateInsurance(id: string, insurance: Partial<Insurance>): Promise<Insurance>;
-  deleteInsurance(id: string): Promise<void>;
-
-  // Note methods
-  createNote(note: InsertNote): Promise<Note>;
-  getNotesByTravel(travelId: string): Promise<Note[]>;
-  updateNote(id: string, updates: Partial<Note>): Promise<Note>;
-  deleteNote(id: string): Promise<void>;
 
   // Client stats
   getClientStats(): Promise<{
@@ -363,130 +336,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTransport(id: string): Promise<void> {
     await db.delete(transports).where(eq(transports.id, id));
-  }
-
-  // Cruise methods
-  async createCruise(insertCruise: InsertCruise): Promise<Cruise> {
-    const id = randomUUID();
-    const [cruise] = await db
-      .insert(cruises)
-      .values({ ...insertCruise, id })
-      .returning();
-    return cruise;
-  }
-
-  async getCruisesByTravel(travelId: string): Promise<Cruise[]> {
-    return await db.select()
-      .from(cruises)
-      .where(eq(cruises.travelId, travelId));
-  }
-
-  async updateCruise(id: string, updates: Partial<Cruise>): Promise<Cruise> {
-    const [cruise] = await db
-      .update(cruises)
-      .set(updates)
-      .where(eq(cruises.id, id))
-      .returning();
-    if (!cruise) {
-      throw new Error("Cruise not found");
-    }
-    return cruise;
-  }
-
-  async deleteCruise(id: string): Promise<void> {
-    await db.delete(cruises).where(eq(cruises.id, id));
-  }
-
-  // Insurance methods
-  async createInsurance(insertInsurance: InsertInsurance): Promise<Insurance> {
-    const id = randomUUID();
-    const [insurance] = await db
-      .insert(insurances)
-      .values({ ...insertInsurance, id })
-      .returning();
-    return insurance;
-  }
-
-  async getInsurancesByTravel(travelId: string): Promise<Insurance[]> {
-    return await db.select()
-      .from(insurances)
-      .where(eq(insurances.travelId, travelId));
-  }
-
-  async updateInsurance(id: string, updates: Partial<Insurance>): Promise<Insurance> {
-    const [insurance] = await db
-      .update(insurances)
-      .set(updates)
-      .where(eq(insurances.id, id))
-      .returning();
-    if (!insurance) {
-      throw new Error("Insurance not found");
-    }
-    return insurance;
-  }
-
-  async deleteInsurance(id: string): Promise<void> {
-    await db.delete(insurances).where(eq(insurances.id, id));
-  }
-
-  
-
-  // Note methods
-  async createNote(insertNote: InsertNote): Promise<Note> {
-    const id = randomUUID();
-  
-    const normalized = {
-      ...insertNote,
-      noteDate: DatabaseStorage.normalizeNoteDate(insertNote.noteDate),
-    };
-  
-    const [note] = await db
-      .insert(notes)
-      .values({ ...normalized, id })
-      .returning();
-  
-    return note;
-  }
-  
-
-  async getNotesByTravel(travelId: string): Promise<Note[]> {
-    return await db.select()
-      .from(notes)
-      .where(eq(notes.travelId, travelId));
-  }
-
-  async updateNote(id: string, updates: Partial<Note>): Promise<Note> {
-    if (updates.noteDate) {
-      updates.noteDate = DatabaseStorage.normalizeNoteDate(updates.noteDate) as any;
-    }
-  
-    const [note] = await db
-      .update(notes)
-      .set(updates)
-      .where(eq(notes.id, id))
-      .returning();
-  
-    if (!note) {
-      throw new Error("Note not found");
-    }
-  
-    return note;
-  }
-  
-
-  static normalizeNoteDate(input: string | Date): Date {
-    const d = new Date(input);
-    return new Date(Date.UTC(
-      d.getUTCFullYear(),
-      d.getUTCMonth(),
-      d.getUTCDate(),
-      12, 0, 0 // 👈 siempre fija a 12:00 UTC
-    ));
-  }
-  
-
-  async deleteNote(id: string): Promise<void> {
-    await db.delete(notes).where(eq(notes.id, id));
   }
 
   async getClientStats() {
