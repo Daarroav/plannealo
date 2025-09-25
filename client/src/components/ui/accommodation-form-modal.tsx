@@ -47,6 +47,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
+  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   console.log("Editing accommodation:", editingAccommodation);
@@ -98,12 +99,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const removeThumbnail = () => {
     setThumbnail(null);
     setThumbnailRemoved(true);
+    setExistingThumbnailUrl(null);
     // Resetear el valor del input al eliminar la imagen
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    // También limpiar el campo thumbnail en el formulario
-    form.setValue("thumbnail", null);
   };
 
 
@@ -173,14 +173,14 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     form
     
     // Handle thumbnail logic more explicitly
-    if (thumbnail && !thumbnailRemoved) {
-      // New thumbnail uploaded or existing thumbnail not removed
+    if (thumbnail) {
+      // New thumbnail uploaded
       formData.append('thumbnail', thumbnail);
-    } else if (thumbnailRemoved && editingAccommodation?.thumbnail) {
+    } else if (thumbnailRemoved && (editingAccommodation?.thumbnail || existingThumbnailUrl)) {
       // Explicitly remove existing thumbnail
       formData.append('removeThumbnail', 'true');
     }
-    // If no thumbnail and no removal flag, don't send thumbnail data
+    // If no changes to thumbnail, don't send thumbnail data
     
     // Add attached files if exists
     attachedFiles.forEach((file, index) => {
@@ -196,6 +196,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckOutDate(undefined);
       setAttachedFiles([]);
       setThumbnail(null);
+      setThumbnailRemoved(false);
+      setExistingThumbnailUrl(null);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -205,6 +207,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     form.reset();
     setThumbnail(null);
     setThumbnailRemoved(false);
+    setExistingThumbnailUrl(null);
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
@@ -222,8 +225,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckInDate(editingAccommodation.checkIn ? new Date(editingAccommodation.checkIn) : undefined);
       setCheckOutDate(editingAccommodation.checkOut ? new Date(editingAccommodation.checkOut) : undefined);
       
-      // Reset thumbnail removal state when editing different accommodation
+      // Reset thumbnail states when editing different accommodation
       setThumbnailRemoved(false);
+      setThumbnail(null);
+      setExistingThumbnailUrl(editingAccommodation.thumbnail || null);
       
       form.reset({
         travelId,
@@ -240,12 +245,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         confirmationNumber: editingAccommodation.confirmationNumber || "",
         policies: editingAccommodation.policies || "",
         notes: editingAccommodation.notes || "",
-        thumbnail: editingAccommodation.thumbnail || null,
         attachments: editingAccommodation.attachments || [],
       });
-
-      // Reset thumbnail state - don't try to convert existing images to File objects
-      setThumbnail(null);
 
       // Sync price formatting
       if (editingAccommodation.price) {
@@ -279,6 +280,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckOutDate(undefined);
       setThumbnailRemoved(false);
       setThumbnail(null);
+      setExistingThumbnailUrl(null);
       setPrice("");
       setAttachedFiles([]);
       
@@ -583,7 +585,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
-            {(thumbnail || (editingAccommodation?.thumbnail && !thumbnailRemoved)) && (
+            {(thumbnail || (existingThumbnailUrl && !thumbnailRemoved)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium"> Imagen Previsualizada:</p>
                 <div className=" w-fit relative">
@@ -591,10 +593,14 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     src={
                       thumbnail 
                         ? URL.createObjectURL(thumbnail) 
-                        : editingAccommodation?.thumbnail
+                        : existingThumbnailUrl
                     } 
                     alt="Thumbnail" 
                     className="max-w-full max-h-40" 
+                    onError={(e) => {
+                      console.error("Error loading thumbnail image");
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   <Button
                     type="button"
