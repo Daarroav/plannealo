@@ -62,7 +62,7 @@ export default function TravelDetail() {
       const startDate = new Date(data.startDate);
       const endDate = new Date(data.endDate);
       const selectedImage = data._selectedImage;
-      
+
       // First create the travel
       const response = await apiRequest("PUT", `/api/travels/${travelId}`, {
         name: data.name,
@@ -80,7 +80,7 @@ export default function TravelDetail() {
           // Get upload URL
           const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
           const { uploadURL } = await uploadResponse.json();
-          
+
           // Upload the image to object storage
           const uploadResult = await fetch(uploadURL, {
             method: 'PUT',
@@ -122,49 +122,25 @@ export default function TravelDetail() {
     },
   });
 
-  // Get travel details
-  const { data: travel, isLoading: travelLoading } = useQuery<Travel>({
-    queryKey: ["/api/travels", travelId],
+  // Get all travel data in a single query for consistency
+  const { data: travelData, isLoading: travelLoading, error: travelError } = useQuery({
+    queryKey: [`/api/travels/${travelId}/full`],
     enabled: !!travelId,
   });
 
-  const { data: accommodations = [], isLoading: accommodationsLoading, error: accommodationsError } = useQuery<Accommodation[]>({
-    queryKey: [`/api/travels/${travelId}/accommodations`],
-    enabled: !!travelId,
-  });
+  // Extract data from unified response
+  const travel = travelData?.travel;
+  const accommodations = travelData?.accommodations || [];
+  const activities = travelData?.activities || [];
+  const flights = travelData?.flights || [];
+  const transports = travelData?.transports || [];
+  const cruises = travelData?.cruises || [];
+  const insurances = travelData?.insurances || [];
+  const notes = travelData?.notes || [];
 
-  const { data: activities = [] } = useQuery<Activity[]>({
-    queryKey: [`/api/travels/${travelId}/activities`],
-    enabled: !!travelId,
-  });
-
-  const { data: flights = [] } = useQuery<Flight[]>({
-    queryKey: [`/api/travels/${travelId}/flights`],
-    enabled: !!travelId,
-  });
-
-  const { data: transports = [] } = useQuery<Transport[]>({
-    queryKey: [`/api/travels/${travelId}/transports`],
-    enabled: !!travelId,
-  });
-
-  const { data: cruises = [] } = useQuery<Cruise[]>({
-    queryKey: [`/api/travels/${travelId}/cruises`],
-    enabled: !!travelId,
-  });
-
-
-
-  const { data: insurances = [] } = useQuery<Insurance[]>({
-    queryKey: [`/api/travels/${travelId}/insurances`],
-    enabled: !!travelId,
-  });
-
-  const { data: notes = [] } = useQuery<Note[]>({
-    queryKey: [`/api/travels/${travelId}/notes`],
-    enabled: !!travelId,
-  });
-
+  // Keep loading states consistent
+  const accommodationsLoading = travelLoading;
+  const accommodationsError = travelError;
 
   const publishTravelMutation = useMutation({
     mutationFn: async () => {
@@ -267,12 +243,12 @@ export default function TravelDetail() {
         } else {
           response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
         }
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Error updating accommodation");
         }
-        
+
         return await response.json();
       } else {
         // Handle FormData for file uploads
@@ -286,12 +262,12 @@ export default function TravelDetail() {
         } else {
           response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
         }
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Error creating accommodation");
         }
-        
+
         return await response.json();
       }
     },
@@ -626,9 +602,9 @@ export default function TravelDetail() {
     forceUTC = false
   ): string => {
     if (!date) return "";
-  
+
     const d = new Date(date);
-  
+
     // Formateamos por partes para controlar exactamente salida (dd MMM yyyy[, HH:mm])
     const dateFmt = new Intl.DateTimeFormat("es-MX", {
       day: "2-digit",
@@ -636,17 +612,17 @@ export default function TravelDetail() {
       year: "numeric",
       timeZone: forceUTC ? "UTC" : undefined,
     });
-  
+
     const parts = dateFmt.formatToParts(d);
     const day = parts.find((p) => p.type === "day")?.value ?? "";
     let month = parts.find((p) => p.type === "month")?.value ?? "";
     const year = parts.find((p) => p.type === "year")?.value ?? "";
-  
+
     // Normalizar abreviatura de mes a "sep" en vez de "sept." (si aparece)
     month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
-  
+
     let result = `${day} ${month} ${year}`;
-  
+
     if (includeTime) {
       const timeParts = new Intl.DateTimeFormat("es-MX", {
         hour: "2-digit",
@@ -654,13 +630,13 @@ export default function TravelDetail() {
         hour12: false,
         timeZone: forceUTC ? "UTC" : undefined,
       }).formatToParts(d);
-  
+
       const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
       const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
-  
+
       result += `, ${hour}:${minute}`;
     }
-  
+
     return result;
   };
 
@@ -775,7 +751,7 @@ export default function TravelDetail() {
       <div className="bg-background border-b border-border sticky top-16 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row  justify-between h-auto gap-2 sm:h-16 pb-2 sm:pb-0">
-            
+
 
             <div className="flex items-center space-x-4 w-full sm:w-auto">
               <Button variant="ghost" size="icon" onClick={() => setLocation("/")}>
@@ -787,7 +763,7 @@ export default function TravelDetail() {
               </div>
             </div>
 
-        
+
 
             <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end px-4 sm:px-0">
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
@@ -853,7 +829,7 @@ export default function TravelDetail() {
                 <p className="text-lg opacity-90 ">Cliente: {travel.clientName} </p>
                   <div onClick={() => setIsNewTravelModalOpen(true)}>
                     <Edit className="w-6 h-6 mr-2 hover:text-red-500 bg-red-500 hover:bg-white  p-1 rounded-lg transition cursor-pointer" />
-        
+
                   </div>
                 </div>
                 <p className="text-sm opacity-75 mt-1">
@@ -957,7 +933,7 @@ export default function TravelDetail() {
                         <div className="flex justify-between items-start gap-4">
                           {accommodation.thumbnail && (
                             <div className="flex-shrink-0">
-                          
+
                               <img
                                 src={accommodation.thumbnail.startsWith('/uploads/') ? accommodation.thumbnail : `/uploads/${accommodation.thumbnail}`}
                                 alt={accommodation.name}
@@ -1071,7 +1047,7 @@ export default function TravelDetail() {
                               <div>
                                 <span className="font-medium">Lugar de fin:</span> {activity.placeEnd || "N/A"}
                               </div>
-                             
+
                              <div>
                               <span className="font-medium">Contacto:</span> {activity.contactName || "N/A"}
                              </div>
@@ -1079,8 +1055,8 @@ export default function TravelDetail() {
                               <span className="font-medium">Teléfono contacto:</span> {activity.contactPhone ? formatPhoneNumber(activity.contactPhone) : "N/A"}
                              </div>
                             </div>
-                          
-                            
+
+
                             {activity.notes && (
                               <p className="text-sm text-muted-foreground mt-2 italic">{activity.notes}</p>
                             )}
