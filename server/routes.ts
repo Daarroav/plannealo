@@ -351,6 +351,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Handle thumbnail upload
       if (files?.thumbnail?.[0]) {
         updateData.thumbnail = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
+      } else if (req.body.thumbnail === 'null' || req.body.thumbnail === null) {
+        // If thumbnail is explicitly set to null, remove it
+        updateData.thumbnail = null;
       }
 
       // Handle attachments upload

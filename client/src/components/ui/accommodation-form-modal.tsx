@@ -100,6 +100,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    // También limpiar el campo thumbnail en el formulario
+    form.setValue("thumbnail", null);
   };
 
 
@@ -168,9 +170,12 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('travelId', currentValues.travelId);
     form
     
-    // Add thumbnail file if exists
+    // Add thumbnail file if exists, or explicit null if removed
     if (thumbnail) {
       formData.append('thumbnail', thumbnail);
+    } else if (editingAccommodation?.thumbnail) {
+      // If we're editing and had a thumbnail but now don't, send null to remove it
+      formData.append('thumbnail', 'null');
     }
     
     // Add attached files if exists
