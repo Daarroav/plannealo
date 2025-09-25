@@ -47,7 +47,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
-  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   console.log("Editing accommodation:", editingAccommodation);
@@ -99,7 +99,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const removeThumbnail = () => {
     setThumbnail(null);
     setThumbnailRemoved(true);
-    setExistingThumbnailUrl(null);
     // Resetear el valor del input al eliminar la imagen
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -176,7 +175,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     if (thumbnail) {
       // New thumbnail uploaded
       formData.append('thumbnail', thumbnail);
-    } else if (thumbnailRemoved && (editingAccommodation?.thumbnail || existingThumbnailUrl)) {
+    } else if (thumbnailRemoved && editingAccommodation?.thumbnail) {
       // Explicitly remove existing thumbnail
       formData.append('removeThumbnail', 'true');
     }
@@ -197,7 +196,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setAttachedFiles([]);
       setThumbnail(null);
       setThumbnailRemoved(false);
-      setExistingThumbnailUrl(null);
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -207,7 +205,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     form.reset();
     setThumbnail(null);
     setThumbnailRemoved(false);
-    setExistingThumbnailUrl(null);
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
@@ -228,7 +225,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       // Reset thumbnail states when editing different accommodation
       setThumbnailRemoved(false);
       setThumbnail(null);
-      setExistingThumbnailUrl(editingAccommodation.thumbnail || null);
       
       form.reset({
         travelId,
@@ -280,7 +276,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckOutDate(undefined);
       setThumbnailRemoved(false);
       setThumbnail(null);
-      setExistingThumbnailUrl(null);
       setPrice("");
       setAttachedFiles([]);
       
@@ -585,20 +580,20 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
-            {(thumbnail || (existingThumbnailUrl && !thumbnailRemoved)) && (
+            {(thumbnail || (editingAccommodation?.thumbnail && !thumbnailRemoved)) && (
               <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium"> Imagen Previsualizada:</p>
-                <div className=" w-fit relative">
+                <p className="text-sm font-medium">Imagen Previsualizada:</p>
+                <div className="w-fit relative">
                   <img 
                     src={
                       thumbnail 
                         ? URL.createObjectURL(thumbnail) 
-                        : existingThumbnailUrl
+                        : editingAccommodation?.thumbnail
                     } 
                     alt="Thumbnail" 
                     className="max-w-full max-h-40" 
                     onError={(e) => {
-                      console.error("Error loading thumbnail image");
+                      console.error("Error loading thumbnail image:", e);
                       e.currentTarget.style.display = 'none';
                     }}
                   />
@@ -607,7 +602,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     variant="ghost"
                     size="sm"
                     onClick={() => removeThumbnail()}
-                    className="absolute top-0 right-0 bg-accent text-white opacity-80"
+                    className="absolute top-0 right-0 bg-red-500 text-white opacity-80 hover:opacity-100"
                   >
                     <X className="w-4 h-4" />
                   </Button>
