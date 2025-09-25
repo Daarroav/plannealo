@@ -30,6 +30,8 @@ export default function HomePage() {
 
   const { data: travels = [], isLoading: travelsLoading } = useQuery<Travel[]>({
     queryKey: ["/api/travels"],
+    staleTime: 1 * 60 * 1000, // 1 minute for travel list
+    refetchOnWindowFocus: true,
   });
 
   const { data: stats } = useQuery<Stats>({
@@ -41,7 +43,7 @@ export default function HomePage() {
       const startDate = new Date(data.startDate);
       const endDate = new Date(data.endDate);
       const selectedImage = data._selectedImage;
-      
+
       // First create the travel
       const response = await apiRequest("POST", "/api/travels", {
         name: data.name,
@@ -59,7 +61,7 @@ export default function HomePage() {
           // Get upload URL
           const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
           const { uploadURL } = await uploadResponse.json();
-          
+
           // Upload the image to object storage
           const uploadResult = await fetch(uploadURL, {
             method: 'PUT',
@@ -117,7 +119,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-muted/30">
       <NavigationHeader />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -181,7 +183,7 @@ export default function HomePage() {
                     </TabsTrigger>
                   </TabsList>
                 </div>
-                
+
                 {activeTab === "list" && (
                   <div className="flex space-x-3">
                     <div className="relative">
@@ -207,7 +209,7 @@ export default function HomePage() {
                 )}
               </div>
             </div>
-            
+
             <div className="p-6">
               <TabsContent value="list" className="mt-0">
                 {travelsLoading ? (
@@ -253,7 +255,7 @@ export default function HomePage() {
                   </div>
                 )}
               </TabsContent>
-              
+
               <TabsContent value="calendar" className="mt-0">
                 <CalendarView travels={travels} />
               </TabsContent>

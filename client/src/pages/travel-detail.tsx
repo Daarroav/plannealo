@@ -27,6 +27,35 @@ import { es } from "date-fns/locale";
 // schemas or types
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
+// Helper type for the unified travel data query
+type TravelData = {
+  travel: Travel;
+  accommodations: Accommodation[];
+  activities: Activity[];
+  flights: Flight[];
+  transports: Transport[];
+  cruises: Cruise[];
+  insurances: Insurance[];
+  notes: Note[];
+};
+
+// Helper function to invalidate all relevant travel queries
+const invalidateTravelQueries = (travelId: string) => {
+  queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "full"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId] }); // Generic travel query
+  queryClient.invalidateQueries({ queryKey: ["/api/travels"] }); // All travels list
+  queryClient.invalidateQueries({ queryKey: ["/api/stats"] }); // Stats if related
+  // Invalidate specific sub-queries if they exist and are used elsewhere, e.g.:
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
+  queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/notes`] });
+};
+
+
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
   const [, setLocation] = useLocation();
@@ -122,10 +151,16 @@ export default function TravelDetail() {
     },
   });
 
-  // Get all travel data in a single query for consistency
-  const { data: travelData, isLoading: travelLoading, error: travelError } = useQuery({
-    queryKey: [`/api/travels/${travelId}/full`],
+  // Get travel data with unified query
+  const { 
+    data: travelData, 
+    isLoading: travelLoading, 
+    error: travelError 
+  } = useQuery<TravelData>({
+    queryKey: ["/api/travels", travelId, "full"],
     enabled: !!travelId,
+    staleTime: 2 * 60 * 1000, // 2 minutes for travel details
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
   // Extract data from unified response
@@ -230,58 +265,46 @@ export default function TravelDetail() {
   };
 
   const createAccommodationMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if (editingAccommodation) {
-        // Handle FormData for file uploads in updates too
-        let response;
-        if (data instanceof FormData) {
-          response = await fetch(`/api/accommodations/${editingAccommodation.id}`, {
-            method: "PUT",
-            credentials: "include",
-            body: data,
-          });
-        } else {
-          response = await apiRequest("PUT", `/api/accommodations/${editingAccommodation.id}`, data);
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Error updating accommodation");
-        }
-
-        return await response.json();
-      } else {
-        // Handle FormData for file uploads
-        let response;
-        if (data instanceof FormData) {
-          response = await fetch(`/api/travels/${travelId}/accommodations`, {
-            method: "POST",
-            credentials: "include",
-            body: data,
-          });
-        } else {
-          response = await apiRequest("POST", `/api/travels/${travelId}/accommodations`, data);
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Error creating accommodation");
-        }
-
-        return await response.json();
-      }
+    mutationFn: async (formData: FormData) => {
+      const endpoint = editingAccommodation 
+        ? `/api/accommodations/${editingAccommodation.id}`
+        : `/api/travels/${travelId}/accommodations`;
+      const method = editingAccommodation ? "PUT" : "POST";
+      const response = await apiRequest(method, endpoint, formData);
+      return await response.json();
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newAccommodation) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const accommodations = oldData.accommodations || [];
+
+        if (editingAccommodation) {
+          // Update existing accommodation
+          return {
+            ...oldData,
+            accommodations: accommodations.map((acc: any) => 
+              acc.id === editingAccommodation.id ? newAccommodation : acc
+            )
+          };
+        } else {
+          // Add new accommodation
+          return {
+            ...oldData,
+            accommodations: [...accommodations, newAccommodation]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
         title: editingAccommodation ? "Alojamiento actualizado" : "Alojamiento agregado",
-        description: editingAccommodation ? "El alojamiento ha sido actualizado exitosamente." : "El alojamiento ha sido agregado exitosamente al viaje.",
+        description: editingAccommodation 
+          ? "El alojamiento ha sido actualizado exitosamente."
+          : "El alojamiento ha sido agregado exitosamente.",
       });
     },
     onError: (error: Error) => {
@@ -303,12 +326,31 @@ export default function TravelDetail() {
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newActivity) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const activities = oldData.activities || [];
+
+        if (editingActivity) {
+          // Update existing activity
+          return {
+            ...oldData,
+            activities: activities.map((act: any) => 
+              act.id === editingActivity.id ? newActivity : act
+            )
+          };
+        } else {
+          // Add new activity
+          return {
+            ...oldData,
+            activities: [...activities, newActivity]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowActivityModal(false);
       setEditingActivity(null);
       toast({
@@ -335,12 +377,31 @@ export default function TravelDetail() {
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newFlight) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const flights = oldData.flights || [];
+
+        if (editingFlight) {
+          // Update existing flight
+          return {
+            ...oldData,
+            flights: flights.map((flight: any) => 
+              flight.id === editingFlight.id ? newFlight : flight
+            )
+          };
+        } else {
+          // Add new flight
+          return {
+            ...oldData,
+            flights: [...flights, newFlight]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowFlightModal(false);
       setEditingFlight(null);
       toast({
@@ -367,12 +428,31 @@ export default function TravelDetail() {
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newTransport) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const transports = oldData.transports || [];
+
+        if (editingTransport) {
+          // Update existing transport
+          return {
+            ...oldData,
+            transports: transports.map((trans: any) => 
+              trans.id === editingTransport.id ? newTransport : trans
+            )
+          };
+        } else {
+          // Add new transport
+          return {
+            ...oldData,
+            transports: [...transports, newTransport]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowTransportModal(false);
       setEditingTransport(null);
       toast({
@@ -399,12 +479,31 @@ export default function TravelDetail() {
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newCruise) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const cruises = oldData.cruises || [];
+
+        if (editingCruise) {
+          // Update existing cruise
+          return {
+            ...oldData,
+            cruises: cruises.map((cruise: any) => 
+              cruise.id === editingCruise.id ? newCruise : cruise
+            )
+          };
+        } else {
+          // Add new cruise
+          return {
+            ...oldData,
+            cruises: [...cruises, newCruise]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowCruiseModal(false);
       setEditingCruise(null);
       toast({
@@ -431,12 +530,31 @@ export default function TravelDetail() {
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newInsurance) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const insurances = oldData.insurances || [];
+
+        if (editingInsurance) {
+          // Update existing insurance
+          return {
+            ...oldData,
+            insurances: insurances.map((ins: any) => 
+              ins.id === editingInsurance.id ? newInsurance : ins
+            )
+          };
+        } else {
+          // Add new insurance
+          return {
+            ...oldData,
+            insurances: [...insurances, newInsurance]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowInsuranceModal(false);
       setEditingInsurance(null);
       toast({
@@ -454,26 +572,47 @@ export default function TravelDetail() {
   });
 
   const createNoteMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (formData: FormData) => {
       if (editingNote) {
-        const response = await apiRequest("PUT", `/api/travels/${travelId}/notes/${editingNote.id}`, data);
+        const response = await apiRequest("PUT", `/api/travels/${travelId}/notes/${editingNote.id}`, formData);
         return await response.json();
       } else {
-        const response = await apiRequest("POST", `/api/travels/${travelId}/notes`, data);
+        const response = await apiRequest("POST", `/api/travels/${travelId}/notes`, formData);
         return await response.json();
       }
     },
-    onSuccess: () => {
-      // Invalidar múltiples consultas para asegurar actualización completa
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/notes`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    onSuccess: (newNote) => {
+      // Update the full travel data optimistically
+      queryClient.setQueryData(["/api/travels", travelId, "full"], (oldData: any) => {
+        if (!oldData) return oldData;
+
+        const notes = oldData.notes || [];
+
+        if (editingNote) {
+          // Update existing note
+          return {
+            ...oldData,
+            notes: notes.map((note: any) => 
+              note.id === editingNote.id ? newNote : note
+            )
+          };
+        } else {
+          // Add new note
+          return {
+            ...oldData,
+            notes: [...notes, newNote]
+          };
+        }
+      });
+
+      invalidateTravelQueries(travelId!);
       setShowNoteModal(false);
       setEditingNote(null);
       toast({
         title: editingNote ? "Nota actualizada" : "Nota agregada",
-        description: editingNote ? "La nota ha sido actualizada exitosamente." : "La nota ha sido agregada exitosamente al viaje.",
+        description: editingNote 
+          ? "La nota ha sido actualizada exitosamente."
+          : "La nota ha sido agregada exitosamente.",
       });
     },
     onError: (error: Error) => {

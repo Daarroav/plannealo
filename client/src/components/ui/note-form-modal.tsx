@@ -145,7 +145,11 @@ export function NoteFormModal({
   const handleClose = () => {
     form.reset();
     setAttachedFiles([]);
-    onOpenChange(false);
+    
+    // Force a small delay to ensure any pending mutations complete
+    setTimeout(() => {
+      onOpenChange(false);
+    }, 100);
   };
 
   const visibleToTravelers = form.watch("visibleToTravelers");

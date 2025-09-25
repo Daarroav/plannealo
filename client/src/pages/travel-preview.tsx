@@ -57,6 +57,9 @@ export default function TravelPreview() {
       return response.json();
     },
     enabled: !!id,
+    staleTime: 1 * 60 * 1000, // 1 minute for preview (fresher data)
+    refetchOnWindowFocus: true,
+    refetchInterval: 2 * 60 * 1000, // Auto-refresh every 2 minutes for preview
   });
 
   const formatRoomType = (roomType: string): JSX.Element => {
