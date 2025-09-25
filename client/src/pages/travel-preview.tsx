@@ -453,10 +453,13 @@ export default function TravelPreview() {
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento de actividad.pdf` // Fallback para attachments antiguos
-                        : attachment.originalName || 'Documento.pdf';
+                        : attachment?.originalName || 'Documento.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -575,10 +578,13 @@ export default function TravelPreview() {
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf` // Fallback para attachments antiguos
-                        : attachment.originalName || 'Documento-vuelo.pdf';
+                        : attachment?.originalName || 'Documento-vuelo.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -707,10 +713,13 @@ export default function TravelPreview() {
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento de transporte ${event.data.name}.pdf` // Fallback para attachments antiguos
-                        : attachment.originalName || 'Documento-transporte.pdf';
+                        : attachment?.originalName || 'Documento-transporte.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -815,10 +824,13 @@ export default function TravelPreview() {
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento de crucero ${event.data.cruiseLine}.pdf` // Fallback para attachments antiguos
-                        : attachment.originalName || 'Documento-crucero.pdf';
+                        : attachment?.originalName || 'Documento-crucero.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -972,10 +984,13 @@ export default function TravelPreview() {
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
                       // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento de alojamiento ${event.data.name}.pdf` // Fallback para attachments antiguos
-                        : attachment.originalName || 'Documento-alojamiento.pdf';
+                        : attachment?.originalName || 'Documento-alojamiento.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -1040,10 +1055,13 @@ export default function TravelPreview() {
                 <div className="space-y-1">
                   {event.data.attachments.map(
                     (attachment: string | { url: string; originalName: string }, index: number) => {
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                       const originalName = typeof attachment === 'string'
                         ? `Documento-${event.data.title || 'nota'}.pdf`
-                        : attachment.originalName || 'Documento-nota.pdf';
+                        : attachment?.originalName || 'Documento-nota.pdf';
+
+                      // Skip if no URL is available
+                      if (!attachmentUrl) return null;
 
                       return (
                         <div
@@ -1285,10 +1303,13 @@ export default function TravelPreview() {
                           <div className="space-y-1">
                             {insurance.attachments.map(
                               (attachment: string | { url: string; originalName: string }, index: number) => {
-                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
+                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
                                 const originalName = typeof attachment === 'string'
                                   ? `Documento de seguro ${insurance.provider}.pdf` // Fallback para attachments antiguos
-                                  : attachment.originalName || 'Documento-seguro.pdf';
+                                  : attachment?.originalName || 'Documento-seguro.pdf';
+
+                                // Skip if no URL is available
+                                if (!attachmentUrl) return null;
 
                                 return (
                                   <div
