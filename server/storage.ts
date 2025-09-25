@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import session from "express-session";
 import { Store } from "express-session";
 import createMemoryStore from "memorystore";
-import { asc, eq, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -55,7 +55,6 @@ export interface IStorage {
   // Accommodation methods
   createAccommodation(accommodation: InsertAccommodation): Promise<Accommodation>;
   getAccommodationsByTravel(travelId: string): Promise<Accommodation[]>;
-  getAccommodation(id: string): Promise<Accommodation | undefined>;
   updateAccommodation(id: string, accommodation: Partial<Accommodation>): Promise<Accommodation>;
   deleteAccommodation(id: string): Promise<void>;
 
@@ -168,14 +167,14 @@ export class DatabaseStorage implements IStorage {
   // Travel methods
   async createTravel(insertTravel: InsertTravel): Promise<Travel> {
     // Aseguramos que las fechas sean objetos Date
-    const startDate = insertTravel.startDate instanceof Date
-      ? insertTravel.startDate
+    const startDate = insertTravel.startDate instanceof Date 
+      ? insertTravel.startDate 
       : new Date(insertTravel.startDate);
-
-    const endDate = insertTravel.endDate instanceof Date
-      ? insertTravel.endDate
+      
+    const endDate = insertTravel.endDate instanceof Date 
+      ? insertTravel.endDate 
       : new Date(insertTravel.endDate);
-
+    
     // Normalizamos las fechas
     const normalized = {
       ...insertTravel,
@@ -219,7 +218,7 @@ export class DatabaseStorage implements IStorage {
     if(updates.endDate){
       updates.endDate = DatabaseStorage.normalizeNoteDate(updates.endDate) as any;
     }
-
+    
     const { startDate, endDate, ...rest } = updates;
     const [travel] = await db
       .update(travels)
@@ -252,23 +251,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAccommodationsByTravel(travelId: string): Promise<Accommodation[]> {
-    const accommodations = await db.select()
+    const result = await db.select()
       .from(accommodations)
-      .where(eq(accommodations.travelId, travelId))
-      .orderBy(asc(accommodations.checkIn));
-
-    console.log(`[DEBUG] Accommodations for travel ${travelId}:`, accommodations.length);
-    return accommodations;
+      .where(eq(accommodations.travelId, travelId));
+    console.log(`[DEBUG] Accommodations for travel ${travelId}:`, result.length);
+    return result;
   }
-
-  async getAccommodation(id: string): Promise<Accommodation | undefined> {
-    const accommodations = await db.select().from(accommodations)
-      .where(eq(accommodations.id, id))
-      .limit(1);
-
-    return accommodations[0] || undefined;
-  }
-
 
   async updateAccommodation(id: string, updates: Partial<Accommodation>): Promise<Accommodation> {
     const [accommodation] = await db
@@ -445,25 +433,25 @@ export class DatabaseStorage implements IStorage {
     await db.delete(insurances).where(eq(insurances.id, id));
   }
 
-
+  
 
   // Note methods
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = randomUUID();
-
+  
     const normalized = {
       ...insertNote,
       noteDate: DatabaseStorage.normalizeNoteDate(insertNote.noteDate),
     };
-
+  
     const [note] = await db
       .insert(notes)
       .values({ ...normalized, id })
       .returning();
-
+  
     return note;
   }
-
+  
 
   async getNotesByTravel(travelId: string): Promise<Note[]> {
     return await db.select()
@@ -475,20 +463,20 @@ export class DatabaseStorage implements IStorage {
     if (updates.noteDate) {
       updates.noteDate = DatabaseStorage.normalizeNoteDate(updates.noteDate) as any;
     }
-
+  
     const [note] = await db
       .update(notes)
       .set(updates)
       .where(eq(notes.id, id))
       .returning();
-
+  
     if (!note) {
       throw new Error("Note not found");
     }
-
+  
     return note;
   }
-
+  
 
   static normalizeNoteDate(input: string | Date): Date {
     const d = new Date(input);
@@ -499,7 +487,7 @@ export class DatabaseStorage implements IStorage {
       12, 0, 0 // 👈 siempre fija a 12:00 UTC
     ));
   }
-
+  
 
   async deleteNote(id: string): Promise<void> {
     await db.delete(notes).where(eq(notes.id, id));
@@ -515,7 +503,7 @@ export class DatabaseStorage implements IStorage {
 
     // Procesar los datos
     const clientsMap = new Map();
-
+    
     // Agrupar viajes por cliente
     clients.forEach(({ users: user, travels: travel }) => {
       if (!clientsMap.has(user.id)) {
@@ -527,7 +515,7 @@ export class DatabaseStorage implements IStorage {
           travels: [],
         });
       }
-
+      
       if (travel) {
         clientsMap.get(user.id).travels.push(travel);
       }
@@ -553,7 +541,7 @@ export class DatabaseStorage implements IStorage {
     });
 
     // Ordenar por último activo (más reciente primero)
-    processedClients.sort((a, b) =>
+    processedClients.sort((a, b) => 
       new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()
     );
 
@@ -599,7 +587,7 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-
+  
 }
 
 export const storage = new DatabaseStorage();

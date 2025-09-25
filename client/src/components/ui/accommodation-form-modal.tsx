@@ -668,40 +668,33 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 
                 {/* Show existing attachments */}
                 {editingAccommodation?.attachments
-                  ?.map((url, originalIndex) => {
-                    // Don't show if this attachment is marked for removal
-                    if (removedExistingAttachments.includes(originalIndex)) {
-                      return null;
-                    }
-                    
-                    // Calculate display index (excluding removed items)
-                    const displayIndex = editingAccommodation.attachments
-                      .slice(0, originalIndex)
-                      .filter((_, idx) => !removedExistingAttachments.includes(idx)).length + 1;
-                    
-                    return (
-                      <div key={`existing-${originalIndex}`} className="flex items-center justify-between bg-muted p-2 rounded">
-                        <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
-                          <span className="text-sm truncate">Archivo existente {displayIndex}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Existente</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeExistingAttachment(originalIndex)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
-                  .filter(Boolean) // Remove null entries
-                }
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index, filteredArray) => (
+                  <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">Archivo existente {index + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Existente</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          // Find the original index in the unfiltered array
+                          const originalIndex = editingAccommodation.attachments?.indexOf(url) ?? -1;
+                          if (originalIndex !== -1) {
+                            removeExistingAttachment(originalIndex);
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
                 
                 {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
@@ -715,7 +708,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700"
                     >
                       <X className="w-4 h-4" />
                     </Button>
