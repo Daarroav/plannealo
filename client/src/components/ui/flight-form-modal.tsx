@@ -98,6 +98,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [originAirport, setOriginAirport] = useState<Airport | null>(null);
   const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
 
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
@@ -145,21 +146,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         attachments: editingFlight.attachments || [],
       });
       
-      // Load existing attachments as files
-      if (Array.isArray(editingFlight.attachments) && editingFlight.attachments.length > 0) {
-        Promise.all(
-          editingFlight.attachments.map(async (url: string) => {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const filename = url.split('/').pop() || 'archivo';
-            return new File([blob], filename, { type: blob.type });
-          })
-        ).then((files) => {
-          setAttachedFiles(files);
-        }).catch((err) => {
-          console.error("Error cargando archivos adjuntos:", err);
-        });
-      }
+      setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     } else {
       setDepartureDate(undefined);
       setArrivalDate(undefined);
@@ -180,8 +168,22 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         attachments: [],
       });
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     }
   }, [editingFlight, form, travelId]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setRemovedExistingAttachments(prev => [...prev, index]);
+  };
 
   // Función para llenar automáticamente el formulario cuando se selecciona un vuelo
   const handleSelectFlight = (flight: FlightInfo) => {
@@ -270,11 +272,27 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       formData.append('attachments', file);
     });
 
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingFlight?.attachments) {
+      const remainingAttachments = editingFlight.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
+    }
+
     onSubmit(formData);
     form.reset();
     setDepartureDate(undefined);
     setArrivalDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
   };
 
   const handleClose = () => {
@@ -282,6 +300,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     setDepartureDate(undefined);
     setArrivalDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     onClose();
   };
 
@@ -579,13 +598,76 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
           {/* File Attachments */}
           <div>
             <Label>Documentos Adjuntos</Label>
-            <FileUploader
-              name="attachments"
-              defaultFiles={editingFlight?.attachments || []}
-              onFilesChange={setAttachedFiles}
-              maxFiles={10}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-            />
+            <p className="text-xs text-muted-foreground mt-1">Sube documentos relacionados al vuelo (confirmaciones, boarding passes, etc.)</p>
+            <div className="mt-2">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-flight"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload-flight')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Seleccionar Documentos
+              </Button>
+            </div>
+
+            {(attachedFiles.length > 0 || (editingFlight?.attachments && editingFlight.attachments.length > 0)) && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium">Documentos Adjuntos:</p>
+                
+                {/* Show existing attachments */}
+                {editingFlight?.attachments
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index) => {
+                    const originalIndex = editingFlight.attachments?.indexOf(url) ?? -1;
+                    return (
+                      <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                        <div className="flex items-center">
+                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <span className="text-sm truncate">Documento existente {index + 1}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Existente</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExistingAttachment(originalIndex)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+                {/* Show new attachments */}
+                {attachedFiles.map((file, index) => (
+                  <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}

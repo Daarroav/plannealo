@@ -44,6 +44,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   const [pickupDate, setPickupDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
 
   const form = useForm<TransportForm>({
     resolver: zodResolver(transportFormSchema),
@@ -93,21 +94,8 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         attachments: editingTransport.attachments || [],
       });
       
-      // Load existing attachments as files
-      if (Array.isArray(editingTransport.attachments) && editingTransport.attachments.length > 0) {
-        Promise.all(
-          editingTransport.attachments.map(async (url: string) => {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const filename = url.split('/').pop() || 'archivo';
-            return new File([blob], filename, { type: blob.type });
-          })
-        ).then((files) => {
-          setAttachedFiles(files);
-        }).catch((err) => {
-          console.error("Error cargando archivos adjuntos:", err);
-        });
-      }
+      setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     } else {
       setPickupDate(undefined);
       setEndDate(undefined);
@@ -129,8 +117,22 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         attachments: [],
       });
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     }
   }, [editingTransport, form, travelId]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setRemovedExistingAttachments(prev => [...prev, index]);
+  };
 
   const handleSubmit = async (data: TransportForm) => {
     // Force blur on any active input to ensure values are captured
@@ -179,11 +181,27 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       formData.append('attachments', file);
     });
 
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingTransport?.attachments) {
+      const remainingAttachments = editingTransport.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
+    }
+
     onSubmit(formData);
     form.reset();
     setPickupDate(undefined);
     setEndDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
   };
 
   const handleClose = () => {
@@ -191,6 +209,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     setPickupDate(undefined);
     setEndDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     onClose();
   };
 
@@ -436,13 +455,76 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
           {/* File Attachments */}
           <div>
             <Label>Documentos Adjuntos</Label>
-            <FileUploader
-              name="attachments"
-              defaultFiles={editingTransport?.attachments || []}
-              onFilesChange={setAttachedFiles}
-              maxFiles={10}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-            />
+            <p className="text-xs text-muted-foreground mt-1">Sube documentos relacionados al transporte (confirmaciones, vouchers, etc.)</p>
+            <div className="mt-2">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-transport"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload-transport')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Seleccionar Documentos
+              </Button>
+            </div>
+
+            {(attachedFiles.length > 0 || (editingTransport?.attachments && editingTransport.attachments.length > 0)) && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium">Documentos Adjuntos:</p>
+                
+                {/* Show existing attachments */}
+                {editingTransport?.attachments
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index) => {
+                    const originalIndex = editingTransport.attachments?.indexOf(url) ?? -1;
+                    return (
+                      <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                        <div className="flex items-center">
+                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <span className="text-sm truncate">Documento existente {index + 1}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Existente</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExistingAttachment(originalIndex)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+                {/* Show new attachments */}
+                {attachedFiles.map((file, index) => (
+                  <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}

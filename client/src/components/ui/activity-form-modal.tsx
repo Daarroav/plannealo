@@ -10,12 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertActivitySchema } from "@shared/schema";
-import { FileUploader } from "@/components/ui/file-uploader";
+import { FileText } from "lucide-react";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
@@ -44,6 +44,7 @@ interface ActivityFormModalProps {
 export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travelId, editingActivity }: ActivityFormModalProps) {
   const [activityDate, setActivityDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
 
   console.info("Editing activity:", editingActivity);
   
@@ -74,19 +75,9 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       const dateStr = format(activityDateTime, "yyyy-MM-dd");
       const timeStr = format(activityDateTime, "HH:mm");
       
-      setActivityDate(activityDateTime); // Se actualiza la fecha del calendario
-      
-      // Handle existing attachments for editing
-      if (editingActivity.attachments && editingActivity.attachments.length > 0) {
-        const existingFiles = editingActivity.attachments.map((url: string) => {
-          const filename = url.split('/').pop() || 'attachment';
-          const file = new File([], filename, { type: 'application/octet-stream' });
-          return file;
-        });
-        setAttachedFiles(existingFiles);
-      } else {
-        setAttachedFiles([]);
-      }
+      setActivityDate(activityDateTime);
+      setRemovedExistingAttachments([]);
+      setAttachedFiles([]);
       
       form.reset({
         travelId,
@@ -107,6 +98,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     } else {
       setActivityDate(undefined);
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
       form.reset({
         travelId,
         name: "",
@@ -127,6 +119,19 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       form.setValue("type", "actividad");
     }
   }, [editingActivity, form, travelId]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setRemovedExistingAttachments(prev => [...prev, index]);
+  };
 
   const handleSubmit = async (data: ActivityForm) => {
     // Force blur on any active input to ensure values are captured
@@ -172,10 +177,26 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       formData.append('attachments', file);
     });
 
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingActivity?.attachments) {
+      const remainingAttachments = editingActivity.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
+    }
+
     onSubmit(formData);
     form.reset();
     setActivityDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
   };
 
   const handleClose = () => {
@@ -183,6 +204,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     form.setValue("type", "actividad");
     setActivityDate(undefined);
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     onClose();
   };
 
@@ -403,14 +425,77 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
 
           {/* File Attachments */}
           <div>
-            <Label>Archivos Adjuntos</Label>
-            <FileUploader
-              name="attachments"
-              defaultFiles={editingActivity?.attachments || []}
-              onFilesChange={setAttachedFiles}
-              maxFiles={10}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-            />
+            <Label>Documentos Adjuntos</Label>
+            <p className="text-xs text-muted-foreground mt-1">Sube documentos relacionados a la actividad</p>
+            <div className="mt-2">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-activity"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload-activity')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Seleccionar Documentos
+              </Button>
+            </div>
+
+            {(attachedFiles.length > 0 || (editingActivity?.attachments && editingActivity.attachments.length > 0)) && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium">Documentos Adjuntos:</p>
+                
+                {/* Show existing attachments */}
+                {editingActivity?.attachments
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index) => {
+                    const originalIndex = editingActivity.attachments?.indexOf(url) ?? -1;
+                    return (
+                      <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                        <div className="flex items-center">
+                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <span className="text-sm truncate">Documento existente {index + 1}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Existente</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExistingAttachment(originalIndex)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+                {/* Show new attachments */}
+                {attachedFiles.map((file, index) => (
+                  <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Form Actions */}

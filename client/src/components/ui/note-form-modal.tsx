@@ -39,6 +39,7 @@ export function NoteFormModal({
   editingNote
 }: NoteFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
 
   const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
@@ -65,23 +66,8 @@ export function NoteFormModal({
         attachments: editingNote.attachments || [],
       });
 
-      if (Array.isArray(editingNote.attachments) && editingNote.attachments.length > 0) {
-        if (editingNote.attachments?.length > 0) {
-          Promise.all(
-            editingNote.attachments.map(async (url: string) => {
-              const response = await fetch(url);
-              const blob = await response.blob();
-              const filename = url.split('/').pop() || 'archivo';
-              return new File([blob], filename, { type: blob.type });
-            })
-          ).then((files) => {
-            setAttachedFiles(files); // 👈 actualiza tu estado
-          }).catch((err) => {
-            console.error("Error cargando archivos adjuntos:", err);
-          });
-        }
-      }
-
+      setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     } else {
       form.reset({
         title: "",
@@ -92,6 +78,7 @@ export function NoteFormModal({
         attachments: [],
       });
       setAttachedFiles([]);
+      setRemovedExistingAttachments([]);
     }
   }, [editingNote, form]);
 
@@ -103,6 +90,10 @@ export function NoteFormModal({
 
     const removeFile = (index: number) => {
       setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const removeExistingAttachment = (index: number) => {
+      setRemovedExistingAttachments(prev => [...prev, index]);
     };
 
   const handleSubmit = async (data: NoteFormData) => {
@@ -136,15 +127,32 @@ export function NoteFormModal({
       formData.append('attachments', file);
     });
 
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingNote?.attachments) {
+      const remainingAttachments = editingNote.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
+    }
+
     console.log("FormData to send:", formData);
     onSubmit(formData);
     form.reset();
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
   };
 
   const handleClose = () => {
     form.reset();
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     
     // Force a small delay to ensure any pending mutations complete
     setTimeout(() => {
@@ -275,12 +283,41 @@ export function NoteFormModal({
                 </div>
               </div>
 
-              {/* Lista de archivos seleccionados */}
-              {attachedFiles.length > 0 && (
+              {/* Lista de archivos */}
+              {(attachedFiles.length > 0 || (editingNote?.attachments && editingNote.attachments.length > 0)) && (
                 <div className="mt-4 space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Documentos seleccionados:</h4>
+                  <h4 className="text-sm font-medium text-foreground">Documentos Adjuntos:</h4>
+                  
+                  {/* Show existing attachments */}
+                  {editingNote?.attachments
+                    ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                    ?.map((url, index) => {
+                      const originalIndex = editingNote.attachments?.indexOf(url) ?? -1;
+                      return (
+                        <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                          <div className="flex items-center">
+                            <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                            <span className="text-sm truncate">Documento existente {index + 1}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Existente</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeExistingAttachment(originalIndex)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  
+                  {/* Show new attachments */}
                   {attachedFiles.map((fileName, index) => (
-                    <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
                         <a href={URL.createObjectURL(fileName)} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
                           <FileText className="w-4 h-4 text-muted-foreground" />

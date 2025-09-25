@@ -40,6 +40,7 @@ export function CruiseFormModal({
   editingCruise
 }: CruiseFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
   const form = useForm<CruiseFormData>({
     resolver: zodResolver(cruiseFormSchema),
     defaultValues: {
@@ -84,21 +85,8 @@ export function CruiseFormModal({
           attachments: editingCruise.attachments || [],
         });
         
-        // Load existing attachments as files
-        if (Array.isArray(editingCruise.attachments) && editingCruise.attachments.length > 0) {
-          Promise.all(
-            editingCruise.attachments.map(async (url: string) => {
-              const response = await fetch(url);
-              const blob = await response.blob();
-              const filename = url.split('/').pop() || 'archivo';
-              return new File([blob], filename, { type: blob.type });
-            })
-          ).then((files) => {
-            setAttachedFiles(files);
-          }).catch((err) => {
-            console.error("Error cargando archivos adjuntos:", err);
-          });
-        }
+        setAttachedFiles([]);
+        setRemovedExistingAttachments([]);
       } else {
         form.reset({
           cruiseLine: "",
@@ -113,11 +101,25 @@ export function CruiseFormModal({
           attachments: [],
         });
         setAttachedFiles([]);
+        setRemovedExistingAttachments([]);
       }
     }, [editingCruise, form]);
 
 
   console.log("Editing cruise now:", editingCruise);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingAttachment = (index: number) => {
+    setRemovedExistingAttachments(prev => [...prev, index]);
+  };
 
   const handleSubmit = async (data: CruiseFormData) => {
     // Force blur on any active input to ensure values are captured
@@ -159,15 +161,32 @@ export function CruiseFormModal({
       formData.append('attachments', file);
     });
 
+    // Send information about removed existing attachments
+    if (removedExistingAttachments.length > 0) {
+      formData.append('removedExistingAttachments', JSON.stringify(removedExistingAttachments));
+    }
+
+    // For editing, send current remaining attachments to preserve them
+    if (editingCruise?.attachments) {
+      const remainingAttachments = editingCruise.attachments.filter((_, index) => 
+        !removedExistingAttachments.includes(index)
+      );
+      if (remainingAttachments.length > 0) {
+        formData.append('existingAttachments', JSON.stringify(remainingAttachments));
+      }
+    }
+
     console.log("FormData to send:", formData);
     onSubmit(formData);
     form.reset();
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
   };
 
   const handleClose = () => {
     form.reset();
     setAttachedFiles([]);
+    setRemovedExistingAttachments([]);
     onOpenChange(false);
   };
 
@@ -295,13 +314,76 @@ export function CruiseFormModal({
           {/* File Attachments */}
           <div>
             <Label>Documentos Adjuntos</Label>
-            <FileUploader
-              name="attachments"
-              defaultFiles={editingCruise?.attachments || []}
-              onFilesChange={setAttachedFiles}
-              maxFiles={10}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-            />
+            <p className="text-xs text-muted-foreground mt-1">Sube documentos relacionados al crucero (confirmaciones, vouchers, etc.)</p>
+            <div className="mt-2">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+                id="file-upload-cruise"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload-cruise')?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Seleccionar Documentos
+              </Button>
+            </div>
+
+            {(attachedFiles.length > 0 || (editingCruise?.attachments && editingCruise.attachments.length > 0)) && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-medium">Documentos Adjuntos:</p>
+                
+                {/* Show existing attachments */}
+                {editingCruise?.attachments
+                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
+                  ?.map((url, index) => {
+                    const originalIndex = editingCruise.attachments?.indexOf(url) ?? -1;
+                    return (
+                      <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                        <div className="flex items-center">
+                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <span className="text-sm truncate">Documento existente {index + 1}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Existente</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExistingAttachment(originalIndex)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                
+                {/* Show new attachments */}
+                {attachedFiles.map((file, index) => (
+                  <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">{file.name}</span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Buttons */}
