@@ -251,9 +251,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAccommodationsByTravel(travelId: string): Promise<Accommodation[]> {
-    return await db.select()
+    const result = await db.select()
       .from(accommodations)
       .where(eq(accommodations.travelId, travelId));
+    console.log(`[DEBUG] Accommodations for travel ${travelId}:`, result.length);
+    return result;
   }
 
   async updateAccommodation(id: string, updates: Partial<Accommodation>): Promise<Accommodation> {
@@ -282,9 +284,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getActivitiesByTravel(travelId: string): Promise<Activity[]> {
-    return await db.select()
+    const result = await db.select()
       .from(activities)
       .where(eq(activities.travelId, travelId));
+    console.log(`[DEBUG] Activities for travel ${travelId}:`, result.length);
+    return result;
   }
 
   async updateActivity(id: string, updates: Partial<Activity>): Promise<Activity> {

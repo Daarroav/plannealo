@@ -133,6 +133,7 @@ export default function TravelDetail() {
     enabled: !!travelId,
     onSuccess: (data) => {
       console.log("Accommodations loaded:", data);
+      console.log("Accommodations count:", data.length);
     },
   });
 
@@ -141,6 +142,7 @@ export default function TravelDetail() {
     enabled: !!travelId,
     onSuccess: (data) => {
       console.log("Activities loaded:", data);
+      console.log("Activities count:", data.length);
     },
   });
 
