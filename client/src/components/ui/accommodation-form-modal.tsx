@@ -588,13 +588,36 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     src={
                       thumbnail 
                         ? URL.createObjectURL(thumbnail) 
-                        : editingAccommodation?.thumbnail
+                        : editingAccommodation?.thumbnail?.startsWith('/objects/')
+                          ? `/api${editingAccommodation.thumbnail}`
+                          : editingAccommodation?.thumbnail?.startsWith('/uploads/')
+                            ? editingAccommodation.thumbnail
+                            : `/api/objects/${editingAccommodation?.thumbnail}`
                     } 
                     alt="Thumbnail" 
-                    className="max-w-full max-h-40" 
+                    className="max-w-full max-h-40 rounded-lg border" 
                     onError={(e) => {
-                      console.error("Error loading thumbnail image:", e);
-                      e.currentTarget.style.display = 'none';
+                      console.error("Error loading thumbnail image. URL:", e.currentTarget.src);
+                      // Try fallback URL if the current one fails
+                      const currentSrc = e.currentTarget.src;
+                      if (editingAccommodation?.thumbnail && !thumbnail) {
+                        if (!currentSrc.includes('/api/objects/')) {
+                          e.currentTarget.src = `/api/objects/${editingAccommodation.thumbnail}`;
+                        } else if (!currentSrc.includes('/uploads/')) {
+                          e.currentTarget.src = editingAccommodation.thumbnail.startsWith('/uploads/') 
+                            ? editingAccommodation.thumbnail 
+                            : `/uploads/${editingAccommodation.thumbnail}`;
+                        } else {
+                          // If all attempts fail, hide the image
+                          e.currentTarget.style.display = 'none';
+                          console.error("Failed to load thumbnail from all possible URLs");
+                        }
+                      } else {
+                        e.currentTarget.style.display = 'none';
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("Thumbnail loaded successfully");
                     }}
                   />
                   <Button
