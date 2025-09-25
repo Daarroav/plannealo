@@ -966,7 +966,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const travels = await storage.getTravelsByUser(req.user!.id);
+      let travels;
+      if (req.user && req.user.role === "admin") {
+        // If admin, get all travels
+        travels = await storage.getTravels();
+      } else if (req.user) {
+        // If regular user, get only their travels
+        travels = await storage.getTravelsByUser(req.user.id);
+      } else {
+        return res.sendStatus(401);
+      }
+
       const activeTrips = travels.filter(t => t.status === "published").length;
       const drafts = travels.filter(t => t.status === "draft").length;
 
