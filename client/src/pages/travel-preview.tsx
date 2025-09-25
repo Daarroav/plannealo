@@ -22,6 +22,7 @@ import {
   Mail,
   Globe,
 } from "lucide-react";
+import { AttachmentList } from "@/components/AttachmentLink";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 interface TravelData {
@@ -444,50 +445,10 @@ export default function TravelPreview() {
               </div>
             )}
 
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento de actividad.pdf` // Fallback para attachments antiguos
-                        : attachment?.originalName || 'Documento.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de actividad"
+            />
           </div>
         );
 
@@ -569,50 +530,10 @@ export default function TravelPreview() {
               </div>
             </div>
 
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento de vuelo ${event.data.airline} ${event.data.flightNumber}.pdf` // Fallback para attachments antiguos
-                        : attachment?.originalName || 'Documento-vuelo.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de vuelo"
+            />
           </div>
         );
 
@@ -704,50 +625,10 @@ export default function TravelPreview() {
               </div>
             )}
 
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento de transporte ${event.data.name}.pdf` // Fallback para attachments antiguos
-                        : attachment?.originalName || 'Documento-transporte.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de transporte"
+            />
           </div>
         );
 
@@ -815,50 +696,10 @@ export default function TravelPreview() {
               </div>
             )}
 
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento de crucero ${event.data.cruiseLine}.pdf` // Fallback para attachments antiguos
-                        : attachment?.originalName || 'Documento-crucero.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de crucero"
+            />
           </div>
         );
 
@@ -975,50 +816,10 @@ export default function TravelPreview() {
                 />
               </div>
             )}
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      // Extraer la URL y el nombre original
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento de alojamiento ${event.data.name}.pdf` // Fallback para attachments antiguos
-                        : attachment?.originalName || 'Documento-alojamiento.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de alojamiento"
+            />
           </div>
         );
 
@@ -1047,49 +848,10 @@ export default function TravelPreview() {
                 {event.data.content}
               </p>
             </div>
-            {event.data.attachments && event.data.attachments.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">
-                  Documentos Adjuntos
-                </p>
-                <div className="space-y-1">
-                  {event.data.attachments.map(
-                    (attachment: string | { url: string; originalName: string }, index: number) => {
-                      const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                      const originalName = typeof attachment === 'string'
-                        ? `Documento-${event.data.title || 'nota'}.pdf`
-                        : attachment?.originalName || 'Documento-nota.pdf';
-
-                      // Skip if no URL is available
-                      if (!attachmentUrl) return null;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 text-sm"
-                        >
-                          <FileText className="w-4 h-4 text-gray-600" />
-                          <a
-                            href={
-                              attachmentUrl.startsWith("/objects/")
-                                ? `/api${attachmentUrl}`
-                                : attachmentUrl.startsWith("/uploads/")
-                                ? `/api/objects${attachmentUrl}`
-                                : `/api/objects/uploads/${attachmentUrl}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
-                          >
-                            {originalName}
-                          </a>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            )}
+            <AttachmentList 
+              attachments={event.data.attachments || []} 
+              fallbackPrefix="Documento de nota"
+            />
           </div>
         );
 
@@ -1294,48 +1056,10 @@ export default function TravelPreview() {
                         <strong>Notas:</strong> <br /> {insurance.notes}
                       </p>
                     )}
-                    {insurance.attachments &&
-                      insurance.attachments.length > 0 && (
-                        <div className="mt-3 border-t border-border pt-3">
-                          <p className="text-sm font-medium text-foreground mb-2">
-                            Documentos Adjuntos
-                          </p>
-                          <div className="space-y-1">
-                            {insurance.attachments.map(
-                              (attachment: string | { url: string; originalName: string }, index: number) => {
-                                const attachmentUrl = typeof attachment === 'string' ? attachment : attachment?.url;
-                                const originalName = typeof attachment === 'string'
-                                  ? `Documento de seguro ${insurance.provider}.pdf` // Fallback para attachments antiguos
-                                  : attachment?.originalName || 'Documento-seguro.pdf';
-
-                                // Skip if no URL is available
-                                if (!attachmentUrl) return null;
-
-                                return (
-                                  <div
-                                    key={index}
-                                    className="flex items-center space-x-2 text-sm"
-                                  >
-                                    <FileText className="w-4 h-4 text-muted-foreground" />
-                                    <a
-                                      href={
-                                        attachmentUrl.startsWith("/uploads/")
-                                          ? `/api/objects${attachmentUrl}`
-                                          : `/api/objects/uploads/${attachmentUrl}`
-                                      }
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:text-blue-800 underline"
-                                    >
-                                      {originalName}
-                                    </a>
-                                  </div>
-                                );
-                              },
-                            )}
-                          </div>
-                        </div>
-                      )}
+                    <AttachmentList 
+                      attachments={insurance.attachments || []} 
+                      fallbackPrefix="Documento de seguro"
+                    />
                   </CardContent>
                 </Card>
               ))}
