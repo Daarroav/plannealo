@@ -10,6 +10,9 @@ import { AccommodationFormModal } from "@/components/ui/accommodation-form-modal
 import { ActivityFormModal } from "@/components/ui/activity-form-modal";
 import { FlightFormModal } from "@/components/ui/flight-form-modal";
 import { TransportFormModal } from "@/components/ui/transport-form-modal";
+import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
+import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
+import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
 // components
 import { ObjectUploader } from "@/components/ObjectUploader";
@@ -17,12 +20,12 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
 // icons
-import { ArrowLeft, Bed, MapPin, Plane, Car, Eye, EyeOff, Plus, Edit, Share, Camera } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera } from "lucide-react";
 // utils
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 // schemas or types
-import type { Travel, Accommodation, Activity, Flight, Transport } from "@shared/schema";
+import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
@@ -32,11 +35,17 @@ export default function TravelDetail() {
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showFlightModal, setShowFlightModal] = useState(false);
   const [showTransportModal, setShowTransportModal] = useState(false);
+  const [showCruiseModal, setShowCruiseModal] = useState(false);
+  const [showInsuranceModal, setShowInsuranceModal] = useState(false);
+  const [showNoteModal, setShowNoteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editingFlight, setEditingFlight] = useState<Flight | null>(null);
   const [editingTransport, setEditingTransport] = useState<Transport | null>(null);
+  const [editingCruise, setEditingCruise] = useState<Cruise | null>(null);
+  const [editingInsurance, setEditingInsurance] = useState<Insurance | null>(null);
   const { toast } = useToast();
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
 

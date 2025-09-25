@@ -78,29 +78,12 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       
       // Handle existing attachments for editing
       if (editingActivity.attachments && editingActivity.attachments.length > 0) {
-        Promise.all(
-          editingActivity.attachments.map(async (attachment: string | { path: string; originalName: string }) => {
-            // Manejar tanto el formato antiguo (string) como el nuevo (objeto)
-            const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-            const originalName = typeof attachment === 'string' 
-              ? attachment.split('/').pop() || 'archivo'
-              : attachment.originalName || 'archivo';
-            
-            const fullUrl = attachmentUrl.startsWith("/objects/")
-              ? `/api${attachmentUrl}`
-              : attachmentUrl.startsWith("/uploads/")
-              ? `/api/objects${attachmentUrl}`
-              : `/api/objects/uploads/${attachmentUrl}`;
-              
-            const response = await fetch(fullUrl);
-            const blob = await response.blob();
-            return new File([blob], originalName, { type: blob.type });
-          })
-        ).then((files) => {
-          setAttachedFiles(files);
-        }).catch((err) => {
-          console.error("Error cargando archivos adjuntos:", err);
+        const existingFiles = editingActivity.attachments.map((url: string) => {
+          const filename = url.split('/').pop() || 'attachment';
+          const file = new File([], filename, { type: 'application/octet-stream' });
+          return file;
         });
+        setAttachedFiles(existingFiles);
       } else {
         setAttachedFiles([]);
       }

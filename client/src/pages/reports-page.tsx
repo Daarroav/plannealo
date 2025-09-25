@@ -10,9 +10,14 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 
 interface TravelStats {
-  activeTrips: number;
-  drafts: number;
-  clients: number;
+  totalTravels: number;
+  publishedTravels: number;
+  draftTravels: number;
+  cancelledTravels: number;
+  sentTravels: number;
+  completedTravels: number;
+  totalClients: number; // si lo tienes disponible en la API
+  travels?: Travel[]; // opcional, si quieres pasar el listado completo
 }
 
 
@@ -22,7 +27,7 @@ export default function ReportsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/stats");
+        const res = await fetch("/api/reports");
         if (!res.ok) throw new Error("Error fetching reports");
         const data: TravelStats = await res.json();
         setStats(data);
@@ -34,33 +39,26 @@ export default function ReportsPage() {
     fetchStats();
   }, []);
 
-  if (!stats) {
-    return (
-      <div className="min-h-screen bg-muted/30">
-        <NavigationHeader />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-center text-lg">Cargando estadísticas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  console.log("Stats data received:", stats);
+  if (!stats) return <p>Cargando...</p>; // <-- Aquí prevenimos el error
 
   const data = {
-    labels: ["Viajes Activos", "Borradores"],
+    labels: ["Publicados", "Enviados", "Cancelados", "Concluidos"],
     datasets: [
       {
         label: "Viajes",
         data: [
-          stats.activeTrips,
-          stats.drafts,
+          stats?.publishedTravels,
+          stats?.sentTravels,
+          stats?.cancelledTravels,
+          stats?.completedTravels,
         ],
-        backgroundColor: ["#93c5fd", "#fde047"],
+        backgroundColor: ["#93c5fd", "#fde047", "#fca5a5", "#86efac"],
         hoverOffset: 8,
       },
     ],
   };
+
+  if (!stats) return <p>Sin datos...</p>;
 
   return (
 
@@ -91,35 +89,42 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
         <StatsCard
-            title="Viajes Activos"
-            value={stats.activeTrips}
+            title="Viajes Publicados"
+            value={stats?.publishedTravels || 0}
             icon={Plane}
             iconBgColor="bg-blue-100"
             iconTextColor="text-blue-600"
         />
 
+        {/* <StatsCard
+            title="Viajes Borradores"
+            value={stats?.draftTravels || 0}
+            icon={Plane}
+            iconBgColor="bg-yellow-100"
+            iconTextColor="text-yellow-600"
+        /> */}
         <StatsCard
-            title="Borradores"
-            value={stats.drafts}
+            title="Viajes Cancelados"
+            value={stats?.cancelledTravels || 0}
+            icon={Plane}
+            iconBgColor="bg-red-100"
+            iconTextColor="text-red-600"
+        />
+
+        <StatsCard
+            title="Viajes Enviados"
+            value={stats?.sentTravels || 0}
             icon={Plane}
             iconBgColor="bg-yellow-100"
             iconTextColor="text-yellow-600"
         />
 
         <StatsCard
-            title="Total de Clientes"
-            value={stats.clients}
+            title="Viajes Concluidos"
+            value={stats?.completedTravels || 0}
             icon={Plane}
             iconBgColor="bg-green-100"
             iconTextColor="text-green-600"
-        />
-
-        <StatsCard
-            title="Total de Viajes"
-            value={stats.activeTrips + stats.drafts}
-            icon={Plane}
-            iconBgColor="bg-purple-100"
-            iconTextColor="text-purple-600"
         />
         </div>
 

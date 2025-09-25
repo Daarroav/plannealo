@@ -68,22 +68,11 @@ export function NoteFormModal({
       if (Array.isArray(editingNote.attachments) && editingNote.attachments.length > 0) {
         if (editingNote.attachments?.length > 0) {
           Promise.all(
-            editingNote.attachments.map(async (attachment: string | { path: string; originalName: string }) => {
-              // Manejar tanto el formato antiguo (string) como el nuevo (objeto)
-              const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.path;
-              const originalName = typeof attachment === 'string' 
-                ? attachment.split('/').pop() || 'archivo'
-                : attachment.originalName || 'archivo';
-              
-              const fullUrl = attachmentUrl.startsWith("/objects/")
-                ? `/api${attachmentUrl}`
-                : attachmentUrl.startsWith("/uploads/")
-                ? `/api/objects${attachmentUrl}`
-                : `/api/objects/uploads/${attachmentUrl}`;
-                
-              const response = await fetch(fullUrl);
+            editingNote.attachments.map(async (url: string) => {
+              const response = await fetch(url);
               const blob = await response.blob();
-              return new File([blob], originalName, { type: blob.type });
+              const filename = url.split('/').pop() || 'archivo';
+              return new File([blob], filename, { type: blob.type });
             })
           ).then((files) => {
             setAttachedFiles(files); // 👈 actualiza tu estado

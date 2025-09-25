@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema } from "@shared/schema";
+import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
 import { ObjectStorageService } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AeroDataBoxService } from "./aeroDataBoxService";
@@ -29,18 +29,6 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
     throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
   const path = objectStorageClient.normalizeObjectEntityPath(uploadURL);
-  
-  // Set metadata with correct content type
-  try {
-    const objectFile = await objectStorageClient.getObjectEntityFile(path);
-    await objectFile.setMetadata({
-      contentType: file.mimetype,
-    });
-  } catch (error) {
-    console.error('Error setting file metadata:', error);
-    // Continue even if metadata setting fails
-  }
-  
   return {
     path,
     originalName: file.originalname
@@ -64,49 +52,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   setupAuth(app);
-
-  // Admin endpoint to fix content-type for existing files
-  app.post("/api/admin/fix-file-metadata", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
-    try {
-      const { filePath } = req.body;
-      if (!filePath) {
-        return res.status(400).json({ error: "filePath es requerido" });
-      }
-
-      const objectFile = await objectStorageClient.getObjectEntityFile(filePath);
-      
-      // Determinar content-type basado en extensión
-      let contentType = 'application/octet-stream';
-      if (filePath.toLowerCase().endsWith('.pdf')) {
-        contentType = 'application/pdf';
-      } else if (filePath.toLowerCase().endsWith('.jpg') || filePath.toLowerCase().endsWith('.jpeg')) {
-        contentType = 'image/jpeg';
-      } else if (filePath.toLowerCase().endsWith('.png')) {
-        contentType = 'image/png';
-      } else if (filePath.toLowerCase().endsWith('.docx')) {
-        contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      } else if (filePath.toLowerCase().endsWith('.doc')) {
-        contentType = 'application/msword';
-      }
-
-      await objectFile.setMetadata({
-        contentType: contentType,
-      });
-
-      res.json({ 
-        message: "Metadata actualizada exitosamente", 
-        filePath, 
-        contentType 
-      });
-    } catch (error) {
-      console.error("Error actualizando metadata del archivo:", error);
-      res.status(500).json({ error: "Error actualizando metadata del archivo" });
-    }
-  });
 
   // Travel routes
   // Obtener estadísticas de clientes
@@ -510,8 +455,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'attachments');
-          attachments.push(attachment);
+          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: file.buffer,
+            headers: {
+              'Content-Type': file.mimetype,
+            },
+          });
+          if (uploadResult.ok) {
+            attachments.push({
+              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
+              originalName: file.originalname
+            });
+          }
         }
       }
 
@@ -574,8 +531,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const attachment = await uploadFileToObjectStorage(file, 'attachments');
-          attachments.push(attachment);
+          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: file.buffer,
+            headers: {
+              'Content-Type': file.mimetype,
+            },
+          });
+          if (uploadResult.ok) {
+            attachments.push({
+              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
+              originalName: file.originalname
+            });
+          }
         }
       }
 
@@ -626,8 +595,303 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/travels/:travelId/cruises", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
 
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      let attachments: {path: string, originalName: string}[] = [];
 
+      // Upload attachments to Object Storage
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: file.buffer,
+            headers: {
+              'Content-Type': file.mimetype,
+            },
+          });
+          if (uploadResult.ok) {
+            attachments.push({
+              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
+              originalName: file.originalname
+            });
+          }
+        }
+      }
+
+      const validated = insertCruiseSchema.parse({
+        ...req.body,
+        travelId: req.params.travelId,
+        departureDate: new Date(req.body.departureDate),
+        arrivalDate: new Date(req.body.arrivalDate),
+        attachments: attachments,
+      });
+
+      const cruise = await storage.createCruise(validated);
+      res.status(201).json(cruise);
+    } catch (error) {
+      console.error("Error creating cruise:", error);
+      res.status(400).json({ message: "Error creating cruise" });
+    }
+  });
+
+  app.put("/api/cruises/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const attachment = await uploadFileToObjectStorage(file, 'cruises');
+          attachments.push(attachment);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const cruise = await storage.updateCruise(req.params.id, {
+        ...updateData,
+        departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
+        arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
+      });
+      res.json(cruise);
+    } catch (error) {
+      console.error("Error updating cruise:", error);
+      res.status(400).json({ message: "Error updating cruise" });
+    }
+  });
+
+  app.post("/api/travels/:travelId/insurances", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      console.log("Raw insurance req.body:", req.body);
+      console.log("Insurance Files:", req.files);
+
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      let attachments: {path: string, originalName: string}[] = [];
+
+      // Upload attachments to Object Storage
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+          const uploadResult = await fetch(uploadURL, {
+            method: 'PUT',
+            body: file.buffer,
+            headers: {
+              'Content-Type': file.mimetype,
+            },
+          });
+          if (uploadResult.ok) {
+            attachments.push({
+              path: objectStorageClient.normalizeObjectEntityPath(uploadURL),
+              originalName: file.originalname
+            });
+          }
+        }
+      }
+
+      // Ensure all required fields are present
+      const { provider, policyNumber, policyType, effectiveDate } = req.body;
+
+      // Check for empty strings and missing values
+      if (!provider || !policyNumber || policyNumber.trim() === '' || !policyType || !effectiveDate) {
+        return res.status(400).json({
+          message: "Missing required fields",
+          received: { provider, policyNumber, policyType, effectiveDate },
+          details: "Todos los campos obligatorios deben completarse: provider, policyNumber, policyType, effectiveDate"
+        });
+      }
+
+      const insuranceData = {
+        travelId: req.params.travelId,
+        provider: provider,
+        policyNumber: policyNumber,
+        policyType: policyType,
+        emergencyNumber: req.body.emergencyNumber || null,
+        effectiveDate: effectiveDate, // Let the schema handle the date transformation
+        importantInfo: req.body.importantInfo || null,
+        policyDescription: req.body.policyDescription || null,
+        notes: req.body.notes || null,
+        attachments: attachments,
+      };
+
+      console.log("Insurance data before validation:", insuranceData);
+
+      const validated = insertInsuranceSchema.parse(insuranceData);
+
+      const insurance = await storage.createInsurance(validated);
+      res.status(201).json(insurance);
+    } catch (error: any) {
+      console.error("Error creating insurance:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          message: "Validation error",
+          details: error.errors
+        });
+      }
+      res.status(400).json({ message: "Error creating insurance" });
+    }
+  });
+
+  app.put("/api/insurances/:id", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const attachment = await uploadFileToObjectStorage(file, 'insurances');
+          attachments.push(attachment);
+        }
+        updateData.attachments = attachments;
+      }
+
+      const insurance = await storage.updateInsurance(req.params.id, {
+        ...updateData,
+        effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
+      });
+      res.json(insurance);
+    } catch (error) {
+      console.error("Error updating insurance:", error);
+      res.status(400).json({ message: "Error updating insurance" });
+    }
+  });
+
+  // Note routes
+  app.get("/api/travels/:travelId/notes", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const notes = await storage.getNotesByTravel(req.params.travelId);
+      res.json(notes);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+      res.status(500).json({ message: "Error fetching notes" });
+    }
+  });
+
+  // Create note for travel
+  app.post("/api/travels/:id/notes", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      console.log("Raw req.body:", req.body);
+      console.log("Files:", req.files);
+
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      let attachments: {path: string, originalName: string}[] = [];
+      
+      // Handle attachments upload
+      if (files?.attachments) {
+        for (const file of files.attachments) {
+          const attachment = await uploadFileToObjectStorage(file, 'notes');
+          attachments.push(attachment);
+        }
+      }
+
+      // Ensure all required fields are present
+      const { title, noteDate, content, visibleToTravelers } = req.body;
+
+      if (!title || !noteDate || !content) {
+        return res.status(400).json({
+          message: "Missing required fields",
+          received: { title, noteDate, content }
+        });
+      }
+
+      const noteData = {
+        travelId: req.params.id,
+        title: title,
+        noteDate: noteDate, // Let the schema handle the date transformation
+        content: content,
+        visibleToTravelers: visibleToTravelers === 'true',
+        attachments: attachments,
+      };
+
+      console.log("Note data before validation:", noteData);
+
+      const validated = insertNoteSchema.parse(noteData);
+
+      const note = await storage.createNote(validated);
+      res.status(201).json(note);
+    } catch (error: any) {
+      console.error("Error creating note:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({
+          message: "Validation error",
+          details: error.errors
+        });
+      }
+      res.status(400).json({ message: "Error creating note" });
+    }
+  });
+
+  // Update note for travel
+  app.put("/api/travels/:travelId/notes/:noteId", upload.fields([{ name: 'attachments', maxCount: 10 }]), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const updateData = { ...req.body };
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+
+      // Handle attachments upload
+      if (files?.attachments) {
+        const attachments = [];
+        for (const file of files.attachments) {
+          const attachment = await uploadFileToObjectStorage(file, 'notes');
+          attachments.push(attachment);
+        }
+        updateData.attachments = attachments;
+      }
+
+      // Convert date if provided
+      if (updateData.noteDate) {
+        updateData.noteDate = new Date(updateData.noteDate);
+      }
+
+      // Remove undefined values to avoid "No values to set" error
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined || updateData[key] === null) {
+          delete updateData[key];
+        }
+      });
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "No data provided for update" });
+      }
+
+      const note = await storage.updateNote(req.params.noteId, updateData);
+      res.json(note);
+    } catch (error) {
+      console.error("Error updating note:", error);
+      res.status(400).json({ message: "Error updating note" });
+    }
+  });
 
   // AeroDataBox API endpoints
   app.get("/api/airports/search", async (req, res) => {
@@ -739,11 +1003,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const [accommodations, activities, flights, transports] = await Promise.all([
+      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
         storage.getAccommodationsByTravel(req.params.id),
         storage.getActivitiesByTravel(req.params.id),
         storage.getFlightsByTravel(req.params.id),
-        storage.getTransportsByTravel(req.params.id)
+        storage.getTransportsByTravel(req.params.id),
+        storage.getCruisesByTravel(req.params.id),
+        storage.getInsurancesByTravel(req.params.id),
+        storage.getNotesByTravel(req.params.id)
       ]);
 
       res.json({
@@ -751,7 +1018,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         accommodations,
         activities,
         flights,
-        transports
+        transports,
+        cruises,
+        insurances,
+        notes
       });
     } catch (error) {
       console.error("Error fetching full travel data:", error);
@@ -805,12 +1075,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get all travel data
-      const [accommodations, activities, flights, transports] = await Promise.all([
+      const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
         storage.getAccommodationsByTravel(req.params.id),
         storage.getActivitiesByTravel(req.params.id),
         storage.getFlightsByTravel(req.params.id),
-        storage.getTransportsByTravel(req.params.id)
+        storage.getTransportsByTravel(req.params.id),
+        storage.getCruisesByTravel(req.params.id),
+        storage.getInsurancesByTravel(req.params.id),
+        storage.getNotesByTravel(req.params.id)
       ]);
+
+      // Filter notes to only show those visible to travelers
+      const visibleNotes = notes.filter(note => note.visibleToTravelers);
 
       // Create a simple HTML content for PDF generation
       const formatDate = (date: Date) => {
@@ -1004,6 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'CHECK-IN': formatDateTime(acc.checkIn),
             'CHECK-OUT': formatDateTime(acc.checkOut)
           },
+          notes: acc.notes,
           location: acc.location
         })),
         ...activities.map(activity => ({
@@ -1017,6 +1294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'START': formatDateTime(activity.date) + (activity.startTime ? ` ${activity.startTime}` : ''),
             'FINISH': activity.endTime || ''
           },
+          notes: activity.notes
         })),
         ...flights.map(flight => ({
           type: 'flight',
@@ -1028,6 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'DEPARTURE': formatDateTime(flight.departureDate),
             'ARRIVAL': formatDateTime(flight.arrivalDate)
           },
+          notes: '',
           location: `${flight.departureCity} - ${flight.arrivalCity}`
         })),
         ...transports.map(transport => ({
@@ -1041,6 +1320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'START': formatDateTime(transport.pickupDate),
             'FINISH': transport.endDate ? formatDateTime(transport.endDate) : ''
           },
+          notes: transport.notes,
           location: `${transport.pickupLocation} - ${transport.dropoffLocation || ''}`
         }))
       ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -1084,6 +1364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </div>
                 `).join('')}
               </div>
+              ${activity.notes ? `<div class="notes">${activity.notes}</div>` : ''}
             </div>
           `;
         });
@@ -1091,6 +1372,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         htmlContent += `</div>`;
       });
 
+      // Add remaining notes section
+      if (visibleNotes.length > 0) {
+        htmlContent += `
+          <div class="day-section">
+            <div class="day-header">
+              <div class="day-box">
+                <span class="day-month">NOTAS</span>
+              </div>
+              <div style="flex: 1;"><strong>Información Adicional</strong></div>
+            </div>
+        `;
+        visibleNotes.forEach(note => {
+          htmlContent += `
+            <div class="activity-item">
+              <div class="activity-title">${note.title}</div>
+              <div class="notes">${note.content}</div>
+            </div>
+          `;
+        });
+        htmlContent += `</div>`;
+      }
 
       // Add footer
       htmlContent += `
