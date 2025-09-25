@@ -348,13 +348,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = { ...req.body };
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
-      // Handle thumbnail upload
+      // Handle thumbnail upload and removal
       if (files?.thumbnail?.[0]) {
+        // New thumbnail uploaded
         updateData.thumbnail = await uploadFileToObjectStorage(files.thumbnail[0], 'accommodations');
-      } else if (req.body.thumbnail === 'null' || req.body.thumbnail === null) {
-        // If thumbnail is explicitly set to null, remove it
+      } else if (req.body.removeThumbnail === 'true') {
+        // Explicitly remove thumbnail
         updateData.thumbnail = null;
+        console.log("Thumbnail explicitly removed for accommodation:", req.params.id);
       }
+      // If neither condition is met, don't modify thumbnail field
+
+      // Remove the removeThumbnail flag from updateData as it's not a database field
+      delete updateData.removeThumbnail;
 
       // Handle attachments upload
       if (files?.attachments) {
@@ -376,7 +382,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Remove undefined values to avoid "No values to set" error
       Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined || updateData[key] === null) {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      // Allow null values for thumbnail removal, but remove other null values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === null && key !== 'thumbnail') {
           delete updateData[key];
         }
       });
@@ -385,6 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No data provided for update" });
       }
 
+      console.log("Update data for accommodation:", req.params.id, updateData);
       const accommodation = await storage.updateAccommodation(req.params.id, updateData);
       res.json(accommodation);
     } catch (error) {

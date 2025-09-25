@@ -172,13 +172,15 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('travelId', currentValues.travelId);
     form
     
-    // Add thumbnail file if exists, or explicit null if removed
-    if (thumbnail) {
+    // Handle thumbnail logic more explicitly
+    if (thumbnail && !thumbnailRemoved) {
+      // New thumbnail uploaded or existing thumbnail not removed
       formData.append('thumbnail', thumbnail);
-    } else if (editingAccommodation?.thumbnail && thumbnailRemoved) {
-      // If we're editing and had a thumbnail but it was explicitly removed, send null to remove it
-      formData.append('thumbnail', 'null');
+    } else if (thumbnailRemoved && editingAccommodation?.thumbnail) {
+      // Explicitly remove existing thumbnail
+      formData.append('removeThumbnail', 'true');
     }
+    // If no thumbnail and no removal flag, don't send thumbnail data
     
     // Add attached files if exists
     attachedFiles.forEach((file, index) => {
@@ -201,11 +203,16 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   const handleClose = () => {
     form.reset();
-    removeThumbnail();
+    setThumbnail(null);
     setThumbnailRemoved(false);
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
+    setPrice("");
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     onClose();
   };
 
@@ -214,6 +221,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     if (editingAccommodation) {
       setCheckInDate(editingAccommodation.checkIn ? new Date(editingAccommodation.checkIn) : undefined);
       setCheckOutDate(editingAccommodation.checkOut ? new Date(editingAccommodation.checkOut) : undefined);
+      
+      // Reset thumbnail removal state when editing different accommodation
+      setThumbnailRemoved(false);
+      
       form.reset({
         travelId,
         name: editingAccommodation.name,
@@ -231,48 +242,60 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         notes: editingAccommodation.notes || "",
         thumbnail: editingAccommodation.thumbnail || null,
         attachments: editingAccommodation.attachments || [],
-        
       });
-      if (editingAccommodation.thumbnail && !thumbnailRemoved) {
-        // 👇 Descargar la imagen y convertirla en File solo si no se ha eliminado explícitamente
+
+      // Load thumbnail only if it exists and hasn't been removed
+      if (editingAccommodation.thumbnail) {
         fetch(editingAccommodation.thumbnail)
           .then(res => res.blob())
           .then(blob => {
             const file = new File([blob], "thumbnail.jpg", { type: blob.type });
             setThumbnail(file);
           })
-          .catch(err => console.error("Error cargando imagen:", err));
+          .catch(err => {
+            console.error("Error cargando imagen:", err);
+            // If thumbnail fails to load, consider it as removed
+            setThumbnail(null);
+          });
+      } else {
+        setThumbnail(null);
       }
 
-      // 👇 sincroniza también el estado visual con formato
+      // Sync price formatting
       if (editingAccommodation.price) {
         const formatted = formatNumber(editingAccommodation.price.toString());
         setPrice(formatted);
-      } 
-      
-
-      if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
-        if (editingAccommodation.attachments?.length > 0) {
-          Promise.all(
-            editingAccommodation.attachments.map(async (url) => {
-              const response = await fetch(url);
-              const blob = await response.blob();
-              const filename = url.split('/').pop() || 'archivo';
-              return new File([blob], filename, { type: blob.type });
-            })
-          ).then((files) => {
-            setAttachedFiles(files); // 👈 actualiza tu estado
-          }).catch((err) => {
-            console.error("Error cargando archivos adjuntos:", err);
-          });
-        }
+      } else {
+        setPrice("");
       }
-     
-      
+
+      // Load attachments
+      if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
+        Promise.all(
+          editingAccommodation.attachments.map(async (url) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const filename = url.split('/').pop() || 'archivo';
+            return new File([blob], filename, { type: blob.type });
+          })
+        ).then((files) => {
+          setAttachedFiles(files);
+        }).catch((err) => {
+          console.error("Error cargando archivos adjuntos:", err);
+          setAttachedFiles([]);
+        });
+      } else {
+        setAttachedFiles([]);
+      }
     } else {
+      // Reset all states for new accommodation
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
       setThumbnailRemoved(false);
+      setThumbnail(null);
+      setPrice("");
+      setAttachedFiles([]);
+      
       form.reset({
         travelId,
         name: "",
