@@ -181,10 +181,13 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     }
     // If no changes to thumbnail, don't send thumbnail data
     
-    // Add attached files if exists
-    attachedFiles.forEach((file, index) => {
-      formData.append('attachments', file);
-    });
+    // Only add new attached files to formData if they exist
+    // Existing attachments will be preserved on the server side
+    if (attachedFiles.length > 0) {
+      attachedFiles.forEach((file, index) => {
+        formData.append('attachments', file);
+      });
+    }
   
     // Enviar el formData directamente
     try {
@@ -252,24 +255,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         setPrice("");
       }
 
-      // Load attachments
-      if (Array.isArray(editingAccommodation.attachments) && editingAccommodation.attachments.length > 0) {
-        Promise.all(
-          editingAccommodation.attachments.map(async (url) => {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const filename = url.split('/').pop() || 'archivo';
-            return new File([blob], filename, { type: blob.type });
-          })
-        ).then((files) => {
-          setAttachedFiles(files);
-        }).catch((err) => {
-          console.error("Error cargando archivos adjuntos:", err);
-          setAttachedFiles([]);
-        });
-      } else {
-        setAttachedFiles([]);
-      }
+      // Reset attached files state - don't try to convert existing URLs to File objects
+      // This prevents overwriting when only updating thumbnail
+      setAttachedFiles([]);
     } else {
       // Reset all states for new accommodation
       setCheckInDate(undefined);
@@ -660,15 +648,28 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
             </div>
 
         
-            {attachedFiles.length > 0 && (
+            {(attachedFiles.length > 0 || (editingAccommodation?.attachments && editingAccommodation.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Archivos adjuntos:</p>
+                
+                {/* Show existing attachments */}
+                {editingAccommodation?.attachments?.map((url, index) => (
+                  <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
+                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <span className="text-sm truncate">Archivo existente {index + 1}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">Existente</div>
+                  </div>
+                ))}
+                
+                {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
-                    <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
+                  <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center">
                       <FileText className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
-                    </a>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
