@@ -123,6 +123,8 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
         conditions: "",
         notes: "",
       });
+      // Ensure the type is explicitly set to "actividad"
+      form.setValue("type", "actividad");
     }
   }, [editingActivity, form, travelId]);
 
@@ -178,6 +180,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
 
   const handleClose = () => {
     form.reset();
+    form.setValue("type", "actividad");
     setActivityDate(undefined);
     setAttachedFiles([]);
     onClose();
@@ -206,7 +209,10 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="type">Tipo de Actividad *</Label>
-              <Select defaultValue="actividad" onValueChange={(value) => form.setValue("type", value)} value={form.watch("type")}>
+              <Select 
+                value={form.watch("type") || "actividad"} 
+                onValueChange={(value) => form.setValue("type", value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar tipo" />
                 </SelectTrigger>
