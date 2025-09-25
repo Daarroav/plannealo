@@ -362,15 +362,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Remove the removeThumbnail flag from updateData as it's not a database field
       delete updateData.removeThumbnail;
 
-      // Handle attachments upload
+      // Handle attachments - both new uploads and existing removals
+      const currentAccommodation = await storage.getAccommodation(req.params.id);
+      let finalAttachments = [...(currentAccommodation?.attachments || [])];
+
+      // Remove existing attachments if specified
+      if (req.body.removedExistingAttachments) {
+        try {
+          const removedIndices = JSON.parse(req.body.removedExistingAttachments);
+          if (Array.isArray(removedIndices)) {
+            // Remove in reverse order to maintain correct indices
+            const sortedIndices = removedIndices.sort((a, b) => b - a);
+            for (const index of sortedIndices) {
+              if (index >= 0 && index < finalAttachments.length) {
+                finalAttachments.splice(index, 1);
+              }
+            }
+            console.log("Removed existing attachments at indices:", removedIndices);
+          }
+        } catch (parseError) {
+          console.error("Error parsing removedExistingAttachments:", parseError);
+        }
+      }
+
+      // Add new attachments if any
       if (files?.attachments) {
-        const attachments = [];
         for (const file of files.attachments) {
           const objectPath = await uploadFileToObjectStorage(file, 'accommodations');
-          attachments.push(objectPath);
+          finalAttachments.push(objectPath);
         }
-        updateData.attachments = attachments;
+        console.log("Added new attachments:", files.attachments.length);
       }
+
+      // Update attachments array only if there were changes
+      if (req.body.removedExistingAttachments || files?.attachments) {
+        updateData.attachments = finalAttachments;
+      }
+
+      // Remove the removedExistingAttachments flag from updateData as it's not a database field
+      delete updateData.removedExistingAttachments;
 
       // Convert dates if provided
       if (updateData.checkIn) {
