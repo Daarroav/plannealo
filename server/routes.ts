@@ -1537,6 +1537,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get file metadata (including original filename)
+  app.get("/api/objects/*/metadata", async (req, res) => {
+    try {
+      const objectPath = req.path.replace("/api", "").replace("/metadata", "");
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+      
+      // Check if user can access this object
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        userId: req.user?.id,
+        objectFile,
+      });
+
+      if (!canAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Get file metadata
+      const [metadata] = await objectFile.getMetadata();
+      const originalName = metadata?.metadata?.originalName || "Archivo sin nombre";
+      const uploadedAt = metadata?.metadata?.uploadedAt;
+      
+      res.json({
+        originalName,
+        uploadedAt,
+        contentType: metadata.contentType,
+        size: metadata.size
+      });
+    } catch (error: any) {
+      if (error.name === "ObjectNotFoundError") {
+        return res.status(404).json({ error: "File not found" });
+      }
+      console.error("Error getting object metadata:", error);
+      res.status(500).json({ 
+        error: "Error getting metadata",
+        details: error.message 
+      });
+    }
+  });
+
   app.put("/api/travels/:id/cover-image", async (req, res) => {
     try {
       const travelId = req.params.id;
