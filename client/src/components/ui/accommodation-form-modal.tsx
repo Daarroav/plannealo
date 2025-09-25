@@ -244,22 +244,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         attachments: editingAccommodation.attachments || [],
       });
 
-      // Load thumbnail only if it exists and hasn't been removed
-      if (editingAccommodation.thumbnail) {
-        fetch(editingAccommodation.thumbnail)
-          .then(res => res.blob())
-          .then(blob => {
-            const file = new File([blob], "thumbnail.jpg", { type: blob.type });
-            setThumbnail(file);
-          })
-          .catch(err => {
-            console.error("Error cargando imagen:", err);
-            // If thumbnail fails to load, consider it as removed
-            setThumbnail(null);
-          });
-      } else {
-        setThumbnail(null);
-      }
+      // Reset thumbnail state - don't try to convert existing images to File objects
+      setThumbnail(null);
 
       // Sync price formatting
       if (editingAccommodation.price) {
@@ -605,9 +591,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     src={
                       thumbnail 
                         ? URL.createObjectURL(thumbnail) 
-                        : editingAccommodation?.thumbnail?.startsWith('/objects/') 
-                          ? editingAccommodation.thumbnail 
-                          : `/objects/${editingAccommodation?.thumbnail}`
+                        : editingAccommodation?.thumbnail
                     } 
                     alt="Thumbnail" 
                     className="max-w-full max-h-40" 
