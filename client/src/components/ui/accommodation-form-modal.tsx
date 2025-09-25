@@ -46,6 +46,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [checkOutDate, setCheckOutDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   console.log("Editing accommodation:", editingAccommodation);
@@ -96,6 +97,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   const removeThumbnail = () => {
     setThumbnail(null);
+    setThumbnailRemoved(true);
     // Resetear el valor del input al eliminar la imagen
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -173,8 +175,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     // Add thumbnail file if exists, or explicit null if removed
     if (thumbnail) {
       formData.append('thumbnail', thumbnail);
-    } else if (editingAccommodation?.thumbnail) {
-      // If we're editing and had a thumbnail but now don't, send null to remove it
+    } else if (editingAccommodation?.thumbnail && thumbnailRemoved) {
+      // If we're editing and had a thumbnail but it was explicitly removed, send null to remove it
       formData.append('thumbnail', 'null');
     }
     
@@ -200,6 +202,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const handleClose = () => {
     form.reset();
     removeThumbnail();
+    setThumbnailRemoved(false);
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
     setAttachedFiles([]);
@@ -230,8 +233,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         attachments: editingAccommodation.attachments || [],
         
       });
-      if (editingAccommodation.thumbnail) {
-        // 👇 Descargar la imagen y convertirla en File
+      if (editingAccommodation.thumbnail && !thumbnailRemoved) {
+        // 👇 Descargar la imagen y convertirla en File solo si no se ha eliminado explícitamente
         fetch(editingAccommodation.thumbnail)
           .then(res => res.blob())
           .then(blob => {
@@ -269,6 +272,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     } else {
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
+      setThumbnailRemoved(false);
       form.reset({
         travelId,
         name: "",
