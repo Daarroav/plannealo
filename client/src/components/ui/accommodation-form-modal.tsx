@@ -561,11 +561,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           {/* Thumbnail */}
           <hr />
           <div>
-          <Label>Imagen Alojamiento</Label>
+          <Label>Imagen Principal del Alojamiento</Label>
+          <p className="text-xs text-muted-foreground mt-1">Sube una imagen representativa del alojamiento (JPG, PNG, WEBP, SVG)</p>
             <div className="mt-2">
               <input
                 type="file"
-                multiple
                 accept=".jpg,.jpeg,.png,.webp,.svg"
                 onChange={handleThumbnailUpload}
                 className="hidden"
@@ -578,13 +578,13 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 onClick={() => document.getElementById('thumbnail')?.click()}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Seleccionar Archivos
+                Seleccionar Imagen
               </Button>
             </div>
 
             {(thumbnail || (editingAccommodation?.thumbnail && !thumbnailRemoved)) && (
               <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium">Imagen Previsualizada:</p>
+                <p className="text-sm font-medium">Vista Previa de la Imagen:</p>
                 <div className="w-fit relative">
                   <img 
                     src={
@@ -641,7 +641,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
           {/* File Attachments */}
           <div>
-            <Label>Adjuntar Archivos</Label>
+            <Label>Documentos Adjuntos</Label>
+            <p className="text-xs text-muted-foreground mt-1">Sube documentos relacionados al alojamiento (confirmaciones, vouchers, políticas, etc.)</p>
             <div className="mt-2">
               <input
                 type="file"
@@ -657,14 +658,14 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 onClick={() => document.getElementById('file-upload')?.click()}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Seleccionar Archivos
+                Seleccionar Documentos
               </Button>
             </div>
 
         
             {(attachedFiles.length > 0 || (editingAccommodation?.attachments && editingAccommodation.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium">Archivos adjuntos:</p>
+                <p className="text-sm font-medium">Documentos Adjuntos:</p>
                 
                 {/* Show existing attachments */}
                 {editingAccommodation?.attachments
