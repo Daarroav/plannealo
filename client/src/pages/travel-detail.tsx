@@ -67,7 +67,6 @@ export default function TravelDetail() {
   const [showCruiseModal, setShowCruiseModal] = useState(false);
   const [showInsuranceModal, setShowInsuranceModal] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editingAccommodation, setEditingAccommodation] = useState<Accommodation | null>(null);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
@@ -304,7 +303,7 @@ export default function TravelDetail() {
         title: editingAccommodation ? "Alojamiento actualizado" : "Alojamiento agregado",
         description: editingAccommodation 
           ? "El alojamiento ha sido actualizado exitosamente."
-          : "El alojamiento ha sido agregado exitosamente.",
+          : "El alojamiento ha sido agregado exitosamente al viaje.",
       });
     },
     onError: (error: Error) => {
@@ -880,6 +879,28 @@ export default function TravelDetail() {
     });
   };
 
+  // Function to clean structured data from notes field
+  const cleanNotesFromStructuredData = (notes: string) => {
+    if (!notes) return null;
+
+    // Remove structured data patterns from notes
+    let cleanedNotes = notes
+      .replace(/[-\s]*Tel:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/[-\s]*Teléfono:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/[-\s]*Phone:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/Ubicación inicio:\s*[^\n\r]+/gi, '')
+      .replace(/Lugar de inicio:\s*[^\n\r]+/gi, '')
+      .replace(/Ubicación fin:\s*[^\n\r]+/gi, '')
+      .replace(/Lugar de fin:\s*[^\n\r]+/gi, '')
+      .replace(/Contacto:\s*[^-\n\r]+?(?:\s*[-\s]*Tel|$)/gi, '')
+      .replace(/Contact:\s*[^-\n\r]+?(?:\s*[-\s]*Tel|$)/gi, '')
+      .replace(/^\s*[-\n\r]+/gi, '') // Remove leading dashes and line breaks
+      .replace(/[-\n\r]+\s*$/gi, '') // Remove trailing dashes and line breaks
+      .trim();
+
+    return cleanedNotes || null;
+  };
+
   if (travelLoading) {
     return (
       <div className="min-h-screen bg-muted/30">
@@ -1249,7 +1270,7 @@ export default function TravelDetail() {
 
 
                             {activity.notes && (
-                              <p className="text-sm text-muted-foreground mt-2 italic">{activity.notes}</p>
+                              <p className="text-sm text-muted-foreground mt-2 italic">{cleanNotesFromStructuredData(activity.notes)}</p>
                             )}
                           </div>
                           <Button

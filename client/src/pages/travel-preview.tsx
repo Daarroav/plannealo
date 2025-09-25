@@ -413,6 +413,30 @@ export default function TravelPreview() {
                   </div>
                 </div>
               )}
+
+              {/* Lugares de inicio y fin */}
+              {event.data.placeStart && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    LUGAR DE INICIO
+                  </div>
+                  <div className="text-gray-900 flex items-center">
+                    <MapPin className="w-3 h-3 mr-1 text-gray-500" />
+                    {event.data.placeStart}
+                  </div>
+                </div>
+              )}
+              {event.data.placeEnd && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    LUGAR DE FIN
+                  </div>
+                  <div className="text-gray-900 flex items-center">
+                    <MapPin className="w-3 h-3 mr-1 text-gray-500" />
+                    {event.data.placeEnd}
+                  </div>
+                </div>
+              )}
             </div>
             {event.data.notes ? (
               <div className="mt-3 pt-3 border-t border-gray-200">
@@ -862,6 +886,29 @@ export default function TravelPreview() {
         return null;
     }
   };
+
+  // Function to clean structured data from notes field
+  const cleanNotesFromStructuredData = (notes: string) => {
+    if (!notes) return null;
+
+    // Remove structured data patterns from notes
+    let cleanedNotes = notes
+      .replace(/[-\s]*Tel:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/[-\s]*Teléfono:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/[-\s]*Phone:\s*[+]?[\d\s\-\(\)]+/gi, '')
+      .replace(/Ubicación inicio:\s*[^\n\r]+/gi, '')
+      .replace(/Lugar de inicio:\s*[^\n\r]+/gi, '')
+      .replace(/Ubicación fin:\s*[^\n\r]+/gi, '')
+      .replace(/Lugar de fin:\s*[^\n\r]+/gi, '')
+      .replace(/Contacto:\s*[^-\n\r]+?(?:\s*[-\s]*Tel|$)/gi, '')
+      .replace(/Contact:\s*[^-\n\r]+?(?:\s*[-\s]*Tel|$)/gi, '')
+      .replace(/^\s*[-\n\r]+/gi, '') // Remove leading dashes and line breaks
+      .replace(/[-\n\r]+\s*$/gi, '') // Remove trailing dashes and line breaks
+      .trim();
+
+    return cleanedNotes || null;
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
