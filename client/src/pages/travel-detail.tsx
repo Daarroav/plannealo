@@ -272,7 +272,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
@@ -301,7 +300,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
       setShowActivityModal(false);
       setEditingActivity(null);
@@ -330,7 +328,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
       setShowFlightModal(false);
       setEditingFlight(null);
@@ -359,7 +356,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
       setShowTransportModal(false);
       setEditingTransport(null);
@@ -388,7 +384,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
       setShowCruiseModal(false);
       setEditingCruise(null);
@@ -417,7 +412,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
       setShowInsuranceModal(false);
       setEditingInsurance(null);
@@ -446,7 +440,6 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/notes`] });
       setShowNoteModal(false);
       setEditingNote(null);
