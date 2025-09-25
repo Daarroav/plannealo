@@ -272,7 +272,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
@@ -300,7 +304,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowActivityModal(false);
       setEditingActivity(null);
       toast({
@@ -328,7 +336,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowFlightModal(false);
       setEditingFlight(null);
       toast({
@@ -356,7 +368,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowTransportModal(false);
       setEditingTransport(null);
       toast({
@@ -384,7 +400,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowCruiseModal(false);
       setEditingCruise(null);
       toast({
@@ -412,7 +432,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowInsuranceModal(false);
       setEditingInsurance(null);
       toast({
@@ -440,7 +464,11 @@ export default function TravelDetail() {
       }
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/notes`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowNoteModal(false);
       setEditingNote(null);
       toast({
@@ -463,7 +491,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/accommodations`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
@@ -486,7 +518,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/activities`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowActivityModal(false);
       setEditingActivity(null);
       toast({
@@ -509,7 +545,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/flights`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowFlightModal(false);
       setEditingFlight(null);
       toast({
@@ -532,7 +572,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/transports`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowTransportModal(false);
       setEditingTransport(null);
       toast({
@@ -555,7 +599,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/cruises`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowCruiseModal(false);
       setEditingCruise(null);
       toast({
@@ -578,7 +626,11 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidar múltiples consultas para asegurar actualización completa
       queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/insurances`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       setShowInsuranceModal(false);
       setEditingInsurance(null);
       toast({
