@@ -1,0 +1,652 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9 (63f4182)
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: accommodations; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.accommodations (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    travel_id character varying NOT NULL,
+    name text NOT NULL,
+    type text NOT NULL,
+    location text NOT NULL,
+    check_in timestamp without time zone NOT NULL,
+    check_out timestamp without time zone NOT NULL,
+    room_type text NOT NULL,
+    price text,
+    confirmation_number text,
+    policies text,
+    notes text,
+    thumbnail text,
+    attachments text[]
+);
+
+
+ALTER TABLE public.accommodations OWNER TO neondb_owner;
+
+--
+-- Name: activities; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.activities (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    travel_id character varying NOT NULL,
+    name text NOT NULL,
+    type text NOT NULL,
+    provider text,
+    date timestamp without time zone NOT NULL,
+    start_time text,
+    end_time text,
+    confirmation_number text,
+    conditions text,
+    notes text,
+    contact_name text,
+    contact_phone text,
+    place_start text,
+    place_end text,
+    attachments text[]
+);
+
+
+ALTER TABLE public.activities OWNER TO neondb_owner;
+
+--
+-- Name: cruises; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.cruises (
+    id text NOT NULL,
+    travel_id text NOT NULL,
+    cruise_line text NOT NULL,
+    confirmation_number text,
+    departure_date timestamp without time zone NOT NULL,
+    departure_port text NOT NULL,
+    arrival_date timestamp without time zone NOT NULL,
+    arrival_port text NOT NULL,
+    notes text,
+    attachments text[]
+);
+
+
+ALTER TABLE public.cruises OWNER TO neondb_owner;
+
+--
+-- Name: flights; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.flights (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    travel_id character varying NOT NULL,
+    airline text NOT NULL,
+    flight_number text NOT NULL,
+    departure_city text NOT NULL,
+    arrival_city text NOT NULL,
+    departure_date timestamp without time zone NOT NULL,
+    arrival_date timestamp without time zone NOT NULL,
+    departure_terminal text,
+    arrival_terminal text,
+    class text NOT NULL,
+    reservation_number text NOT NULL,
+    attachments text[]
+);
+
+
+ALTER TABLE public.flights OWNER TO neondb_owner;
+
+--
+-- Name: insurances; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.insurances (
+    id text NOT NULL,
+    travel_id text NOT NULL,
+    provider text NOT NULL,
+    policy_number text NOT NULL,
+    policy_type text NOT NULL,
+    emergency_number text,
+    effective_date timestamp without time zone NOT NULL,
+    important_info text,
+    policy_description text,
+    notes text,
+    attachments text[]
+);
+
+
+ALTER TABLE public.insurances OWNER TO neondb_owner;
+
+--
+-- Name: notes; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.notes (
+    id text NOT NULL,
+    travel_id text NOT NULL,
+    title text NOT NULL,
+    note_date timestamp without time zone NOT NULL,
+    content text NOT NULL,
+    visible_to_travelers boolean DEFAULT true NOT NULL,
+    attachments text[]
+);
+
+
+ALTER TABLE public.notes OWNER TO neondb_owner;
+
+--
+-- Name: transports; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.transports (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    travel_id character varying NOT NULL,
+    type text NOT NULL,
+    name text NOT NULL,
+    provider text,
+    contact_name text,
+    contact_number text,
+    pickup_date timestamp without time zone NOT NULL,
+    pickup_location text NOT NULL,
+    end_date timestamp without time zone,
+    dropoff_location text,
+    confirmation_number text,
+    notes text,
+    attachments text[]
+);
+
+
+ALTER TABLE public.transports OWNER TO neondb_owner;
+
+--
+-- Name: travels; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.travels (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    client_name text NOT NULL,
+    start_date timestamp without time zone NOT NULL,
+    end_date timestamp without time zone NOT NULL,
+    travelers integer NOT NULL,
+    status text DEFAULT 'draft'::text NOT NULL,
+    cover_image text,
+    created_by character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    public_token text,
+    public_token_expiry timestamp without time zone,
+    client_id character varying
+);
+
+
+ALTER TABLE public.travels OWNER TO neondb_owner;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: neondb_owner
+--
+
+CREATE TABLE public.users (
+    id character varying DEFAULT gen_random_uuid() NOT NULL,
+    username text NOT NULL,
+    password text NOT NULL,
+    name text NOT NULL,
+    role text DEFAULT 'agent'::text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.users OWNER TO neondb_owner;
+
+--
+-- Data for Name: accommodations; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.accommodations (id, travel_id, name, type, location, check_in, check_out, room_type, price, confirmation_number, policies, notes, thumbnail, attachments) FROM stdin;
+b731e5f9-5ace-41a2-a743-81ea430bfdc4	5948ede8-258b-4cd3-9f44-be08adccf9d5	Premier Inn Köln City Süd	hotel	Cologne, Germany	2025-10-14 15:00:00	2025-10-16 11:00:00	Habitación Doble	120.00 EUR	PIC123456				{}
+c473dd5-cdea-4262-ac36-e532048c6dd5	5948ede8-258b-4cd3-9f44-be08adccf9d5	Barceló Hamburg	hotel	Hamburg, Germany	2025-10-16 15:00:00	2025-10-18 11:00:00	Habitación Doble	135.00 EUR	BHM789012				{}
+d371e5f9-5ace-41a2-a743-81ea430bfdc4	5948ede8-258b-4cd3-9f44-be08adccf9d5	Premier Inn Berlin Alexanderplatz	hotel	Berlin, Germany	2025-10-18 15:00:00	2025-10-20 11:00:00	Habitación Doble	145.00 EUR	PIB345678				{}
+e473dd5-cdea-4262-ac36-e532048c6dd5	5948ede8-258b-4cd3-9f44-be08adccf9d5	Eurostars Book Hotel	hotel	Munich, Germany	2025-10-20 15:00:00	2025-10-22 11:00:00	Habitación Doble	165.00 EUR	EBH901234				{}
+b66a07b7-f7a0-423e-be82-fd66df286cd7	30ae4a7a-8f05-4fd3-8f97-19ddaa7d494d	AlojamientoDePrueba	casa	Seattle, WA	2025-09-26 21:00:00	2025-09-29 17:00:00	2 Doble	0	HTL2345673	asdfasddf	23452345	/objects/uploads/ad491225-fafe-452e-ab85-5eef199b8b5d	{/objects/uploads/6768d901-355d-4796-885c-c086cf0bfd01,/objects/uploads/1707f639-8eb6-4da3-b0ea-80d149cc538f}
+ca24e3f8-2d8b-4e98-beab-e5a8e3e6ecef	5948ede8-258b-4cd3-9f44-be08adccf9d5	Eurostars Book Hotel	hotel	Neuhauser Str. 31, Munich, 80331 Alemania	2025-10-20 21:00:00	2025-10-22 17:00:00	1 Doble estandar		#2278092273				{/uploads/accommodations/attachments-1758668279561-706844228.pdf}
+e53a3291-ba4d-4a6b-8123-cb7ea6f9bc18	b9a2864e-c91c-491b-b3a8-8c24cab30c33	Hotel Xcaret México	resort	Cancún 	2025-08-31 21:00:00	2025-09-10 17:00:00	2 Doble		HJA187613			/uploads/thumbnail-1756511253629-942434982.jpg	{}
+af6f876a-920b-4212-b8c3-49aa5db1a22c	d96a8593-bc27-4a93-86cc-513106594bc1	Steigenberger Nile Palace en Luxor	resort	Khaled Ben El-Waleed Street Gazirat Al Awameyah	2025-09-05 02:00:00	2025-09-10 17:00:00	1 Doble	$90,000.00	FGH23659752	Espacio para políticas de cancelación	Espacio para los detalles adicionales.	/uploads/thumbnail-1756730703969-140152867.jpg	{/uploads/attachments-1756730703971-468099612.pdf}
+c8d17798-846b-4bb4-a592-72fadf9c36ac	dee026ed-e996-41ba-b2d0-11d839941d6b	Villa del Palmar Beach Resort & Spa Cabo San Lucas	resort	Cam. Viejo a San Jose Km 0.5, Tourist Corridor, El Médano, 23453 Cabo San Lucas, B.C.S.	2025-09-14 21:00:00	2025-09-22 17:00:00	3 Doble	$98,780.00	1458754	Reservas Estándar\\r\\n\\r\\nLas cancelaciones realizadas con 72 horas o más antes de la fecha de llegada no generan cargos.\\r\\n\\r\\nSi la cancelación se realiza dentro de las 72 horas previas a la llegada, se cobrará el equivalente a 1 noche de estancia (incluidos impuestos y cargos aplicables).\\r\\n\\r\\nEn caso de no presentarse (no show), se cobrará el 100% de la primera noche.\\r\\n\\r\\nReservas No Reembolsables / Tarifas Promocionales\\r\\n\\r\\nEstas reservas no permiten cambios ni devoluciones.\\r\\n\\r\\nEn caso de cancelación, modificación o no presentarse, se cobrará el 100% del importe total de la estancia.\\r\\n\\r\\nModificaciones\\r\\n\\r\\nLas solicitudes de cambio de fecha estarán sujetas a disponibilidad y a la tarifa vigente al momento de la modificación.	El huésped debe presentar una identificación oficial vigente y la tarjeta de crédito utilizada para la reserva.\\r\\n\\r\\nEl check-in inicia a las 15:00 horas y el check-out es a las 12:00 horas.\\r\\n\\r\\nLlegadas anticipadas o salidas tardías están sujetas a disponibilidad y pueden generar cargos adicionales.	/uploads/accommodations/thumbnail-1757689157048-624701306.jpg	{/uploads/accommodations/attachments-1757689157049-737418975.pdf}
+ea6f7491-70a3-43f3-b9cf-32954f73c0f5	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AC Hotel Venezia	hotel	Rio Tera Sant'Andrea 466 Venezia, Italia	2025-10-20 21:00:00	2025-09-21 17:00:00	1 Habitación Doble					\N	{}
+3d359547-4790-4e56-80cc-609912e4c09e	dee026ed-e996-41ba-b2d0-11d839941d6b	AIRBNB La casa de espera	casa	Cd. de México	2025-09-13 21:00:00	2025-09-14 11:00:00	4 Sencilla	$6,500.00	FGH23659752	De acuerdo a lo que señale Airbnb.	Kits de bienvenida (agua embotellada, café y té de cortesía).	/uploads/accommodations/thumbnail-1757689259216-790698279.jpg	{}
+9731e5f9-5ace-41a2-a743-81ea430bfdc4	a995959b-d2b0-4592-b145-b650865a6086	Barcelo Budapest	hotel	Király Street 16, Budapest, 1061 Hungría	2025-10-30 21:00:00	2025-11-03 17:00:00	3 Habitación Doble		8940SF139414 / 8940SF139415 / 8940SF139416			/uploads/thumbnail-1756825678351-4496713.jpeg	{/uploads/attachments-1756766810793-733745491.pdf}
+92473dd5-cdea-4262-ac36-e532048c6dd5	a995959b-d2b0-4592-b145-b650865a6086	Les Jardins d'Eiffel	hotel	 8 Rue Amelie, Paris, 75007 Francia	2025-10-26 21:00:00	2025-10-30 17:00:00	3 Habitación Doble		SZYDTP / SZYDT5 / SZYDTW			/uploads/thumbnail-1756825747999-185751978.jpg	{/uploads/attachments-1756766731026-713813299.pdf}
+071dcdf8-2623-4c6a-bcff-16ee48f178d3	c9537dc5-659a-4493-912b-78a053f28ecd	Barceló Guadalajara	hotel	Av de Las Rosas 2933, Rinconada del Bosque, 44530 Guadalajara,	2025-12-22 21:00:00	2025-12-29 17:00:00	1 Sencilla		GTYHI986325			/uploads/thumbnail-1757000668810-854984956.jpg	{}
+c81b50e3-a69d-4cbc-9b31-c81cd29159d4	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	The Udaya Resorts and Spa	hotel	Jl. Sriwedari No 48B, Desa Tegallantang, Ubud, Bali, 80571 Indonesia	2025-10-29 21:00:00	2025-11-02 17:00:00	1 Habitación Doble		44413061			\N	{/uploads/attachments-1757460564379-443044613.pdf}
+da49175b-f782-4731-89e5-9697ec982975	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	New Blanc Central Myeongdong	hotel	20 Changgyeonggung-ro, Jung-gu, Seoul, 04559 Corea del Sur	2025-11-02 21:00:00	2025-11-06 17:00:00	1 Habitación Doble		H2502250808			\N	{/uploads/attachments-1757460665922-637195580.pdf}
+62fce019-5851-4ae7-ba11-a0f406e709a5	ef201789-8b34-4b7a-ae43-0ee527515e67	Montreal Marriott Chateau Champlain	resort	1050 de la Gauchetiere West, Montreal, Quebec H3B 4C9 Canadá	2025-12-07 21:00:00	2025-12-28 17:00:00	2 Sencilla		QWE986	Políticas de Cancelación y Modificación\\r\\n\\r\\nReservas Estándar\\r\\n\\r\\nLas cancelaciones realizadas con 72 horas o más antes de la fecha de llegada no generan cargos.\\r\\n\\r\\nSi la cancelación se realiza dentro de las 72 horas previas a la llegada, se cobrará el equivalente a 1 noche de estancia (incluidos impuestos y cargos aplicables).\\r\\n\\r\\nEn caso de no presentarse (no show), se cobrará el 100% de la primera noche.\\r\\n\\r\\nReservas No Reembolsables / Tarifas Promocionales\\r\\n\\r\\nEstas reservas no permiten cambios ni devoluciones.\\r\\n\\r\\nEn caso de cancelación, modificación o no presentarse, se cobrará el 100% del importe total de la estancia.\\r\\n\\r\\nReservas con Pago Anticipado\\r\\n\\r\\nAlgunas tarifas requieren pago completo al momento de la reserva.\\r\\n\\r\\nDicho pago no es reembolsable.\\r\\n\\r\\nEstancias Prolongadas o Grupos (5 habitaciones o más)\\r\\n\\r\\nLas cancelaciones deben hacerse con mínimo 14 días de anticipación.\\r\\n\\r\\nCancelaciones fuera de ese plazo tendrán un cargo del 50% de la estancia total.\\r\\n\\r\\nSalidas Anticipadas\\r\\n\\r\\nSi el huésped decide salir antes de la fecha confirmada, se aplicará un cargo equivalente a una noche adicional más las noches ya utilizadas.\\r\\n\\r\\nModificaciones\\r\\n\\r\\nLas solicitudes de cambio de fecha estarán sujetas a disponibilidad y a la tarifa vigente al momento de la modificación.\\r\\n\\r\\nFuerza Mayor\\r\\n\\r\\nEn casos excepcionales (ej. desastres naturales, emergencias sanitarias internacionales, restricciones de viaje gubernamentales), el hotel podrá ofrecer reprogramación o crédito para una futura estancia, sin cargos adicionales.	Amenidades Especiales\\r\\n\\r\\nHabitaciones con vista al mar o a la ciudad (sujeto a disponibilidad).\\r\\n\\r\\nKits de bienvenida (agua embotellada, café y té de cortesía).\\r\\n\\r\\nProductos de baño premium y batas de cortesía.\\r\\n\\r\\nAcceso gratuito al spa en determinados horarios.\\r\\n\\r\\nServicio de transporte a puntos turísticos locales (en horarios establecidos).	/uploads/thumbnail-1757541343245-666860989.jpg	{/uploads/attachments-1757541343246-632964986.jpg}
+bdb7b6b1-077c-47c0-ac8c-af5420ef7839	5948ede8-258b-4cd3-9f44-be08adccf9d5	Premier Inn Berlin Alexanderplatz	hotel	Theanolte-Bähnisch-Straße 2, Berlin, 10178 Alemania	2025-10-18 21:00:00	2025-10-20 17:00:00	1 Doble estandar		2481055762				{/uploads/accommodations/attachments-1758593283241-808469147.pdf}
+0b3bebba-817d-4682-8288-aeeeb9908e8b	5948ede8-258b-4cd3-9f44-be08adccf9d5	Barceló Hamburg	hotel	Ferdinandstrasse 15, Hamburg Altsadt, Hamburg, HH, 20095 Alemania	2025-10-15 21:00:00	2025-10-18 17:00:00	1 superior		7402SF239779				{/uploads/accommodations/attachments-1758593258038-718595533.pdf}
+e0be4971-3cc5-45df-aaaa-7420fe2553b6	5948ede8-258b-4cd3-9f44-be08adccf9d5	Premier Inn Köln City Süd	hotel	Perlengraben 2, Cologne, 50676 Alemania	2025-10-14 21:00:00	2025-10-15 17:00:00	1 Doble estandar		2481055560				{/uploads/accommodations/attachments-1758593205345-721509349.pdf}
+0873a713-ccee-425c-acd5-e21fe37b2483	5948ede8-258b-4cd3-9f44-be08adccf9d5	Eurostars Book Hotel	hotel	Schwanthalerstrasse 44, Munich, BY, 80336 Alemania	2025-10-20 21:00:00	2025-10-22 17:00:00	1 estándar		73236999444685				{/uploads/accommodations/attachments-1758593296660-845854954.pdf}
+3d338741-a0a0-4287-8f96-dcdb7b5266fc	2660e785-54d9-4cfa-b9da-b92933c7eb2d	Catalonia Berlin Mitte	hotel	Köpenicker Str. 80-82, Berlin, BE, 10179 Alemania	2025-09-19 03:30:00	2025-09-22 18:00:00	1 Doble	MXN $40,714	407884186 - 407884187	Cancelaciones y cambios\\r\\nComprendemos que a veces los planes cambian. Por lo tanto, no cobramos cargos por cambios ni cancelaciones.\\r\\nCuando la propiedad cobre dichos cargos conforme a sus políticas, se te transferirá el costo. Catalonia Berlin Mitte\\r\\ncobra los siguientes cargos por cancelaciones y cambios:\\r\\nCancelación gratuita hasta el 17 sept. 2025, 00:01 (hora local de la propiedad)\\r\\nNo hay cargos por cancelaciones efectuadas antes de las 00:01 (hora local de la propiedad) del 17 de septiembre de\\r\\n2025.\\r\\nLas cancelaciones o los cambios efectuados después de las 00:01 (hora local de la propiedad) del 17 de septiembre\\r\\nde 2025 o las personas que no se presenten al check-in están sujetos a un cargo de la propiedad equivalente a la\\r\\ntarifa de la primera noche, más impuestos y cargos.\\r\\nEn caso de realizar una reservación conjunta de varias habitaciones o unidades, se aplicarán los cargos de la\\r\\npropiedad para cada habitación que se cambie o cancele.\\r\\nPrecios y pago\\r\\nCARGOS DE LA PROPIEDAD: El precio NO incluye cargos por servicios de la propiedad, servicios opcionales (ej.,\\r\\nconsumos del minibar o llamadas telefónicas) ni cargos reglamentarios. La propiedad cobrará estos costos y cargos\\r\\nadicionales al momento de hacer el check-out.\\r\\nPAGO: Al momento de la compra, se cargará el costo total a tu tarjeta de crédito. Los precios y la disponibilidad de las\\r\\nhabitaciones o unidades se garantizan hasta que se reciba la totalidad del pago.\\r\\nCargos por huéspedes y capacidad de las habitaciones\\r\\nLa tarifa base es para 2 huéspedes.\\r\\nEste hotel considera como adultos a los huéspedes de cualquier edad.\\r\\nNo se garantiza disponibilidad de hospedaje en la misma propiedad para huéspedes adicionales.\\r\\nConfirmación de la habitación\\r\\nAlgunas propiedades solicitan esperar hasta los 7 días anteriores al check-in para enviar los nombres de los\\r\\nhuéspedes. En tal caso, tu habitación o unidad está reservada; sin embargo, tu nombre no figura todavía en los\\r\\narchivos de la propiedad.\\r\\n	Check-in\\r\\nHora de inicio de check-in: 15:00\\r\\nHora de finalización de check-in: 00:00\\r\\nLa edad mínima para hacer el check-in es: 18\\r\\nSi piensas llegar tarde, comunícate directamente a la propiedad para obtener información sobre su política de checkin posterior al horario previsto.\\r\\nCheck-out\\r\\nHora del check-out: 12:00\\r\\n	/uploads/accommodations/thumbnail-1757706485273-759909122.jpg	{/uploads/accommodations/attachments-1757706485274-775836896.pdf}
+1dd92dc2-1e50-40fc-8f00-0e64b55da3b3	71e3bd75-ae49-49ca-ba05-97850d04e385	Prueba de Hotel	hotel	Cancún	2025-09-29 21:00:00	2025-10-03 17:00:00	1 Sencilla	20000	Pruebaa155	PRUEBA	PRUEBA		{/uploads/accommodations/attachments-1758642952768-871712180.pdf,/uploads/accommodations/attachments-1758642952768-874431346.jpg}
+2d4c268c-964d-47b4-8e64-3979750fdc87	df478a23-1e35-4405-b0d5-7c2601cb399d	Xelena Hotel & Suites	hotel	René Favaloro 3500, El Calafate, Santa Cruz, Argentina	2025-10-04 21:00:00	2025-10-07 17:00:00	1 estándar		#249-3345567			\N	{/uploads/accommodations/attachments-1758665942820-66803916.pdf}
+7a271fc6-35f3-4804-8b62-ad35eb646f8a	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Catalonia Berlin Mitte	hotel	Köpenicker Str. 80-82, Berlin, BE, 10179 Alemania	2025-09-19 03:30:00	2025-09-22 18:00:00	2 Sencilla	40714	407884186 - 407884187	Check-in\\r\\nHora de inicio de check-in: 15:00\\r\\nHora de finalización de check-in: 00:00\\r\\nLa edad mínima para hacer el check-in es: 18\\r\\nSi piensas llegar tarde, comunícate directamente a la propiedad para obtener información sobre su política de checkin posterior al horario previsto.\\r\\nCheck-out\\r\\nHora del check-out: 12:00\\r\\n\\r\\nCancelaciones y cambios\\r\\nComprendemos que a veces los planes cambian. Por lo tanto, no cobramos cargos por cambios ni cancelaciones.\\r\\nCuando la propiedad cobre dichos cargos conforme a sus políticas, se te transferirá el costo. Catalonia Berlin Mitte\\r\\ncobra los siguientes cargos por cancelaciones y cambios:\\r\\nCancelación gratuita hasta el 17 sept. 2025, 00:01 (hora local de la propiedad)\\r\\nNo hay cargos por cancelaciones efectuadas antes de las 00:01 (hora local de la propiedad) del 17 de septiembre de\\r\\n2025.\\r\\nLas cancelaciones o los cambios efectuados después de las 00:01 (hora local de la propiedad) del 17 de septiembre\\r\\nde 2025 o las personas que no se presenten al check-in están sujetos a un cargo de la propiedad equivalente a la\\r\\ntarifa de la primera noche, más impuestos y cargos.\\r\\nEn caso de realizar una reservación conjunta de varias habitaciones o unidades, se aplicarán los cargos de la\\r\\npropiedad para cada habitación que se cambie o cancele.\\r\\n\\r\\n\\r\\n	Se cobrará un impuesto local o municipal del 8.025 %.\\r\\nIncluimos todos los cargos de los cuales nos informó la propiedad.\\r\\n	/uploads/accommodations/thumbnail-1757803677038-15844210.png	{/uploads/accommodations/attachments-1757803677047-870962673.pdf}
+767ad756-69d1-47ca-8669-f35c9de06ee9	d2e13f1c-5e2c-42a6-a0b3-0033688b68cf	María Dolores Río verde	hotel	Rioverde 568	2025-09-23 22:30:00	2025-10-04 17:00:00	2 Doble	12000	164623147846			/uploads/accommodations/thumbnail-1757964399706-692550820.jpeg	{/uploads/accommodations/attachments-1757964399706-619344550.jpg}
+f5aa18c2-51e0-4dbd-8609-82c0d71ee763	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Gioberti Hotel	hotel	Via Gioberti, 20 Rome, 00185, Italy	2025-09-22 18:00:00	2025-09-25 18:00:00	2 Sencilla		2154117172 - 2154117176	Check-in\\r\\nHora de inicio de check-in: 14:00\\r\\nHora de finalización de check-in: 00:30\\r\\nLa edad mínima para hacer el check-in es: 18	Si piensas llegar tarde, comunícate directamente a la propiedad para obtener información sobre su política de checkin posterior al horario previsto.	/uploads/accommodations/thumbnail-1757804346243-862802071.png	{/uploads/accommodations/attachments-1757804346243-660467176.pdf}
+42519b8b-3bfa-4200-8fd0-ac05322ce17f	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	AIRBNB	casa	No aplica	2025-09-25 21:00:00	2025-09-28 18:00:00	1 Sencilla		gestionada por el cliente			\N	{}
+a9750f47-8243-42fe-ba54-b41ba36597b1	0901b373-d2bd-436e-8384-6041e252fb01	Hotel Riu Plaza España	hotel	Gran Vía 84, Madrid, Madrid, España	2025-10-02 21:00:00	2025-10-05 18:00:00	2 Sencilla	30000	33808260 - 33808261	Puede aplicarse un recargo por cada persona adicional, según la política del alojamiento.\\r\\nA tu llegada, pueden pedirte un documento de identidad oficial con foto y una tarjeta de crédito o débito, o\\r\\nun depósito en efectivo, para cubrir los gastos imprevistos.\\r\\nNo se garantizan las solicitudes especiales, que están sujetas a disponibilidad en el momento de la\\r\\nllegada y pueden suponer un recargo adicional.\\r\\nEste alojamiento acepta tarjetas de crédito, tarjetas de débito y efectivo.\\r\\nEste alojamiento se reserva el derecho a efectuar una autorización de la tarjeta de crédito del huésped\\r\\nprevia a la llegada.\\r\\nTransacciones sin efectivo disponibles\\r\\nEste alojamiento utiliza energía eólica.\\r\\nEntre los elementos de seguridad de este alojamiento, se incluyen los siguientes: extintor, sistema de\\r\\nseguridad, botiquín de primeros auxilios, barreras de seguridad en las ventanas y iluminación exterior.\\r\\nEl alojamiento afirma que sigue las medidas de limpieza y desinfección de Covid-19 Protocolo Sanitario\\r\\n(RIU).\\r\\nLas normas culturales y las políticas para huéspedes pueden variar según el país y el alojamiento, que es\\r\\nel que dicta las políticas que aquí se muestran.\\r\\n	Desayuno tipo bufé: 30 EUR por adulto y 10 EUR por menor (precio aproximado)\\r\\nAparcamiento en las inmediaciones: 32.5 EUR por noche (ubicado a 1448 m)\\r\\n	/uploads/accommodations/thumbnail-1757960733098-448481867.jpeg	{}
+2457bcc4-3da2-4d96-99ea-1b3b7aeeee3d	73fdb531-9e28-4a7f-b199-396f20990d02	Catalonia Berlin Mitte	hotel	Köpenicker Str. 80-82, Berlin, BE, 10179 Alemania	2025-09-19 03:30:00	2025-09-22 18:00:00	2 Doble	20000	407884186 - 407884187	Hora de inicio de check-in: 15:00\\r\\nHora de finalización de check-in: 00:00\\r\\nLa edad mínima para hacer el check-in es: 18\\r\\nSi piensas llegar tarde, comunícate directamente a la propiedad para obtener información sobre su política de checkin posterior al horario previsto.\\r\\nCheck-out\\r\\nHora del check-out: 12:00\\r\\n	argos a pagar en la propiedad\\r\\nDeberás pagar los siguientes cargos en la propiedad, que podrían incluir los impuestos aplicables:\\r\\nSe cobrará un impuesto local o municipal del 8.025 %.\\r\\nIncluimos todos los cargos de los cuales nos informó la propiedad.\\r\\nEl precio NO incluye cargos por servicios de la propiedad, servicios opcionales (ej., consumos del minibar o llamadas\\r\\ntelefónicas) ni cargos reg	/uploads/accommodations/thumbnail-1757971426257-198448405.jpeg	{/uploads/accommodations/attachments-1757971426258-364262096.pdf}
+ac9707d7-972b-47d1-abd8-747581258c94	73fdb531-9e28-4a7f-b199-396f20990d02	Gioberti Hotel	hotel	Via Gioberti, 20 Rome, 00185, Italy	2025-09-22 18:00:00	2025-09-25 18:00:00	1 Sencilla		2154117176	DÓNDE COMER / PROBAR\\r\\nPasta e Vino Osteria (cocina romana tradicional, cerca del Coliseo).\\r\\nRoscioli (pasta y productos gourmet, cerca de Campo de' Fiori).\\r\\nArmando al Pantheon (cocina romana auténtica).\\r\\nTonnarello (Trastevere, famoso por pasta fresca).\\r\\nGiolitti (gelato clásico cerca del Panteón).\\r\\nLa Prosciutteria (tablas de embutidos y vino).			{}
+d35ffcf6-de44-47ac-bceb-fda7d7e9a9b2	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	Royal Ariston	hotel	Kardinala Stepnica 31b, Dubrovnik, Dubrovnik-Neretva, Croacia	2025-10-24 22:00:00	2025-09-27 17:00:00	1 Habitación Doble		266-2889362			\N	{/uploads/accommodations/attachments-1758588525068-938704263.pdf}
+5c87b65a-ab3b-4bfe-93a0-6be0beb2ce35	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AC Hotel Firenze	hotel	Via Luciano Bausi, 5 Florencia, Italia	2025-10-18 21:00:00	2025-09-20 17:00:00	1 Habitación Doble					\N	{}
+5ba5cbac-0b08-44da-9325-c1189c8c05d9	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	Residence Inn by Marriott Sarajevo	hotel	Skenderija 43 Sarajevo, Bosnia-Herzegovina	2025-10-27 21:00:00	2025-10-29 17:00:00	1 Habitación Doble					\N	{}
+840032d4-8023-474b-b3cb-a3f53ae40d66	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AC Hotel Clodio Roma	hotel	Via di Santa Lucia 10 Rome, Italia	2025-10-15 21:00:00	2025-10-18 17:00:00	1 Habitación Doble					\N	{}
+125523ea-f0a4-4521-a153-c0449626344e	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AC Hotel Split	hotel	Domovinskog Rata 61A Split, Croacia	2025-10-21 21:00:00	2025-10-24 17:00:00	1 Habitación Doble					\N	{}
+b99abdda-7224-4e1d-be88-70435daf92f5	df478a23-1e35-4405-b0d5-7c2601cb399d	Argentino Hotel	hotel	Espejo 455, Mendoza, Mendoza, Argentina	2025-10-13 21:00:00	2025-10-16 17:00:00	1 estándar		#249-3341932			\N	{/uploads/accommodations/attachments-1758666090733-973973912.pdf}
+717bcf41-ffb0-419c-a0ba-34253998e4bb	df478a23-1e35-4405-b0d5-7c2601cb399d	NH City Buenos Aires	hotel	Bolívar 160, Buenos Aires, Buenos Aires, Argentina	2025-10-08 04:00:00	2025-10-13 17:00:00	1 estándar		#2278092273				{/uploads/accommodations/attachments-1758668279561-706844228.pdf}
+\.
+
+
+--
+-- Data for Name: activities; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.activities (id, travel_id, name, type, provider, date, start_time, end_time, confirmation_number, conditions, notes, contact_name, contact_phone, place_start, place_end, attachments) FROM stdin;
+cc70f387-730e-42c0-941c-732b6a513880	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR COLONIA	tour	CULTURE AND TOURING SL	2025-10-15 10:00:00	10:00	13:00	A33834298	El tour comenzará en la Catedral de Colonia	Contacto: Tel: (+34) 644234146			Catedral de Colonia		{}
+dd70f387-730e-42c0-941c-732b6a513880	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR HAMBURGO	tour	CULTURE AND TOURING SL	2025-10-17 10:00:00	10:00	13:00	A33834299	El tour comenzará en el Ayuntamiento de Hamburgo	Contacto: Tel: (+34) 644234146			Ayuntamiento de Hamburgo		{}
+ee70f387-730e-42c0-941c-732b6a513880	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR BERLÍN	tour	CULTURE AND TOURING SL	2025-10-19 10:00:00	10:00	13:30	A33834300	El tour comenzará en Pariser Platz	Contacto: Tel: (+34) 644234146			Pariser Platz		{}
+ff70f387-730e-42c0-941c-732b6a513880	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR MUNICH	tour	CULTURE AND TOURING SL	2025-10-21 10:00:00	10:00	13:00	A33834301	El tour comenzará en Marienplatz	Contacto: Tel: (+34) 644234146			Marienplatz		{}
+fa30488c-9af8-4af6-8391-73826d429b8b	a995959b-d2b0-4592-b145-b650865a6086	VISITA GUIADA POR EL PARLAMENTO DE BUDAPEST EN ESPAÑOL	tour	Paseando Por Europa (Budapest)	2025-11-01 15:45:00	09:45	11:00	A33255123		- Tel: +34 644 45 08 26 Ubicación inicio: Plaza Kossuth Lajos tér.					{}
+9dbf42e9-3734-461e-b285-bdc6612af5a3	a995959b-d2b0-4592-b145-b650865a6086	TOUR PRIVADO BUDAPEST	tour	Csabatoth	2025-10-31 16:30:00	10:30	14:30	A33255119		- Tel: 0036307295840 Ubicación inicio: HOTEL BARCELO					{}
+afee4eb7-94d4-4c9f-a9c8-e96d6ab8ea0d	b9a2864e-c91c-491b-b3a8-8c24cab30c33	Spa Cenotes	spa	Xcaret	2025-09-02 15:50:00	09:50	10:00	658822		Contacto: Andrés - Tel: 4598326269 Ubicación inicio: Hotel Ubicación fin: Hotel					{}
+7ec19d30-deca-4f2b-9563-41a6a72eb51d	b9a2864e-c91c-491b-b3a8-8c24cab30c33	Cena en Xe'Ha'	evento	Xcaret México	2025-09-07 15:00:00	09:00	11:00	ACTE2986		Contacto: Fernanda Bueno - Tel: 98757245 Ubicación inicio: No aplica Ubicación fin: No aplica					{}
+c17dfc8e-caea-4147-989b-21dcc2481a40	b9a2864e-c91c-491b-b3a8-8c24cab30c33	Cenotes de Playa del Carmen	tour	Xcaret	2025-09-03 13:00:00	07:00	05:00	ACT238563480	No incluye políticas de cancelación.	Contacto: Fernanda Bueno - Tel: 2324976008 Ubicación inicio: Lobby hotel Ubicación fin: Libby Hotel Protector solar biodegradable.					{}
+9e5b386c-07d7-45b0-9913-050c5897b39c	d96a8593-bc27-4a93-86cc-513106594bc1	Piramides de Giza de Keops, Kefrén y Micerinos	excursion	ToursNilo	2025-09-06 12:00:00	06:00	23:59	ACT983157	Espacio para condiciones y términos	Visita a las pirámides de Giza con guía especializado					{}
+531469c1-41f6-4f63-b04d-850820f7e973	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR HAMBURGO	tour	Hamburgo A Pie	2025-10-16 17:15:00	11:15	13:15	A33834299	Quedaremos en la Plaza del Ayuntamiento de Hamburgo, en la entrada principal del edificio del Ayuntamiento (Rathausmarkt 1, 20095 Hamburg, Alemania) LLEGAR CON 15 MINUTOS DE ANTICIPACIÓN	- Tel: +4915204719263 Ubicación inicio: Plaza del Ayuntamiento (Rathausmarkt).			Plaza del Ayuntamiento (Rathausmarkt).		{/uploads/activities/attachments-1758593074991-799891605.pdf}
+808f7b7c-7dcd-4258-8f6d-1b20135c06f2	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR MUNICH	tour	Todo Tours Munich	2025-10-21 16:45:00	10:45	13:00	C731-T1068-250911-135	El día de la actividad, deberan acudir a la hora indicada a la plaza Marienplatz de Múnich. Su guía los estará esperando con un paraguas azul de Todo Tours frente a la Columna de María. Recomendamos llegar con 10 minutos de antelación.	- Tel: +34623062291 Ubicación inicio: Marienplatz (frente a la Columna de María).			Marienplatz (frente a la Columna de María)		{/uploads/activities/attachments-1758593149100-199909513.pdf}
+1f7273d3-b9d6-4548-93c7-136d959c96be	5948ede8-258b-4cd3-9f44-be08adccf9d5	FREE TOUR COLONIA	tour	The Walkings Tours	2025-10-15 16:30:00	10:30	13:00	C731-T1253-250911-30	El tour comenzará a la hora indicada desde el siguiente punto de la ciudad alemana de Colonia: frente a la Estación Central de Colonia, Alemania (Köln Hauptbahnhof), en la escalinata de la lateral izquierda de la catedral de Colonia.	- Tel: +4915772431884 Ubicación inicio: Estación Central de Colonia, Alemania.			Estación Central de Colonia, Alemania.		{/uploads/activities/attachments-1758593024392-442539064.pdf}
+d5f32bed-9f5b-4fe0-9239-b9349e8a9d24	d96a8593-bc27-4a93-86cc-513106594bc1	Pirámide Escalonada de Zoser	excursion	TourNilo	2025-09-08 12:00:00	06:00	23:59	ACT922623	Espacio para condiciones y términos.	Contacto: Jorge N. - Tel: 34542186\nUbicación inicio: Hotel\nUbicación fin: Hotel\nEspacio para notas adicionales.	\N	\N	\N	\N	\N
+4857e448-7f4c-4b34-81a3-d9af37b5105f	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Monte Fuji, lago Ashi y Kamakura - Tour en español	excursion	Amigo Tours Japan	2025-11-16 13:00:00	07:00	18:30	288956218		- Tel: 81120587697\nUbicación inicio: Centro comercial Ginza Inz 2.	\N	\N	\N	\N	\N
+43c6eb41-8153-4573-9ee0-0670a713428f	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Nara y Uji - Tour con comida	excursion	DOA JAOAN/Japan Panoramic Tours	2025-11-11 13:50:00	07:50	16:00	286587		- Tel: 03-6279-2977\nUbicación inicio: 31 Nishi-Sanno Cho.	\N	\N	\N	\N	\N
+996ee1f5-7cbf-4451-ac94-a1886f33da66	a995959b-d2b0-4592-b145-b650865a6086	VERSALLES	recorrido	Chateau de Versailles	2025-10-28 16:30:00	10:30	14:00			Ubicación inicio: PALACIO DE VERSALLES	\N	\N	\N	\N	\N
+ac9ba7d8-c927-49ad-ab70-8b0736abd834	a995959b-d2b0-4592-b145-b650865a6086	PASEO EN BARCO POR EL DANUBIO AL ANOCHECER	paseo	Legenda Sightseeing Boats	2025-10-31 22:40:00	16:40	17:40	210268		- Tel: (+36) 1 317 22 03\nUbicación inicio: Vigadó tér 7.\nDurante el paseo en barco navegaremos por el Danubio desde el Puente Petőfi hasta el primer puente de Isla Margarita, recorriendo Budapest en su totalidad.\n\nPasaremos por debajo de los puentes más grandiosos de la ciudad: el Puente de las Cadenas, el Puente de Isabel y el Puente de la Libertad y disfrutaremos de las vistas de ambas orillas, conociendo los principales edificios de Buda y de Pest.\n\nAlgunos de los edificios mejor iluminados son el Parlamento de Budapest, el Hotel Gellert, el Castillo de Buda, el Bastión de los Pescadores y la Iglesia Matías.\n\nDurante todo el recorrido disfrutaréis de los comentarios de una audioguía en español. También se incluye una bebida a elegir entre champán, vino, cerveza, refresco o agua.\n\nIncluido\n-Paseo en barco de 1 hora.\n-Audioguía individual con comentarios en español.\n-Bebida a elegir entre champán, vino, cerveza, refrescos o agua.\n-Wifi gratuito.	\N	\N	\N	\N	\N
+e3d6b844-6d05-4c6e-9d2d-06fadac07cb4	c9537dc5-659a-4493-912b-78a053f28ecd	Recorrido por Guachimontones	excursion	Experiencias Guadalajara	2025-12-26 15:00:00	09:00	15:00	ACT6565		Contacto: Karla - Tel: 34542186\nUbicación inicio: Hotel\nUbicación fin: Hotel	\N	\N	\N	\N	\N
+44f05274-bda7-4c14-9eda-37a17db0be92	c9537dc5-659a-4493-912b-78a053f28ecd	Cena Navideña en el ex convento del Carmen	restaurante	Experiencias Guadalajara	2025-12-25 03:00:00	21:00	02:00	ACT7874		Contacto: Karla - Tel: 34542186\nUbicación inicio: Hotel\nUbicación fin: Hotel	\N	\N	\N	\N	\N
+a49e239c-6552-4824-ae56-9e8e7d5cdbf5	a995959b-d2b0-4592-b145-b650865a6086	PASEO PANORAMICO POR EL RIO SENA CON CENA	paseo	Paris en scène	2025-10-28 01:15:00	19:15	21:00	836046		- Tel: +330141419070\nUbicación inicio: Île aux Cygnes, 75015 Paris, France	\N	\N	\N	\N	\N
+855eb73a-44d8-463e-87b2-b31469e3abea	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Visita guiada por Osaka y su Castillo - Tour en español	tour	BenzaitenTours	2025-11-08 17:00:00	11:00	17:00	A31211381		- Tel: +8108062497750\nUbicación inicio: Estación Morinomiya, salida 3-B	\N	\N	\N	\N	\N
+28c3d3cd-5d2c-4a70-8b24-7560598697e9	c9537dc5-659a-4493-912b-78a053f28ecd	Escapada a Tlaquepaque	recorrido	Experiencias Guadalajara	2025-12-23 16:00:00	10:00	18:00	ACT789652	Este es un ejemplo para señalar las condiciones y términos se visualiza de forma diferente en el itinerario final.	Ubicación inicio: No deja la información \nUbicación inicio: Hotel\nUbicación fin: Hotel\nContacto: Karla - Tel: 34542186\nUbicación inicio: Lobby del hotel\nUbicación fin: Lobby del hotel	\N	\N	\N	\N	\N
+a586eae4-180a-4071-9ecc-6620e82920df	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Entradas al Museo del Futuro	otro	Priohub	2025-10-31 16:30:00	10:30	12:30	175253924226147	Les recomendamos llegar al menos con 30 minutos de antelación.	Ubicación inicio: Sheikh Zayed Rd - Trade Centre - Trade Centre 2 - Dubai\nUbicación inicio: Sheikh Zayed Rd - Trade Centre - Trade Centre 2 - Dubai - Emiratos Árabes Unidos.	\N	\N	\N	\N	\N
+418228ce-3879-439e-beeb-e483ab35d71c	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Tour privado por Ubud y el centro de Bali - Tour privado en español	tour	Bali Viaje	2025-10-31 14:30:00	08:30	18:30	A31207306		- Tel: +6282144156108\nUbicación inicio: RECOGIDA EN HOTEL\nUbicación fin: TERMINA EN HOTEL	\N	\N	\N	\N	\N
+691ea5d3-67ef-453c-a36b-5e15733a4d36	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Tour de Kioto al completo con entradas - Tour en español	tour	Amigo Tours Japan	2025-11-10 13:00:00	07:00	18:00	288955490		- Tel: 81120587697\nUbicación inicio: Hotel Keihan Kyoto.	\N	\N	\N	\N	\N
+91f2ff37-99dd-4b44-b3f0-3460e6178d48	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Entradas al Burj Khalifa	otro	Burj Khalifa (Emaar)	2025-11-01 00:30:00	18:30	20:30	ATT-8825079	Les recomendamos llegar 30 minutos antes de la hora seleccionada.	Ubicación inicio: centro comercial Dubai Mall (entrada por la Fashion Avenue).	\N	\N	\N	\N	\N
+3247b306-b399-472d-900d-fc87f8daf07e	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Tour de Tokio al completo - Tour con comida	tour	Amigo Tours Japan GK	2025-11-14 14:00:00	08:00	18:00	288955997		- Tel: 81120587697\nUbicación inicio: Plaza Hachiko.	\N	\N	\N	\N	\N
+2e89d7ef-2e9e-4798-8f1a-55d115d498cd	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Tour de Dubái + Desert Safari	tour	OceanAir Travels	2025-11-01 14:00:00	08:00	21:00	A32145959		Ubicación inicio: Rove Downtown Hotel	\N	\N	\N	\N	\N
+f495db58-5453-4471-87a4-1963133bb55d	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Entradas Jardín de Mariposas	otro		2025-11-02 15:00:00	09:00	11:00	27005471	HORA DE INICIO PLENAMENTE INDICATIVA, LOS JARDINES ABREN DESDE LAS 9AM	Ubicación inicio: Jardín de las mariposas	\N	\N	\N	\N	\N
+8991f013-d2f2-49c2-aea8-0c33b73c4b3e	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Entrada al Dubai Frame	otro	Be My Guest	2025-11-03 15:00:00	09:00	21:00	KLGTZWK	LA HORA DE INICIO Y FINALIZACIÓN SON MERAMENTE INDICATIVAS, son las horas a las que abre y cierra el lugar.	- Tel: +65 9873 0052\nUbicación inicio: Dubai Frame, situado en el Zabeel Park.	\N	\N	\N	\N	\N
+7b8710d3-9423-43b7-a916-0e181bfdcc8a	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Entradas Ferrari World Abu Dhabi	otro		2025-11-04 18:00:00	12:00	21:00	22507150676		Contacto: Ferrari World\nUbicación inicio: Ferrari World	\N	\N	\N	\N	\N
+b0103d61-913b-424a-ab8a-ece4f06a5d30	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	Grand Mosque, Royal Palace, and Etihad Tower	tour	OceanAir Travels	2025-11-05 15:45:00	09:45	16:00	GYG7VLGBMXQ8		Contacto: OceanAir Travels - Tel: +97143582500\nUbicación inicio: Staybridge Suites Abu Dhabi - Yas Island by IHG	\N	\N	\N	\N	\N
+4c040027-1bab-4ab8-be19-cfb65101209b	c9537dc5-659a-4493-912b-78a053f28ecd	Concierto Candleligth	teatro	Experiencias Guadalajara	2025-12-28 02:00:00	20:00	22:00	ACT4525		Ubicación inicio: hh\nUbicación inicio: Lobby del hotel\nContacto: Karla - Tel: 34542186\nUbicación inicio: Hotel\nUbicación fin: Hotel\n\n\n\n\nkhfkfjkf\n\n\nkjgkjfv\n\n\ndgsgsgfs\n\n\nsgfhdfhdh	\N	\N	\N	\N	\N
+dd0fbc8c-a8a0-43f7-a686-a82f5e10109a	ef201789-8b34-4b7a-ae43-0ee527515e67	Snowboard en Mont-Tremblant	otro	Xperience Montreal	2025-12-22 15:00:00	09:00	13:00	ACT145E	Las solicitudes de cambio de fecha estarán sujetas a disponibilidad y a la tarifa vigente al momento de la modificación.	Contacto: Alberto - Tel: 9999578620\nUbicación inicio: Lobby del hotel\nUbicación fin: Lobby del hotel\nLlegadas anticipadas o salidas tardías están sujetas a disponibilidad y pueden generar cargos adicionales.	\N	\N	\N	\N	\N
+900f51e7-3624-4445-a2bf-7e4230ac4e6e	dee026ed-e996-41ba-b2d0-11d839941d6b	Atardecer Tacos & Tequila en playa	actividad	Sun Rider Tour	2025-09-15 01:00:00	19:00	22:00	FGH23659752	Estas reservas no permiten cambios ni devoluciones.\n\nEn casos excepcionales (ej. desastres naturales, emergencias sanitarias internacionales, restricciones de viaje gubernamentales), el hotel podrá ofrecer reprogramación o crédito para una futura estancia, sin cargos adicionales.	Las tarifas no incluyen impuestos municipales, ecológicos o turísticos que se pagan directamente en el hotel.	Juan H.	9999578620	Lobby del hotel	Lobby del hotel	\N
+bdf738d9-169f-492e-9489-11e3ec3e95fa	dee026ed-e996-41ba-b2d0-11d839941d6b	Snorkel con almuerzo en velero	actividad	SunRider Tours	2025-09-15 13:00:00	07:00	11:30	ACT98217	La empresa no se hace responsable de personas que no utilicen chalecos salva vidas.	Utilizar protector solar ecológico y biodegradable.	Juan H.	9999578620	Hotel	Hotel	\N
+3ae69fee-771c-4cf2-ab31-f8694e856e07	dee026ed-e996-41ba-b2d0-11d839941d6b	Cena de despedida + antro	actividad	Hotel	2025-09-21 02:00:00	20:00	23:00	164623147846	Tiempo de tolerancia 10 min.	Posteriormente pasar al antro, con derecho a barra libre hasta la 1:00 am	Karla	34542186	Hotel	Hotel	\N
+0ece8f4f-c0ff-43c8-a23c-7b02f0862952	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Tour privado por Roma	actividad	Rome Bites Tours	2025-09-22 19:00:00	13:00	15:00	A31162566		El día de la actividad, deben acudir al cruce entre la piazza di Spagna y la via di San Sebastianello,\njunto a la tienda de Versace. Les recomendamos llegar con 10 minutos de antelación.	Rome Bites Tours	 (+39) 3492210982	Plaza de España		\N
+dfa95707-6a2c-44e7-9ad5-bc9d18f4bfb2	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Audiencia con el papa León XIV - Audiencia papal	actividad	Tourismotion Roma	2025-09-24 13:10:00	07:10	12:00	A28764995		ESTAR 15 MINUTOS ANTES EN EL PUNTO INDICADO	Tourismotion Roma	(WHATSAPP) +39 0692926678	Via della Conciliazione, 48 (frente a la tienda Domus Artis)		\N
+eb3620e9-928c-44d6-a3e5-d0f42f27a576	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	MUSEOS DEL VATICANO	actividad		2025-09-24 18:30:00	12:30	15:00	2L133GLM70NZSS1TV			Coordinador	+39 06 6988 3145	Entrada del museo del vaticano		\N
+67627dfc-ef06-4274-b0b0-c61517920688	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Coliseo Romano / Foro palatino y Arena de gladiadores	actividad		2025-09-23 16:35:00	10:35	12:00	GYGWZBLWM9VF		Nos vemos en Largo Gaetana Agnesi, la plaza ubicada en la terraza sobre la estación de metro del\nColiseo. Busca a nuestros coordinadores, quienes visten camisetas moradas y ondean la bandera\nde Crown Tours.\nHora: Por favor, llega al punto de encuentro 30 minutos antes de la hora elegida para no perder\ntu franja horaria.	Coordinador	whatsapp solo en ingles +49 151 23457858	L.go Gaetana Agnesi, 00184 Roma RM, Italy		\N
+e12f871e-c8f8-4622-b13a-f285412f77dc	0901b373-d2bd-436e-8384-6041e252fb01	Palacio Real + Catedral de la Almudena	actividad	Todo Tours	2025-10-03 20:30:00	14:30	16:00	C731-T1068- 250605-138	ESTE VOUCHER INCLUYE SOLAMENTE 2 BOLETOS PARA ALEJANDRA Y MARU.	El punto de encuentro es en la salida de la estación de metro de Ópera (esta parada pertenece a la\nlínea 2, la de color rojo; la línea 5, la verde; y el ramal de Ópera a Príncipe Pío). Les pedimos que\nacudáis al punto de encuentro con 10 minutos de antelación. Encontraran al guía con un paraguas\nazul de Todo Tours.	Todo Tours	0034623062291	Parada de Metro Ópera.		\N
+629da6c4-8b08-4d42-b819-9369f7131868	0901b373-d2bd-436e-8384-6041e252fb01	Museo del Prado	actividad		2025-10-03 23:45:00	17:45	19:00	GYGX7NXVHVVK					C. de Ruiz de Alarcón, 23, 28014 Madrid	C. de Ruiz de Alarcón, 23, 28014 Madrid	\N
+6fde56b9-e1d0-4196-be65-07db8f7e77dd	0901b373-d2bd-436e-8384-6041e252fb01	Excursión a Toledo y Segovia	excursion	Amigo Tour España	2025-10-04 13:45:00	07:45	18:45	C. de Ruiz de Alarcón, 23, 28014 Madrid	El punto de salida es la estación de metro de Las Ventas (línea 2, la de color rojo) saliendo en la salida de la calle Julio Camba. Es imprescindible llegar con 15 minutos de antelación.	A la hora indicada nos encontraremos en el centro de Madrid, desde donde partiremos en autobús\nhasta Toledo y Segovia. ¡Descubriremos por qué han sido declaradas Patrimonio de la Humanidad\npor la Unesco!\nRealizaremos la primera parada en Toledo, conocida como la Ciudad de las Tres Culturas por\nconservar importantes huellas de la historia de las tres religiones monoteístas que habitaron la zona\ndurante siglos.\nDisfrutaremos del patrimonio arquitectónico, artístico y urbano milenario de la ciudad mientras\nrecorremos sus estrechas callejuelas, plazas y jardines. Pasaremos junto a la Catedral de Toledo,\nuna de las muestras más destacadas del gótico español, y el Monasterio de San Juan de los\nReyes, el lugar elegido por los Reyes Católicos para ser enterrados. Antes de partir rumbo a\nSegovia, admiraremos algunas de las vistas panorámicas más impresionantes de Toledo desde\nel Puente de San Martín y el Mirador del Valle.\nLa siguiente parada tendrá lugar en Segovia. Por supuesto, veremos el Acueducto, uno de los\nmonumentos mejor conservados de los que dejaron los romanos en la península Ibérica.\nContemplaremos la Catedral de Segovia, conocida popularmente como "la Dama de las\nCatedrales" por la sorprendente belleza de su estilo gótico con influencias renacentistas.\nRecorreremos también el barrio de las Canonjías hasta llegar al famoso Alcázar, uno de los monumentos más visitados de España, desde donde podremos admirar parte del trazado de\nmurallas que rodeaban a Segovia en época medieval.\nFinalmente, tras un total de 11 horas de excursión, estaremos de nuevo en la capital española.	Amigo Tour España	(+34) 91 129 34 83	Parada de metro Las Ventas. Salida Calle Julio Camba		\N
+0e125dc8-af24-4afb-a34d-12560cf774bd	0901b373-d2bd-436e-8384-6041e252fb01	Tour Bernabéu	actividad		2025-10-03 16:30:00	10:30	12:00	GYGMX4Z95Z2V	El acceso al Tour Bernabéu se encuentra en la Avenida Concha Espina.\nEl día de la visita, dirígete a la entrada y muestra una copia electrónica o impresa de este ticket.\nHora: Debes llegar al punto de encuentro 5 minutos antes de la hora de entrada para no perder\ntu franja horaria		Estadio bernabéu	+49 30 837 91488	Av. de Concha Espina, 6, Chamartín, 28036 Madrid, Spain	Av. de Concha Espina, 6, Chamartín, 28036 Madrid, Spain	{/uploads/activities/attachments-1757963746279-762507675.pdf}
+17aee3c6-2499-4903-82f2-4c978702e806	d2e13f1c-5e2c-42a6-a0b3-0033688b68cf	Puente de Dios - Nado	actividad	ExperienciasSLP	2025-09-23 16:00:00	10:00	15:00	FGH23659752		Posterior a esta actividad acudir al autobus para continuar viaje.	Coordinador	9999578620	Centro de entrada a cascada	Centro de entrada a cascada	{/uploads/activities/attachments-1757964227355-388926966.docx}
+678b4dcc-1499-4f9a-a0d7-95d840791944	73fdb531-9e28-4a7f-b199-396f20990d02	Visita al Coliseo Romano	actividad		2025-09-20 12:00:00	06:00	11:00	1458754	Condiciones y términos...\nExclusiones Generales\n\nNo se cubrirán accidentes derivados de:\n\nParticipación en deportes extremos o de riesgo (a menos que estén expresamente contratados como cobertura adicional).\n\nConsumo de alcohol o drogas.\n\nActos intencionales o autolesiones.\n\nGuerras, disturbios o desastres naturales (excepto si se incluye cobertura especial).\n\nDuración y Ámbito de Cobertura\n\nLa póliza es válida únicamente durante las fechas del viaje contratadas y fuera del país de residencia habitual.\n\nLa cobertura inicia al momento de salir del país de residencia y finaliza con el regreso al mismo.	Documentación y requisitos\n\n✅ Identificación oficial vigente (INE o pasaporte).\n\n✅ Comprobante de reservación (hotel, vuelos, traslados).\n\n✅ Seguro de viaje / seguro médico (recomendado).\n\n✅ Método de pago: tarjeta y efectivo (pesos mexicanos).	No aplica	4598326269 (only whats)	Lobby del hotel	Fuente	{}
+cd2d22a5-0d73-4264-bb03-177d6abf5c72	71e3bd75-ae49-49ca-ba05-97850d04e385	Prueba PDF restaurante	restaurante	Hotel	2025-09-26 00:00:00	18:00	20:00	1458754	Prueba para adjuntar PDF.	Prueba para adjuntar PDF.	Karla	4598326269	Hotel	Hotel	{/uploads/activities/attachments-1758664128771-147380441.pdf,/uploads/activities/attachments-1758664128771-400689379.pdf,/uploads/activities/attachments-1758664128772-666153182.pdf}
+032eb6c2-85bc-4b71-9290-a85467365758	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	Entrada Vaticano: museos y capilla sixtina	actividad		2025-10-17 21:30:00	15:30	18:30	GYG48Y6MAV4V					00120, Vatican City		{/uploads/activities/attachments-1758584803013-239686233.pdf}
+fe83e5d1-f958-42b8-a7e0-ade6b5ea7b60	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	ticket de entrada a la Galería de la Academia y al David	actividad		2025-10-19 16:55:00	10:55	13:00	GYG2Q92LLKH5					Via Ricasoli, 39, 50122 Firenze FI, Italy		{/uploads/activities/attachments-1758584817336-34682491.pdf}
+469c8483-adb6-4b22-a029-3e9bdab12978	71e3bd75-ae49-49ca-ba05-97850d04e385	Tour de prueba	tour	Experiencias Guadalajara	2025-09-25 16:00:00	10:00	17:00	FGH23659752	Aquí se incluyen las condiciones y términos (políticas).	Aquí se incluye las notas adicionales. ESTA ES UNA PRUEBA PARA ADJUNTAR DOCUMENTOS EN UNA ACTIVIDAD.	No aplica	9999578620	Av. de Concha Espina, 6, Chamartín, 28036 Madrid, Spain	Av. de Concha Espina, 6, Chamartín, 28036 Madrid, Spain	{/uploads/activities/attachments-1758663943242-952448937.pdf}
+9af2209f-205a-4637-88f9-6eecd088440a	71e3bd75-ae49-49ca-ba05-97850d04e385	PRUEBA1	actividad	PRUEBA1	2025-09-29 16:00:00	10:00	15:00	1458754	PRUEBA1	PRUEBA1	PRUEBA1	9999578620	Hotel	Hotel	{/uploads/activities/attachments-1758663950790-964631616.pdf}
+fdf272ba-52cf-4cd8-a44f-8ca7f733dc55	71e3bd75-ae49-49ca-ba05-97850d04e385	Buceo con delfines	actividad	Experiencias QWE	2025-09-23 16:00:00	10:00	11:00	FGH23659752	Prueba.	Prueba.	Karla	4598326269	Hotel	Hotel	{/uploads/activities/attachments-1758663954574-735299435.jpg}
+259e6671-42d9-4d0a-9030-105fbd238653	30ae4a7a-8f05-4fd3-8f97-19ddaa7d494d	Andres Pozas	restaurante	Paris City Tours	2025-09-26 17:28:00	11:28	13:28	HTL2345673	dfgjfghjghj	r6456456	Prueba 006	4444444444	Inicio	Finalización	{/objects/uploads/b4ba90d4-b131-49e8-889c-e7adebee54e4}
+\.
+
+
+--
+-- Data for Name: cruises; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.cruises (id, travel_id, cruise_line, confirmation_number, departure_date, departure_port, arrival_date, arrival_port, notes, attachments) FROM stdin;
+\.
+
+
+--
+-- Data for Name: flights; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.flights (id, travel_id, airline, flight_number, departure_city, arrival_city, departure_date, arrival_date, departure_terminal, arrival_terminal, class, reservation_number, attachments) FROM stdin;
+a71feea7-2f2e-4200-902c-0033647aef50	b9a2864e-c91c-491b-b3a8-8c24cab30c33	Volaris	AM432	SLP Ponciano Arriaga	Cancun 	2025-08-31 16:00:00	2025-08-31 19:30:00	1	2	premium	232235	\N
+98393410-df51-4c80-bfa6-68e61c3c0db1	d96a8593-bc27-4a93-86cc-513106594bc1	AeroMéxico	AM	MEX - Origin City	Egipto	2025-09-04 00:00:00	2025-09-06 02:00:00	1	2	ejecutiva	IDHY65987	\N
+a552b563-945d-4e2f-8c2a-0b51701e0685	a995959b-d2b0-4592-b145-b650865a6086	AMERICAN AIRLINES	AA 48	Dallas/Fort Worth (DFW)	Paris Charles de Gaulle (CDG)	2025-10-25 23:50:00	2025-10-26 15:05:00			economica	LSIHXJ	\N
+c297c59a-d615-4e07-a6c9-0c35602eb7b4	a995959b-d2b0-4592-b145-b650865a6086	AMERICAN AIRLINES	AA 6713	Budapest-Ferenc Liszt (BUD)	London Heathrow (LHR)	2025-11-03 13:20:00	2025-11-03 15:30:00			economica	LSIHXJ	\N
+9723d50c-41c0-4adb-8355-79c1c37f65b5	a995959b-d2b0-4592-b145-b650865a6086	AMERICAN AIRLINES	AA 79	London Heathrow (LHR)	Dallas/Fort Worth (DFW)	2025-11-03 17:55:00	2025-11-03 22:20:00			economica	LSIHXJ	\N
+c8a1c133-a72c-4b71-a725-e60e9717b5fc	a995959b-d2b0-4592-b145-b650865a6086	AMERICAN AIRLINES	AA 1440	San Luis Potosi-Ponciano Arriaga (SLP)	Dallas/Fort Worth (DFW)	2025-10-25 17:59:00	2025-10-25 21:14:00			economica	JBPNMK	\N
+9fdc2236-696a-48f8-ae87-49f37a166347	a995959b-d2b0-4592-b145-b650865a6086	RYANAIR	FR 4230	Paris Beauvais (BVA)	Budapest-Ferenc Liszt (BUD)	2025-10-30 18:35:00	2025-10-30 20:55:00			economica	LSJH7J	\N
+6dbc588f-bd96-4109-8ffa-bc909ea603b0	a995959b-d2b0-4592-b145-b650865a6086	AMERICAN AIRLINES	AA 2626	Dallas/Fort Worth (DFW)	San Luis Potosi-Ponciano Arriaga (SLP)	2025-11-04 01:03:00	2025-11-04 03:20:00			economica	JBPNMK	\N
+f9293ee9-ebc6-4ae6-a71b-3137be0b5bab	c9537dc5-659a-4493-912b-78a053f28ecd	Volaris	GT 570	Guadalajara	San Luis Potosí	2025-12-31 04:00:00	2025-12-30 18:00:00	1	2	economica	IDHY65987	\N
+68c96d8e-7ef8-4c10-afa3-cf3b64000429	dee026ed-e996-41ba-b2d0-11d839941d6b	AeroMéxico	GT 568	SLP - Ponciano Arriaga	MEX - Licenciado Benito Juarez	2025-09-13 18:00:00	2025-09-13 21:00:00	1	2	economica	IDHY65987	\N
+ee3e4832-df12-4d1f-bb70-8b1717cc4cd7	c9537dc5-659a-4493-912b-78a053f28ecd	Volaris	GT 568	SLP - Ponciano Arriaga	Guadalajara	2025-12-22 22:00:00	2025-12-23 01:00:00	1	2	economica	IDHY65987	\N
+743715a9-1a44-4bf9-b42e-76d5845faee0	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	United Arilines (UA)	UA 2252	Ciudad de México (MEX)	Nueva York/Newmark, NJ, US	2025-10-29 16:00:00	2025-10-29 22:50:00			economica	FFB9BS	\N
+4c229abf-4378-459f-9fe8-9e42e185cd74	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	United Airlines (UA)	UA 164	Nueva York/Newmark, NJ, US	Dubai, AE	2025-10-30 04:35:00	2025-10-31 01:40:00			economica	FFB9BS	\N
+bb4be834-b1af-4cd2-a6bf-09a9b749b689	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	United Arilines (UA)	5283	Houston-George Bush (IAH)	San Luis Potosi-Ponciano Arriaga (SLP)	2025-11-18 12:05:00	2025-11-19 02:15:00			economica	NHSPBS	\N
+b79bfc36-2b3c-4b80-abf5-02831bfb802f	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Garuda Indonesia (GA)	870	Bali-Ngurah Rai (DPS)	Seul-Incheon (ICN)	2025-11-02 07:20:00	2025-11-02 15:15:00			economica	4807	\N
+096174b8-1df1-4f8c-9f77-c3f0d4bcf9ef	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Korean Air (KE)	727	Seul-Incheon (ICN)	Osaka-Kansai (KIX)	2025-11-06 17:05:00	2025-11-06 18:50:00			economica	4G4WIB	\N
+901d5456-d365-4125-84cc-b4cc763c6f90	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	Singapore Airlines (SQ)	948	Singapur-Changi (SIN)	Bali-Ngurah Rai (DPS)	2025-10-30 03:20:00	2025-10-30 05:55:00			economica	2RRZ3N	\N
+01db2316-98bb-4d2e-8850-fa16a177b5d6	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	United Arilines (UA)	2405	San Luis Potosi-Ponciano Arriaga (SLP)	Houston-George Bush (IAH)	2025-10-27 17:49:00	2025-10-27 20:44:00			economica	NHSPBS	\N
+fb14f428-1030-4f1b-a691-ba2f2c6eaed4	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	United Arilines (UA)	2388	Houston-George Bush (IAH)	San Francisco-Aeropuerto Internacional (SFO)	2025-10-28 02:35:00	2025-10-28 04:41:00			economica	NHSPBS	\N
+d6e1d0e5-bbec-4ddd-bcb1-a007be8fda11	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	United Arilines (UA)	1	San Francisco-Aeropuerto Internacional (SFO)	Singapur-Changi (SIN)	2025-10-28 05:40:00	2025-10-29 14:00:00			economica	NHSPBS	\N
+edccbb75-5921-40e3-922a-eb812b674882	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	United Arilines (UA)	6	Tokio-Narita (NRT)	Houston-George Bush (IAH)	2025-11-18 23:45:00	2025-11-18 20:35:00			economica	NHSPBS	\N
+5e085f2b-447d-46ad-80b1-a7f57aaa9bec	df478a23-1e35-4405-b0d5-7c2601cb399d	Aerolineas Argentinas (AR)	1896	Buenos Aires-Aeroparque Jorge Newbery (AEP)	El Calafate-Comandante Armando Tola (FTE)	2025-10-04 18:20:00	2025-10-04 21:14:00			economica	YEEEXB	\N
+82d3da85-e563-4c23-b10b-e4409ce136b6	df478a23-1e35-4405-b0d5-7c2601cb399d	Aerolineas Argentinas (AR)	1897	El Calafate-Comandante Armando Tola (FTE)	Buenos Aires-Aeropuerto Internacional Ezeiza (EZE)	2025-10-07 23:50:00	2025-10-08 02:50:00			economica	YEEEXB	\N
+6beff121-f75c-4a62-8f63-4cc264325d1f	df478a23-1e35-4405-b0d5-7c2601cb399d	JetSmart (JA)	3736	Buenos Aires-Aeroparque Jorge Newbery (AEP)	Mendoza-El Plumerillo (Mendoza)	2025-10-13 20:25:00	2025-10-13 22:20:00			economica	ID2LFK	\N
+6bef2c39-b1f3-4747-9d81-7068a304f35b	df478a23-1e35-4405-b0d5-7c2601cb399d	JetSmart (JA)	3073	Mendoza-El Plumerillo (Mendoza)	Buenos Aires-Aeroparque Jorge Newbery	2025-10-16 21:04:00	2025-10-16 22:41:00			economica	ID2LFK	\N
+44a73bff-a34d-49e1-a264-68fc1be43d41	dee026ed-e996-41ba-b2d0-11d839941d6b	AeroMéxico	Y4 102	MEX - Origin City	Los Cabos Aeropuerto	2025-09-14 11:00:00	2025-09-14 19:00:00	Terminal 2	Terminal 1	premium	IDHY65987	\N
+83f4a3a2-f9cd-4bd9-aa08-55b944759605	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Aeromexico	AM 2535	SLP - Ponciano Arriaga Aeropuerto Internacional	MEX - Licenciado Benito Juárez Aeropuerto Internacional	2025-09-17 18:25:00	2025-09-17 19:50:00	2	5	economica	KDXAPJ	\N
+adc873e5-341c-4660-a173-02eeb54f32cb	2660e785-54d9-4cfa-b9da-b92933c7eb2d	Aeromexico	AM 2535	SLP - Ponciano Arriaga International Airport	MEX - Licenciado Benito Juarez	2025-09-17 18:25:00	2025-09-17 19:50:00	1	2	ejecutiva	KDXAPJ	\N
+c3fbcbac-e965-408f-b748-b7fb806fb2b4	2660e785-54d9-4cfa-b9da-b92933c7eb2d	Aeromexico	AM 0005	MEX - Licenciado Benito Juarez	Charles de Gaulle International Airport	2025-09-17 22:55:00	2025-09-18 17:55:00	1	2	premium	KDXAPJ	\N
+ab5213f6-b345-4573-9d33-a6d5aced9310	2660e785-54d9-4cfa-b9da-b92933c7eb2d	EasyJet	U2 4633	CDG - Charles de Gaulle International Airport	BER: Berlin Brandenburg Airport (U.C.)	2025-09-19 00:45:00	2025-09-19 02:30:00	1	4	ejecutiva	K95HN42	\N
+18c2a370-c298-45b9-946a-952c4b33a056	2660e785-54d9-4cfa-b9da-b92933c7eb2d	EasyJet	U2 5079	BER: Berlin Brandenburg Airport (U.C.)	Roma Fiumicino	2025-09-22 13:10:00	2025-09-22 15:20:00	3	6	ejecutiva	K95HMM3	\N
+48321b89-729d-4bd3-804c-57af4c5ff1b0	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	Aeromexico	AM 0005	MEX - Licenciado Benito Juárez Aeropuerto Internacional	CDG - Charles de Gaulle International Airport	2025-09-17 22:55:00	2025-09-18 17:55:00	1	4	premium	KDXAPJ	\N
+e6cda26c-8e1f-406d-be09-a2f9e9d257c6	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	EasyJet	U2 4633	CDG - Charles de Gaulle International Airport	BER - Berlin Brandenburg Airport (U.C.)	2025-09-19 00:45:00	2025-09-19 02:30:00	3	1	economica	K95HN42	\N
+c105ade4-0c99-4996-98fc-ef2fb635c9f5	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	EasyJet	U2 5079	BER: Berlin Brandenburg Airport (U.C.)	Roma Fiumicino	2025-09-22 13:10:00	2025-09-22 15:20:00			premium	U2 5079	\N
+39e91498-4dc8-4cbb-9024-268e7f0da369	0901b373-d2bd-436e-8384-6041e252fb01	Brussels Airlines	SN 3721	BRU: Brussels Airport	MAD: Madrid Barajas International Airport	2025-10-02 15:30:00	2025-10-02 17:50:00				U2D8RZ	{}
+a558a73e-cbcf-451f-81d0-5dc940c6669d	0901b373-d2bd-436e-8384-6041e252fb01	Aeromexico	AM 0020	MAD - Madrid Barajas International Airport	MEX - Licenciado Benito Juarez	2025-10-05 15:00:00	2025-10-05 19:15:00				KDXAPJ	{}
+71d24725-1845-47a0-8ce4-e3b349da0d65	0901b373-d2bd-436e-8384-6041e252fb01	Aeromexico	AM 1534	MEX - Licenciado Benito Juarez	San Luis Potosí	2025-10-05 21:05:00	2025-10-05 22:25:00				KDXAPJ	{}
+e6ab1ce2-0c81-402b-82de-5cb3abd30bb5	73fdb531-9e28-4a7f-b199-396f20990d02	Aeromexico	AM 2535	SLP - Ponciano Arriaga International Airport	MEX - Licenciado Benito Juarez	2025-09-17 18:25:00	2025-09-17 19:50:00			ejecutiva	KDXAPJ	{/uploads/flights/attachments-1757971036988-327761725.jpg}
+6cb372ce-5edd-42d9-847a-63b0a45ee18b	73fdb531-9e28-4a7f-b199-396f20990d02	Aeromexico	AM 2535	MEX - Licenciado Benito Juarez	CDG Charles de Gaukke	2025-09-17 18:25:00	2025-09-18 17:55:00				KDXAPJ	{}
+7d1aeb35-1311-4b10-adce-6d51f13831b3	71e3bd75-ae49-49ca-ba05-97850d04e385	Aeromexico	AM 2535	SLP - Ponciano Arriaga	MEX - Licenciado Benito Juarez	2025-09-23 18:00:00	2025-09-23 23:00:00	1	2	premium	KDXAPJ	{/uploads/flights/attachments-1758571035104-653178924.pdf}
+093b8e8f-0d54-46f0-a546-67ee864ebb8f	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AEROMEXICO	AM1415	San Luis Potosi-Ponciano Arriaga (SLP)	Ciudad de México (MEX)	2025-10-14 18:25:00	2025-10-14 19:50:00		terminal 2		MDRZQI	{/uploads/flights/attachments-1758584831782-645632215.pdf}
+d11134af-ef5c-4595-98ab-98b545b21cf6	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AEROMEXICO	AM 0071	Roma, Italia (FCO)	Ciudad de México (MEX)	2025-10-31 04:05:00	2025-10-31 10:35:00	3	2		MDRZQI	{/uploads/flights/attachments-1758584841640-486326077.pdf}
+3c820bfe-048d-4470-868b-bcd830b6443a	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AEROMEXICO	AM 0070	Ciudad de México (MEX)	Roma, Italia (FCO)	2025-10-15 01:40:00	2025-10-15 21:30:00	2	3		MDRZQI	{/uploads/flights/attachments-1758584868570-790640721.pdf}
+14804964-7f37-4583-90d1-859af68c83cd	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AEROMEXICO	AM 1532	Ciudad de México (MEX)	San Luis Potosi-Ponciano Arriaga (SLP)	2025-10-31 13:10:00	2025-10-31 14:23:00	2			MDRZQI	{/uploads/flights/attachments-1758584877933-534836560.pdf}
+01cca671-ccc5-4b05-93ba-f89e5bb4b975	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AirSERBIA	JU 0653	SARAJEVO, BOSNIA HERZEGOV (SJJ)	BELGRADE, SERBIA (BEG)	2025-10-29 20:55:00	2025-10-29 21:45:00		2		FIVWFN	{/uploads/flights/attachments-1758584894211-508967489.pdf}
+2976ec29-bf3b-4f69-947e-a1e8af9a2562	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AirSERBIA	JU 0404	BELGRADE, SERBIA (BEG)	ROME FIUMICINO, ITALY (FCO)	2025-10-30 00:05:00	2025-10-30 01:35:00	2	3		FIVWFN	{/uploads/flights/attachments-1758584903187-985599275.pdf}
+cb70d16a-b80f-44f5-beb2-53e5e126023d	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AUSTRIAN (OS)	522	Venecia-Marco Polo (VCE)	Viena-Vienna Schwechat (VIE)	2025-10-21 16:55:00	2025-10-21 18:00:00				8YOL78	{/uploads/flights/attachments-1758589655883-826861789.pdf}
+0c1bc051-d9d9-4503-b5d2-7a2bc6e630f1	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	AUSTRIAN (OS)	745	Viena-Vienna Schwechat (VIE)	Split - Aeropuerto Internacional (SPU)	2025-10-21 19:05:00	2025-10-21 20:20:00				8YOL78	{}
+8984c809-e278-40ec-af06-1abb2c89e7d4	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	CROATIA AIRLINES (OU)	669	Dubrovnik - Zračna Luka (DBV)	Zagreb - Zagreb-Pleso (ZAG)	2025-10-27 19:00:00	2025-10-27 20:05:00				8YTXWE	{/uploads/flights/attachments-1758590476290-785401692.pdf}
+811d76db-d009-410c-b896-a059c5802336	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	CROATIA AIRLINES (OU)	344	Zagreb - Zagreb-Pleso (ZAG)	Sarajevo - Aeropuerto Internacional (SJJ)	2025-10-27 20:50:00	2025-10-27 21:40:00				8YTXWE	{}
+83fc10f8-2dd3-43ac-bd26-bb1d41446060	30ae4a7a-8f05-4fd3-8f97-19ddaa7d494d	Aeromexico	VO1245	CUN - Origin City	SLP	2025-09-26 18:00:00	2025-09-26 20:00:00	4	2	ejecutiva	78465774830098	{/objects/uploads/4d568dd8-b6c9-4c05-8b22-e9c0c0472276}
+\.
+
+
+--
+-- Data for Name: insurances; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.insurances (id, travel_id, provider, policy_number, policy_type, emergency_number, effective_date, important_info, policy_description, notes, attachments) FROM stdin;
+\.
+
+
+--
+-- Data for Name: notes; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.notes (id, travel_id, title, note_date, content, visible_to_travelers, attachments) FROM stdin;
+e466108e-d801-46d6-b8ff-e8d653fa6e4c	a995959b-d2b0-4592-b145-b650865a6086	IMPRESCINDIBLES PARIS	2025-10-26 00:00:00	1. Torre Eiffel – Sube al mirador o disfruta de un picnic en el Campo de Marte. 2. Arco del Triunfo y Campos Elíseos – Pasea por la avenida más famosa. 3. Louvre – Dedica al menos medio día, reserva online. 4. Notre-Dame – Aunque en restauración, su exterior sigue siendo impresionante. 5. Barrio de Montmartre – Basílica del Sagrado Corazón y ambiente bohemio. 6. Palacio de Versalles – Excursión de un día completo (30 min en tren desde París).	t	{}
+86360f27-7dce-43e0-a7c3-a0eb62a6377f	a995959b-d2b0-4592-b145-b650865a6086	IMPRESCINDIBLES BUDAPEST	2025-10-31 00:00:00	1. Bastión de los Pescadores (Halászbástya) – Vistas panorámicas espectaculares del Danubio y el Parlamento. 2. Parlamento Húngaro – Tour guiado en español para conocer su arquitectura e historia. 3. Balnearios termales – Széchenyi o Gellért para una experiencia relajante. 4. Mercado Central – Gastronomía local y souvenirs. 5. Castillo de Buda – Barrio histórico con museos y vistas. 6. Crucero nocturno por el Danubio – El Parlamento iluminado es impresionante.	t	{}
+f8a5c2e9-1b3d-4c7e-9f8a-2e1d3c4b5a6e	a995959b-d2b0-4592-b145-b650865a6086	RECOMENDACIONES GENERALES	2025-10-25 00:00:00	Documentación: Lleva tu pasaporte y una copia de seguridad. Moneda: Euro en ambos países. Propinas: 10-15% en restaurantes si no está incluido el servicio. Transporte: Compra tarjetas de transporte público diarias. Idioma: Francés en París, húngaro en Budapest (inglés ampliamente hablado). Clima: Octubre puede ser fresco, lleva abrigo ligero.	t	{}
+a1b2c3d4-e5f6-7890-abcd-ef1234567890	5948ede8-258b-4cd3-9f44-be08adccf9d5	GUÍA ALEMANIA - CIUDADES PRINCIPALES	2025-10-14 00:00:00	COLONIA: Famosa por su catedral gótica (Kölner Dom), una de las más impresionantes de Europa. HAMBURGO: Ciudad portuaria con el famoso barrio de entretenimiento Reeperbahn y hermosos canales. BERLÍN: Capital rica en historia, desde el Muro de Berlín hasta la Puerta de Brandeburgo. MÚNICH: Capital de Baviera, conocida por su Oktoberfest y arquitectura tradicional alemana.	t	{}
+b2c3d4e5-f6g7-8901-bcde-f23456789012	5948ede8-258b-4cd3-9f44-be08adccf9d5	INFORMACIÓN PRÁCTICA ALEMANIA	2025-10-14 00:00:00	Moneda: Euro (€). Idioma: Alemán (inglés ampliamente hablado en zonas turísticas). Transporte: Excelente sistema de trenes (DB) y transporte público. Propinas: 5-10% en restaurantes. Horarios: Tiendas cierran temprano los domingos. Clima octubre: Fresco, temperatura 8-15°C, lleva ropa abrigada.	t	{}
+c3d4e5f6-g7h8-9012-cdef-345678901234	b9a2864e-c91c-491b-b3a8-8c24cab30c33	CANCÚN - RECOMENDACIONES	2025-08-31 00:00:00	Protector solar biodegradable para cenotes. Ropa cómoda y zapatos antideslizantes. Hidratación constante por el clima tropical. Respeta las normas de los cenotes (no usar bloqueador químico). Lleva efectivo para compras locales y propinas.	t	{}
+d4e5f6g7-h8i9-0123-defg-456789012345	d96a8593-bc27-4a93-86cc-513106594bc1	EGIPTO - CONSEJOS IMPORTANTES	2025-09-04 00:00:00	Documentación: Visa requerida (se puede obtener al llegar). Vestimenta: Respetuosa, especialmente en sitios religiosos. Hidratación: Agua embotellada siempre. Propinas: Esperadas en la mayoría de servicios. Fotografía: Algunos sitios cobran extra por cámaras.	t	{}
+\.
+
+
+--
+-- Data for Name: transports; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.transports (id, travel_id, type, name, provider, contact_name, contact_number, pickup_date, pickup_location, end_date, dropoff_location, confirmation_number, notes, attachments) FROM stdin;
+2fb00737-4514-486e-abc2-162fa476a4c8	b9a2864e-c91c-491b-b3a8-8c24cab30c33	autobus	Traslado aeropuerto a hotel	ADO	Hilario P.	2432435345	2025-08-31 22:00:00	Aeropuerto Cancun salida.	2025-08-31 18:00:00	Hotel Xcaret	2323534534	No aplica.	\N
+877a1490-ac12-4599-b1e7-0f4281e9217f	d96a8593-bc27-4a93-86cc-513106594bc1	taxi	Traslado de aeropuerto a hotel	Taxi El Cairo	Ala	568723135	2025-09-06 02:30:00	Aeropuerto	2025-09-06 05:00:00	Hotel Steigenberger Nile Palace en Luxor,	9863258741	Espacio para notas adicionales	\N
+efffcfff-4bd0-45eb-965f-69936d4d888c	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	AEROPUERTO-BUDAPEST	Budapest Private Transfers	\N	+36709322948	2025-10-30 20:55:00	AEROPUERTO	2025-10-30 21:30:00	HOTEL BARCELO	T2619814	\N	\N
+5186ec2f-4999-44af-a053-865d8ebe6abe	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	AEROPUERTO-PARIS	Move In Paris	\N	0033662920505	2025-10-26 15:05:00	AEROPUERTO	2025-10-26 16:00:00	HOTEL LES JARDINS	T2619811	\N	\N
+e6d04529-72f7-4fef-81ef-1eab0a38fc78	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	BUDAPEST-AEROPUERTO	Budapest Private Transfers	\N	+36709322948	2025-11-03 09:30:00	HOTEL BARCELO	2025-11-03 10:15:00	AEROPUERTO	T2619815	\N	\N
+e84f4f5c-2320-4658-915d-7f0cfdc61215	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	PARIS-AEROPUERTO	Alliance Transfer Shuttle	\N	+33 6 98 97 21 20	2025-10-30 14:30:00	HOTEL LES JARDINS	2025-10-30 15:45:00	AEROPUERTO BVA	T2619813	\N	\N
+cc284a7f-2240-49cb-9d6e-a1ab7656ef23	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	VERSALLES-PARIS	Move In Paris	\N	0033662920505	2025-10-28 20:20:00	VERSALLES	2025-10-28 21:00:00	HOTEL LES JARDINS	T2619798	\N	\N
+abfcd878-b68e-4537-b3d9-ed7a240c69d9	a995959b-d2b0-4592-b145-b650865a6086	traslado_privado	PARIS-VERSALLES	Move In Paris	\N	0033662920505	2025-10-28 15:00:00	HOTEL LES JARDINS	2025-10-28 16:00:00	VERSALLES	T2619797	\N	\N
+7fdbe3d6-da66-45e9-b36c-1b85119dc7c6	c9537dc5-659a-4493-912b-78a053f28ecd	alquiler_auto	Alquiler carro March para Tlaquepaque	Alquileres 89	Jon	4446998752	2025-12-23 14:00:00	Hotel	\N	\N	5658	\N	\N
+db7cbd5b-07e8-4a4a-a98d-f833b7d8c9a8	c9537dc5-659a-4493-912b-78a053f28ecd	alquiler_auto	Alquiler auto para Guachimontones	Alquileres 89	Jon	4446998752	2025-12-26 14:00:00	Hotel	\N	\N	856953	\N	\N
+7abf2a96-2370-41d4-b625-9107d7183df5	c9537dc5-659a-4493-912b-78a053f28ecd	uber	Traslado a Cena Navideña	Uber	Andrés	62598752531	2025-12-25 02:00:00	Hotel	\N	\N	164623147846	\N	\N
+83cb86e0-50f1-42bf-a768-cece07e347f8	c9537dc5-659a-4493-912b-78a053f28ecd	uber	Traslado a Concierto	Uber	Karla	78965334	2025-12-27 23:00:00	Hotel	\N	\N	453218651	\N	\N
+d034772a-014a-4771-ab3e-be3ca279f1fc	c9537dc5-659a-4493-912b-78a053f28ecd	taxi	Taxi seguro	Taxi seguro aeropueto	Hilario	78965334	2025-12-23 02:00:00	Aeropuerto	2025-12-23 03:00:00	Hotel Barceló 	1458754	Espacio para notas adicionales	\N
+d4c7f339-b8ab-4f8e-a312-588c2dcc108d	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	traslado_privado	AEROPUERTO-BALI	Nandini Dewata Trans	\N	+6281 2397 74376	2025-10-30 05:55:00	AEROPUERTO	2025-10-30 06:30:00	HOTEL UDAYA	T2509944	\N	\N
+ac78b4c7-103b-4f1f-9470-07fa69d7e421	d37e0f99-7cf3-4726-9ae0-ac43be22b18e	traslado_privado	BALI-AEROPUERTO	Nandini Dewata Trans	\N	+6281 2397 74376	2025-11-02 03:30:00	HOTEL UDAYA	2025-11-02 04:00:00	AEROPUERTO	T2509946	\N	\N
+51df6a3e-f05b-4d4e-9e51-8db5d7a73036	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	traslado_privado	TRASLADO AEROPUERTO-HOTEL	Koi Ride	(Whatsapp)	+971 4 575 4333	2025-10-31 01:40:00	Aeropuerto Internacional de Dubái	2025-10-31 02:40:00	Rove Downtown - Al Mustaqbal Street - Dubái - Emiratos Árabes Unidos	T2630486	Terminal 1: Después de recoger vuestro equipaje, proceded hacia la sala de llegadas. En la zona de recepción un representante os estará esperando con un cartel con vuestro nombre. El representante os acompañará hasta vuestro vehículo y conductor en la zona de recogida de pasajeros. Terminal 3: Después de recoger vuestro equipaje, proceded hacia la sala de llegadas y dirigíos hacia la farmacia Boots donde un representante os estará esperando con un cartel con vuestro nombre. El representante os acompañará hasta vuestro vehículo y conductor en la zona de recogida de pasajeros. Terminal 2: Vuestro conductor os estará esperando con un cartel con vuestro nombre en la sala de llegadas.	\N
+1dd29267-1d3e-46bf-a94c-b5dd8eb192d5	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	traslado_privado	DUBAI - ABU DHABI	Koi Ride	whatsapp	+971 4 575 4333	2025-11-04 15:30:00	Rove Downtown - Al Mustaqbal Street - Dubái - Emiratos Árabes Unidos	2025-11-04 17:30:00	Staybridge Suites Abu Dhabi - Yas Island by IHG - Abu Dabi - Emiratos Árabes Unidos	T2630487	El conductor te estará esperando en la puerta de tu alojamiento con un cartel a tu nombre.	\N
+2b55f82b-a7b0-4b00-bce8-4e05a0d05b1c	c1907a9d-4be8-4e5f-accd-1dbf102f4d83	traslado_privado	ABU DHABI - AEROPUERTO	Koi Ride	whatsapp	+971 4 575 4333	2025-11-05 19:30:00	Staybridge Suites Abu Dhabi - Yas Island by IHG - Abu Dabi - Emiratos Árabes Unidos	2025-11-05 20:30:00	Aeropuerto Internacional de Abu Dhabi	T2632343	\N	\N
+34caddae-416b-4ad3-8062-07cede088ac3	dee026ed-e996-41ba-b2d0-11d839941d6b	uber	Uber Aeropuerto MEX a Airbnb	Uber	No aplica	78965334	2025-09-13 19:00:00	Aeropuerto MEX	2025-09-13 20:00:00	Airbnb	852255	Uber para 3 personas.	\N
+d38d861a-dfb0-4769-bff1-f56d1764fb28	dee026ed-e996-41ba-b2d0-11d839941d6b	uber	Uber Aeropuerto MEX a Airbnb (2)	Uber	No aplica	62598752531	2025-09-13 19:00:00	Aeropuerto MEX	2025-09-13 19:00:00	Airbnb	1458754	Uber para 2 personas.	\N
+11e0b86c-42f5-4f4d-b1b6-63044072c807	dee026ed-e996-41ba-b2d0-11d839941d6b	traslado_privado	Aeropuerto a Resort	Hotel	Andrés	4446998752	2025-09-14 21:00:00	Aeropuerto Los Cabos	2025-09-14 22:00:00	Hotel 	8456216410	Carro del hotel para transportar a todas juntas.	\N
+9886bb61-aa71-4ee0-9202-75ecc2a02108	2660e785-54d9-4cfa-b9da-b92933c7eb2d	taxi	OnWayTransfers - EUR	OnWayTransfers - EUR	No aplica.	whatsapp (+34) 871153847	2025-09-19 02:30:00	Aeropuerto de Berlín Brandeburgo	2025-09-19 03:00:00	Hotel Catalonia Berlin Mitte, Köpenicker Straße, Berlín, Alemania	T2506831	Tras recoger el equipaje, tienen que llamar al +4917640783582 (WhatsApp disponible) para acordar el encuentro con el conductor o el representante fuera de la terminal. Si no consiguen contactar con el equipo local, llamar al equipo de atención al cliente del proveedor disponible 24/7: +34 871 153 847.	\N
+6bc16e66-94be-4b72-99d3-befda4d755c2	2660e785-54d9-4cfa-b9da-b92933c7eb2d	taxi	OnWayTransfers - EUR	OnWayTransfers - EUR	No aplica	whatsapp (+34)871153847	2025-09-22 10:00:00	Hotel Catalonia Berlin Mitte, Köpenicker Straße, Berlín, Alemania	2025-09-22 11:00:00	Aeropuerto de Berlín Brandeburgo	T2506832	El conductor te estará esperando en la puerta de tu alojamiento con un cartel a tu nombre. No esperes a que el conductor entre a buscarte, ya que en ocasiones no pueden abandonar el vehículo. El tiempo máximo de espera es de 10 minutos.	\N
+93e1003d-5f1c-4e8a-a46d-0a1d752bc623	2660e785-54d9-4cfa-b9da-b92933c7eb2d	taxi	Mistertransfer	Mistertransfer	No aplica	(Whatsapp Only) +19804496969	2025-09-22 15:20:00	Aeropuerto Fiumicino	2025-09-22 16:00:00	Hotel Gioberti, Via Gioberti, Roma, Italia	T2506833	Si aterrizan en la terminal 1, el chófer los estará esperando en el hall de llegadas en la salida número 3. Si aterrizan en la terminal 3, el chófer los estará esperando en el hall de llegadas en la salida número 1.	\N
+8bc01558-f984-45a4-93bf-542130c88295	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	alquiler_auto	Aeropuerto - Berlin	OnWayTransfers - EUR	\N	WhatsApp (+34) 871153847	2025-09-19 02:30:00	Aeropuerto de Berlín Brandeburgo	2025-09-19 03:00:00	Hotel Catalonia Berlin Mitte, Köpenicker Strabe, Berlín, Alemanía	T2506831	Tras recoger el equipaje, tienen que llamar al +4917640783582 (WhatsApp disponible) para acordar el encuentro con el conductor o el representante fuera de la terminal. Si no consiguen contactar con el equipo local, llamar al equipo de atención al cliente del proveedor disponible 24/7: +34 871 153 847.	\N
+542685fc-5fb0-4c05-86b2-20324e4e3648	73fdb531-9e28-4a7f-b199-396f20990d02	traslado_privado	Aeropuerto - Berlin	OnWayTransfers - EUR	OnWayTransfers - EUR	whatsapp (+34)871153847	2025-09-19 02:30:00	Aeropuerto de Berlín Brandeburgo	2025-09-19 03:00:00	Hotel Catalonia Berlin Mitte, Köpenicker Straße, Berlín, Alemania	T2506831	Tras recoger el equipaje, tienen que llamar al +4917640783582 (WhatsApp disponible) para acordar el encuentro con el conductor o el representante fuera de la terminal. Si no consiguen contactar con el equipo local, llamar al equipo de atención al cliente del proveedor disponible 24/7: +34 871 153 847.	{/uploads/transports/attachments-1757971265931-506697037.pdf}
+d043d468-4420-46e6-a936-0793f639af3a	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	traslado_privado	BERLIN-AEROPUERTO	OnWayTransfers - EUR	OnWayTransfers - EUR	whatsapp (+34)871153847	2025-09-22 10:00:00	Hotel Catalonia Berlin Mitte, Köpenicker Straße, Berlín, Alemania	2025-09-22 11:00:00	Aeropuerto de Berlín Brandeburgo	T2506832	El conductor te estará esperando en la puerta de tu alojamiento con un cartel a tu nombre. No esperes a que el conductor entre a buscarte, ya que en ocasiones no pueden abandonar el vehículo. El tiempo máximo de espera es de 10 minutos.	\N
+c9ea4b7d-7814-40f4-b666-8de97a8aae60	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	traslado_privado	AEROPUERTO-ROMA	Mistertransfer	Mistertransfer	 Whatsapp only +19804496969 	2025-09-22 15:20:00	Aeropuerto Fiumicino	2025-09-22 16:00:00	Hotel Gioberti, Via Gioberti, Roma, Italia	T2506833	Si aterrizan en la terminal 1, el chófer los estará esperando en el hall de llegadas en la salida número 3. Si aterrizan en la terminal 3, el chófer los estará esperando en el hall de llegadas en la salida número 1.	\N
+86de5a5a-be94-4a0e-934c-08321af05fdc	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	traslado_privado	Visitando Italia Visitando Italia Traslados SRL	Visitando Italia Traslados SRL	Visitando Italia Traslados SRL	EMERGENCIAS +39 3358737093 	2025-09-25 15:25:00	Hotel Gioberti, Via Gioberti, Roma, Italia	2025-09-25 16:00:00	Estación Termini	T2506834	El conductor te estará esperando en la puerta de tu alojamiento con un cartel a tu nombre.	\N
+9befedb9-a68d-4ed8-96ce-fe044c9afc4b	f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	tren	ROMA-FLORENCIA TRENITALIA	TRENITALIA	Coordinador	(+39) 3346148357	2025-09-25 18:05:00	T2507155	2025-09-25 19:00:00	Via Camillo Cavour, 12, 50122 Florence, Florencia, Toscana, Italia	T2507155	El conductor te estará esperando con un cartel a tu nombre cerca de la farmacia, ubicada en la estación saliendo de los andenes a la izquierda.	\N
+e004d85f-7f07-461b-8c50-f5c64ccb3715	0901b373-d2bd-436e-8384-6041e252fb01	traslado_privado	Bruselas - Aeropuerto	Driveme	Driveme	llamadas y whatsapp +32 485 93 59 65	2025-10-02 11:30:00	Craves, Rue du Marché aux Poulets, Bruselas, Bélgica	2025-10-02 12:30:00	Aeropuerto de Bruselas Zaventem	T2506836		{/uploads/transports/attachments-1757960091573-330039980.pdf}
+4c5e95d9-4ffd-41f8-b13c-87e810363b5a	0901b373-d2bd-436e-8384-6041e252fb01	traslado_privado	Aeropuerto - Madrid	Vip Madrid	Vip Madrid	solo emergencias (+34) 680 52 79 40	2025-10-02 17:50:00	Aeropuerto de Barajas	2025-10-02 19:00:00	Hotel Riu Plaza España, Gran Vía, Madrid, España	T2506837	El conductor los estará esperando en el hall de llegadas de la terminal con un cartel con el nombre que indicaron en la reserva. Los puntos de encuentro en las diferentes terminales son los siguientes: Terminal 1: Junto a Correos (si es la puerta 1) o junto a la Farmacia (si es la puerta 2). Terminal 2: Junto al punto de información turística (entre las puertas 5 y 6). Terminal 4: Punto de encuentro en el centro del hall de llegadas, puertas 10 y 12, al lado de la columna amarilla con carteles negros y letras amarillas.	{}
+4d8d0e0f-b6a7-416c-8ccc-a7164fd339a9	0901b373-d2bd-436e-8384-6041e252fb01	traslado_privado	Madrid - Aeropuerto	Vio Madrid	Vio Madrid	solo emergencias (+34) 680 52 79 40	2025-10-05 11:20:00	Hotel Riu Plaza España, Gran Vía, Madrid, España	2025-10-05 12:00:00	Aeropuerto de Barajas	T2506838		{}
+49866f38-295a-4e2d-9ab8-10f1e836cb26	d2e13f1c-5e2c-42a6-a0b3-0033688b68cf	autobus	Traslado SLP a Ríoverde	Plus	Coordinador	4446559782	2025-09-23 12:00:00	Plaza Tangamanga	2025-09-23 14:00:00	Rioverde	587152	Asientos B2 y B3.	{/uploads/transports/attachments-1757964129201-483737856.pdf}
+b5ad1a62-20da-467c-9e02-618da199e68b	d2e13f1c-5e2c-42a6-a0b3-0033688b68cf	autobus	Puente de Dios a Hotel	Plus	Coordinador	4446998752	2025-09-23 22:00:00	Puente de Dios	2025-09-23 22:20:00	Hotel María Dolores Río verde	1458754	Revisa el PDF para ver tu reservación en el hotel.	{/uploads/transports/attachments-1757964324182-543560335.pdf}
+c5573cb3-d878-45ab-944d-06790348c023	71e3bd75-ae49-49ca-ba05-97850d04e385	traslado_privado	Prueba traslado	Uber	Andrés	4446998752	2025-09-24 18:00:00	Airbnb Calzada de Gpe. 568 Col. Juan Diego	2025-09-24 20:00:00	Hotel 	FGH23659752	Uber para 2 personas.	{/uploads/transports/attachments-1758571115256-251525673.pdf}
+dfd91138-205b-4883-832b-5559f364a6e4	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	tren	ROMA - FLORENCIA	TRENITALIA			2025-10-18 17:10:00	Roma Termini	2025-10-18 18:46:00	Firenze S. M. Novella	NFBVXN		{/uploads/transports/attachments-1758584919313-329457541.pdf}
+9e6670a5-0116-48e1-a8a9-14372cd78cfc	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	tren	FLORENCIA - VENECIA	.ITALO			2025-10-20 15:39:00	Estación Firenze Santa Maria Novella	2025-10-20 17:55:00	Venezia Santa Lucia	C95C9V		{/uploads/transports/attachments-1758584929154-941667121.pdf}
+851dfb25-5179-4793-8a7d-da4539eccd3c	8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	autobus	Split - Dubrovnik	FlixBus			2025-10-24 18:30:00	Estación de autobuses de Split  (Obala kneza Domagoja 12, 21000 Split)	2025-10-24 23:15:00	Estación de autobuses de Dubrovnik  (Obala pape Ivana Pavla II 44, 20000 Dubrovnik)	3289587744		{/uploads/transports/attachments-1758584939102-151228012.pdf}
+d912b5b1-8b94-4d3e-982f-859897506629	df478a23-1e35-4405-b0d5-7c2601cb399d	traslado_privado	aer-aer	Angels Transfers & Tours	 (whatsapp)	+5491157563385 	2025-10-04 11:55:00	Aeropuerto de Ezeiza Ministro Pistarini	2025-10-04 13:00:00	Aeroparque Jorge Newbery	T2652459		{/uploads/transports/attachments-1758666785233-666776047.pdf}
+5dcbcb64-73ff-4e06-ae19-777c135d2f9b	df478a23-1e35-4405-b0d5-7c2601cb399d	traslado_privado	AER-BUENOS AIRES	Angels Transfers & Tours	whatsapp	+5491157563385	2025-10-08 02:50:00	Aeropuerto de Ezeiza Ministro Pistarini	2025-10-08 03:50:00	Hotel NH Buenos Aires City, Bolívar 160, Buenos Aires, Ciudad Autónoma de Buenos Aires, Arg entina	T2652470		{/uploads/transports/attachments-1758666919536-721765151.pdf}
+c990316f-193e-42fa-a3c4-ce4366c62523	df478a23-1e35-4405-b0d5-7c2601cb399d	traslado_privado	BUENOS AIRES - AER	Angels Transfers & Tours	whatsapp	+5491157563385 	2025-10-13 17:45:00	Hotel NH Buenos Aires City, Bolívar 160, Buenos Aires, Ciudad Autónoma de Buenos Aires, Arg entina	2025-10-13 18:30:00	Aeroparque Jorge Newbery	T2652473		{/uploads/transports/attachments-1758667022784-970679034.pdf}
+19b6a4f6-eced-448d-bea9-fa744602c5ef	df478a23-1e35-4405-b0d5-7c2601cb399d	traslado_privado	aer-ba	Angels Transfers & Tours	whatsapp	+5491157563385	2025-10-16 22:40:00	Aeroparque Jorge Newbery 	2025-10-16 23:30:00	Eurobuilding Hotel Boutique Buenos Aires, Lima, Ciudad Autónoma de Buenos Aires, Argentin a	T2653314		{/uploads/transports/attachments-1758667135396-173955372.pdf}
+6afda03e-0d18-4e09-affc-4248692cfc7b	df478a23-1e35-4405-b0d5-7c2601cb399d	traslado_privado	ba-aer	Angels Transfers & Tours	whatsapp	+5491157563385	2025-10-17 10:00:00	Eurobuilding Hotel Boutique Buenos Aires, Lima, Ciudad Autónoma de Buenos Aires, Argentina	2025-10-17 11:00:00	Aeropuerto de Ezeiza Ministro Pistarini	T2653317		{/uploads/transports/attachments-1758667350515-741041709.pdf}
+\.
+
+
+--
+-- Data for Name: travels; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.travels (id, name, client_name, start_date, end_date, travelers, status, cover_image, created_by, created_at, updated_at, public_token, public_token_expiry, client_id) FROM stdin;
+a995959b-d2b0-4592-b145-b650865a6086	PARIS Y BUDAPEST	MARIA ESTHELA YAÑEZ GONZALEZ	2025-10-25 00:00:00	2025-11-03 00:00:00	5	published	/objects/uploads/38eb6f7f-e1b8-4291-b076-012100ac7872	b5430f92-5136-4544-b062-106671203718	2025-09-01 22:19:21.756	2025-09-02 03:12:03.446	f558d7d1ef46f47fb469a036c7ce464874f161adaa5d91acb3783c705dd23260	2025-10-01 23:29:12.92	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+5948ede8-258b-4cd3-9f44-be08adccf9d5	ALEMANIA	MARIO REYES	2025-10-14 12:00:00	2025-10-22 12:00:00	2	published	/objects/uploads/6d786487-1f2e-4197-beb1-ddd5349e440b	b5430f92-5136-4544-b062-106671203718	2025-09-11 18:01:56.838	2025-09-23 02:12:14.398	3fda3d95393eefbce47ac02ddb4946e5296efd9fd97d906f923faa6ad46a7a47	2025-10-11 18:40:34.439	147bf23f-f047-45bc-9eed-8b0c6736dca7
+c1907a9d-4be8-4e5f-accd-1dbf102f4d83	DUBAI Y EGIPTO	Alejandro y Mariana	2025-10-30 00:00:00	2025-11-06 00:00:00	2	draft	/objects/uploads/c115c2e0-b08c-4314-97a3-634a22e6a56e	b5430f92-5136-4544-b062-106671203718	2025-09-09 23:55:54.855	2025-09-09 23:55:56.21	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+6d915ad6-884e-482b-9c1b-5f9a5d201c6b	LUNA DE MIEL DANIEL & ISA	DANIEL HERNANDEZ AVILA	2025-10-27 00:00:00	2025-11-15 00:00:00	2	draft	/objects/uploads/da950860-0248-41de-8371-79dfc235ffc0	558e4806-f2ea-4a79-8245-4138dd8fbca5	2025-09-01 21:52:41.659	2025-09-01 21:52:44.718	\N	\N	\N
+d37e0f99-7cf3-4726-9ae0-ac43be22b18e	HONEYMOON	ISA & DANIEL	2025-10-27 00:00:00	2025-11-18 00:00:00	2	draft	/objects/uploads/5fda2889-73ea-4fde-a207-bd00bd6c59ec	b5430f92-5136-4544-b062-106671203718	2025-09-09 23:16:15.986	2025-09-10 00:29:32.848	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+df478a23-1e35-4405-b0d5-7c2601cb399d	ARGENTINA	FAMILIA RICO MEDINA	2025-09-23 22:45:03.646	2025-09-23 22:45:03.646	2	published	/objects/uploads/575b278c-8d4d-471b-9d45-ac1d94adc2f8	b5430f92-5136-4544-b062-106671203718	2025-09-10 23:34:58.514	2025-09-23 22:45:03.646	a115a642a815740f6a9d67cf1fbe0f87f26f24317c132f3efde11662c2a137e9	2025-12-22 22:45:03.646	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+71e3bd75-ae49-49ca-ba05-97850d04e385	PRUEBA VISUALIZACIÓN PDF	PRUEBA PDF	2025-09-22 12:00:00	2025-09-25 12:00:00	1	draft	/objects/uploads/d6f14e25-921e-4b21-8839-8376042073ca	b4c79851-93ba-4e20-aae8-03d58a529c0e	2025-09-22 16:11:29.426	2025-09-22 20:17:01.475	5123b163ddb950e0fc809185c82dd20146ab1dd6dd9c2efac30af27ab503a876	2025-12-21 17:42:24.462	a6e13fa4-0022-47cf-a08d-1a7490eeec67
+8d2e8f5a-7ac8-48e7-aaa6-4e3b7e9923b2	EUROPA ARMANDO TRUJILLO	Armando trujillo	2025-09-23 01:34:40.261	2025-09-23 01:34:40.261	2	published	/objects/uploads/f2da5f2c-0223-4c6f-abe9-c4659bd7a9df	b5430f92-5136-4544-b062-106671203718	2025-09-19 17:18:21.594	2025-09-23 01:34:40.261	\N	\N	147bf23f-f047-45bc-9eed-8b0c6736dca7
+b9a2864e-c91c-491b-b3a8-8c24cab30c33	CANCÚN - XCARET	MARU Y ALI	2025-08-31 00:00:00	2025-09-10 00:00:00	5	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+d96a8593-bc27-4a93-86cc-513106594bc1	EGIPTO	ALEJANDRO Y MARIANA	2025-09-04 00:00:00	2025-09-10 00:00:00	2	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+c9537dc5-659a-4493-912b-78a053f28ecd	NAVIDAD EN GUADALAJARA	DANIEL Y ISA	2025-12-22 00:00:00	2025-12-31 00:00:00	2	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+ef201789-8b34-4b7a-ae43-0ee527515e67	MONTREAL	FAMILIA RICA	2025-12-07 00:00:00	2025-12-28 00:00:00	4	draft	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	13b8d38e-fc35-4748-9f38-f78eb3b012aa
+dee026ed-e996-41ba-b2d0-11d839941d6b	LOS CABOS	FAMILIA RUIZ HERRERA	2025-09-13 00:00:00	2025-09-22 00:00:00	5	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	4ebfd78e-481e-4492-9a15-8a60f55f7730
+f64d175b-b070-4a6c-b8b3-ec9ae5fd7207	EUROPA	ALEJANDRA Y MARU	2025-09-17 00:00:00	2025-09-28 00:00:00	2	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	6534cab6-01f7-4d6e-88d7-5f1a7e49fa11
+2660e785-54d9-4cfa-b9da-b92933c7eb2d	EUROPA ANA Y ROSA	ANA Y ROSA	2025-09-17 00:00:00	2025-09-22 00:00:00	2	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	d0875842-044e-49ca-8dac-e0bafcd4146b
+0901b373-d2bd-436e-8384-6041e252fb01	ESPAÑA	ALEJANDRA Y MARU	2025-10-02 00:00:00	2025-10-05 00:00:00	2	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	6534cab6-01f7-4d6e-88d7-5f1a7e49fa11
+d2e13f1c-5e2c-42a6-a0b3-0033688b68cf	RIOVERDE	FAMILIA GONZÁLEZ	2025-09-23 00:00:00	2025-10-04 00:00:00	6	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	6e0a6a37-f109-429b-b41d-f9fdda7ffa07
+73fdb531-9e28-4a7f-b199-396f20990d02	EUROPA 	FAMILIA LÓPEZ	2025-09-17 00:00:00	2025-09-25 00:00:00	4	published	\N	b5430f92-5136-4544-b062-106671203718	2025-09-01 21:53:27.602644	2025-09-01 21:53:27.602644	\N	\N	93f71dd3-c79b-40bd-b6d8-29873072dbac
+30ae4a7a-8f05-4fd3-8f97-19ddaa7d494d	Viaje de prueba	Cliente prueba	2025-09-26 12:00:00	2025-10-02 12:00:00	3	draft	/objects/uploads/bf1659a1-93b7-4ee7-bb29-ce8623ecec7b	b4c79851-93ba-4e20-aae8-03d58a529c0e	2025-09-25 14:19:45.311	2025-09-25 14:19:46.985	\N	\N	dff8472f-6e56-4526-b13b-25d6c904ed6d
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: neondb_owner
+--
+
+COPY public.users (id, username, password, name, role, created_at) FROM stdin;
+cbc2dc59-2f25-433a-aec0-2c45f33dcbe8	info@artendigital.mx	87a3d88179d8803aade5c255b50d12251fa6d10d524231168ad657054714db95293a5dd96eba18d07e50ff4bda1f265e12dc90338e334ca367654414c1918d2a.8c5570f5387a51e1c7705ad9dd7ccf34	Arten Digital	agent	2025-09-01 21:53:27.602644
+a632c59e-bf8c-47fa-8879-475dcc38fc39	MarianaTorres	4e1b84e71aee1afd2781fc97f0be144f4be972c5904459230c98baf5a7bb497318d193b496729712c1a52e4e461806baf40165e268431765ba1c6a4482422c36.20092a37bbbd467d2e236eea2c7da46d	Mariana Torres Gordoa	agent	2025-09-01 21:53:27.602644
+b5430f92-5136-4544-b062-106671203718	Mariana_TG	6cf634305722dcbd71fb092baf8ce7b0eb543dd229f9662ee1b986b297a97dc91e2829ef49b0a2453695ddb8563612064fe9c9e78118bf3911c81c8cd26fd24e.2451bfd6fecce50d50aef271cb7425c5	Mariana Torres Gordoa	admin	2025-09-01 21:53:27.602644
+13b8d38e-fc35-4748-9f38-f78eb3b012aa	reservas.planealo@gmail.com	tkjkx4yt	MARIA ESTHELA YAÑEZ GONZALEZ	client	2025-09-01 22:19:21.709778
+147bf23f-f047-45bc-9eed-8b0c6736dca7	Plannealo@gmail.com	270ll0nq	MARIO REYES	client	2025-09-11 18:01:56.790396
+a6e13fa4-0022-47cf-a08d-1a7490eeec67	casandra@artendigital.mx	q6xd655w	PRUEBA PDF	client	2025-09-02 19:03:58.398433
+c2091c4b-2160-4f5e-943d-b025466a86c2	YamelCano	096cdc1480ab1a5e27c3e281454c8b1ad0bbd339df6f9d43dc0b505e2c54e07810556a3f66500ee55728864a920674f7eaf0f3dcc4390bd34fb31121b2a88b64.a52865295f2b7a6333ee01c3d987f123	Yamel Cano Zarur	agent	2025-09-01 21:53:27.602644
+7bf342b7-1946-4cc6-bba7-a06ecfdb89e2	MontserratZarur	e355633f1593510512650a167934b14ac5138c5f05cc926a8e56cdd07a1b8af24a974378e1c5da6a99a61122be0fcfb51d42092d559544441e1b870ce0db1275.102631b0fd8e1c64019f5d9f106d0172	Montserrat Zarur	agent	2025-09-01 21:53:27.602644
+977aead7-48bc-41ea-86c2-7f7910f5e773	ARTEN	e6472600f6220562a0cab3766c0a1ce6e9caf9fbb849cd696ef01e8b9096c19421d51f156f2427d55308654bb547b14ad3f41a8e91dcfd3485684d864a8cc460.96d678519af36f734c02afc5fe75a124	ARTEN Pruebas	agent	2025-09-02 19:00:07.381854
+558e4806-f2ea-4a79-8245-4138dd8fbca5	Yamel_CZ	4d16c309034bb45a81ea42570032ead8e84a501c7e06920123fa6c1938135a914c1b468e38e8a660e5ec1862132e5564e0c6faa143d7b01fa0faf8d3ecb47c9c.fa1a6eb107d062af28610de39965186a	Yamel Cano Zarur	admin	2025-09-01 21:53:27.602644
+f7d815a6-361a-450b-bc3c-0d91edb0220d	Montserrat_Z	8ba48840d8f83f2536a30e92082ed4f945bfb7976774d552e94fb7064b9f599f07d460dcb4b63436a8a59a31efe8a098d780df3e414d5d4c9c4391fbb01362d6.60e2586424da3c75ac238fc010a607a8	Montserrat Zarur	admin	2025-09-01 21:53:27.602644
+d0875842-044e-49ca-8dac-e0bafcd4146b	ana@gmail.com	tdy45b1z	Ana Ruíz	client	2025-09-11 22:01:41.103319
+6534cab6-01f7-4d6e-88d7-5f1a7e49fa11	gonzalez@gmail.com	dp0n0vx9	Familia González García	client	2025-09-12 19:26:09.27058
+4ebfd78e-481e-4492-9a15-8a60f55f7730	herrera@gmail.com	vzgx40gj	Rosa Herrera	client	2025-09-10 21:43:02.826189
+6e0a6a37-f109-429b-b41d-f9fdda7ffa07	gomes@gmail.com	hin6rf5g	Familia Sánchez Venegas	client	2025-09-15 18:08:46.224525
+93f71dd3-c79b-40bd-b6d8-29873072dbac	ejemplo@gmail.com	001whmxl	Familia Gonzáles García	client	2025-09-15 15:35:34.828207
+6d9b2b51-6776-4699-886d-c1070e5a1602	jonathan@artendigital.mx	1243cfca5b25e82d2590afb404bc1444e97d7f7ad9ff5b87ee1ab0d5d3ee279d6bce8320e894812fe82f020668e308158488f53562343e93fd6095bd119af4df.8d330da4e883cffb495af3d4b3ff1cae	Jonathan Quistiano	admin	2025-09-10 21:39:00.712214
+b4c79851-93ba-4e20-aae8-03d58a529c0e	CassL	d0413f29e7519beab021a342ec1697e4f7ec030bc8ae03c1095193e855d2605b2629361db9b26ef7c12cc4231ae53cabf40776572a111ab20bdf9e9746002102.42b97011609767654867def0bfb455dd	Casandra López C	admin	2025-09-01 21:53:27.602644
+dff8472f-6e56-4526-b13b-25d6c904ed6d	pruebas-002@artendigital.mx	9b5nvoen	Cliente prueba	client	2025-09-25 14:19:45.229447
+\.
+
+
+--
+-- Name: accommodations accommodations_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.accommodations
+    ADD CONSTRAINT accommodations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: activities activities_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.activities
+    ADD CONSTRAINT activities_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cruises cruises_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.cruises
+    ADD CONSTRAINT cruises_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: flights flights_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.flights
+    ADD CONSTRAINT flights_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: insurances insurances_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.insurances
+    ADD CONSTRAINT insurances_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: transports transports_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.transports
+    ADD CONSTRAINT transports_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: travels travels_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.travels
+    ADD CONSTRAINT travels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_unique; Type: CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_unique UNIQUE (username);
+
+
+--
+-- Name: cruises cruises_travel_id_travels_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.cruises
+    ADD CONSTRAINT cruises_travel_id_travels_id_fk FOREIGN KEY (travel_id) REFERENCES public.travels(id) ON DELETE CASCADE;
+
+
+--
+-- Name: insurances insurances_travel_id_travels_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.insurances
+    ADD CONSTRAINT insurances_travel_id_travels_id_fk FOREIGN KEY (travel_id) REFERENCES public.travels(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notes notes_travel_id_travels_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_travel_id_travels_id_fk FOREIGN KEY (travel_id) REFERENCES public.travels(id) ON DELETE CASCADE;
+
+
+--
+-- Name: travels travels_client_id_users_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: neondb_owner
+--
+
+ALTER TABLE ONLY public.travels
+    ADD CONSTRAINT travels_client_id_users_id_fk FOREIGN KEY (client_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: cloud_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE cloud_admin IN SCHEMA public GRANT ALL ON SEQUENCES TO neon_superuser WITH GRANT OPTION;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: cloud_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE cloud_admin IN SCHEMA public GRANT ALL ON TABLES TO neon_superuser WITH GRANT OPTION;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
