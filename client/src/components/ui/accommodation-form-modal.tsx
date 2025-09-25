@@ -597,12 +597,21 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
-            {thumbnail  && (
+            {(thumbnail || (editingAccommodation?.thumbnail && !thumbnailRemoved)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium"> Imagen Previsualizada:</p>
                 <div className=" w-fit relative">
-    
-                  <img src={URL.createObjectURL(thumbnail)} alt="Thumbnail" className="max-w-full max-h-40" />
+                  <img 
+                    src={
+                      thumbnail 
+                        ? URL.createObjectURL(thumbnail) 
+                        : editingAccommodation?.thumbnail?.startsWith('/objects/') 
+                          ? editingAccommodation.thumbnail 
+                          : `/objects/${editingAccommodation?.thumbnail}`
+                    } 
+                    alt="Thumbnail" 
+                    className="max-w-full max-h-40" 
+                  />
                   <Button
                     type="button"
                     variant="ghost"
