@@ -697,6 +697,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                           if (originalIndex !== -1) {
                             removeExistingAttachment(originalIndex);
                           }
+                        }}hment(originalIndex);
+                          }
                         }}
                         className="text-red-500 hover:text-red-700"
                       >

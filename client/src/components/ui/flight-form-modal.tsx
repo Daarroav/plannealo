@@ -9,14 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search, Plane } from "lucide-react";
+import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
-import { FileUploader } from "./file-uploader";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { insertCruiseSchema } from "@shared/schema";
-import { FileUploader } from "./file-uploader";
+import { Upload, FileText, X } from "lucide-react";
 import React from "react";
 
 // Form validation schema - extends the base schema with date string handling

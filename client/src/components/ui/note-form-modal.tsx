@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Upload, FileText, X } from "lucide-react";
 import { insertNoteSchema } from "@shared/schema";
-import { FileUploader } from "./file-uploader";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
