@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
-import { ObjectStorageService, objectStorageClient } from "./objectStorage";
+import { ObjectStorageService, objectStorageClient as storageClient } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AeroDataBoxService } from "./aeroDataBoxService";
 import multer from 'multer';  // Instalacion  para subir archivos
@@ -13,7 +13,7 @@ import fs from "fs";  // Para crear carpetas
 import { Buffer } from 'buffer';
 
 // Initialize ObjectStorageService
-const objectStorageClient = new ObjectStorageService();
+const objectStorageService = new ObjectStorageService();
 
 // Helper function to parse object storage paths
 function parseObjectPath(path: string): { bucketName: string; objectName: string } {
@@ -42,7 +42,8 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
     console.log(`Corrected content type for ${file.originalname}: ${file.mimetype} -> ${contentType}`);
   }
   
-  const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
+  const tempObjectStorageService = new ObjectStorageService();
+  const uploadURL = await tempObjectStorageService.getObjectEntityUploadURL();
   const uploadResult = await fetch(uploadURL, {
     method: 'PUT',
     body: file.buffer,
@@ -56,9 +57,11 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
 
   const normalizedPath = objectStorageClient.normalizeObjectEntityPath(uploadURL);
   
+  const normalizedPath = tempObjectStorageService.normalizeObjectEntityPath(uploadURL);
+  
   // Set metadata with original filename and corrected content type
   try {
-    const objectFile = await objectStorageClient.getObjectEntityFile(normalizedPath);
+    const objectFile = await tempObjectStorageService.getObjectEntityFile(normalizedPath);
     await objectFile.setMetadata({
       contentType: contentType,
       metadata: {
@@ -1798,11 +1801,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const archiver = await import('archiver');
     
     try {
-      const objectStorageService = new ObjectStorageService();
       const privateDir = objectStorageService.getPrivateObjectDir();
       const { bucketName, objectName } = parseObjectPath(privateDir);
       
-      const bucket = objectStorageClient.bucket(bucketName);
+      const bucket = storageClient.bucket(bucketName);
       
       // Get all files in the uploads directory
       const [files] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
