@@ -80,16 +80,16 @@ export default function ReportsPage() {
         throw new Error('Received empty file');
       }
 
-      const url = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = blobUrl;
       a.download = `storage_backup_${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
 
       // Clean up
       setTimeout(() => {
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(blobUrl);
         document.body.removeChild(a);
       }, 100);
 
