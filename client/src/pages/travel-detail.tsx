@@ -874,10 +874,12 @@ export default function TravelDetail() {
   };
 
   const formatPrice = (price: number): string => {
-    return price.toLocaleString('es-MX', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
       currency: 'MXN',
-    });
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
   };
 
   // Function to clean structured data from notes field
