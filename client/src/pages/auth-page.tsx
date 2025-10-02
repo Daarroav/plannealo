@@ -207,15 +207,27 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero */}
-      <div 
-        className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden"
-        style={{
-          backgroundImage: backgroundImage,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
+      <div className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden">
+        {/* Background Image */}
+        {backgroundImage && !backgroundImage.includes('linear-gradient') && (
+          <img
+            src={backgroundImage.replace('url(', '').replace(')', '')}
+            alt="Travel background"
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        )}
+        {/* Gradient fallback */}
+        {(!backgroundImage || backgroundImage.includes('linear-gradient')) && (
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+            }}
+          />
+        )}
         {/* Overlay oscuro para mejorar legibilidad */}
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="max-w-md text-center space-y-8 relative z-10">
