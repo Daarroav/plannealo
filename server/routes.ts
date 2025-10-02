@@ -55,8 +55,6 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
     throw new Error(`Failed to upload file to object storage: ${uploadResult.statusText}`);
   }
 
-  const normalizedPath = objectStorageClient.normalizeObjectEntityPath(uploadURL);
-  
   const normalizedPath = tempObjectStorageService.normalizeObjectEntityPath(uploadURL);
   
   // Set metadata with original filename and corrected content type
