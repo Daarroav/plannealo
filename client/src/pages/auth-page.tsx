@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Redirect } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [backgroundImage, setBackgroundImage] = useState<string>("");
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -45,6 +46,35 @@ export default function AuthPage() {
       name: "",
     },
   });
+
+  // Fetch random travel cover image
+  useEffect(() => {
+    const fetchRandomCoverImage = async () => {
+      try {
+        const response = await fetch('/api/travels');
+        if (response.ok) {
+          const travels = await response.json();
+          const travelsWithCover = travels.filter((t: any) => t.coverImage);
+          
+          if (travelsWithCover.length > 0) {
+            const randomTravel = travelsWithCover[Math.floor(Math.random() * travelsWithCover.length)];
+            const imageUrl = randomTravel.coverImage.startsWith("/objects/") 
+              ? `/api${randomTravel.coverImage}` 
+              : randomTravel.coverImage;
+            setBackgroundImage(imageUrl);
+          } else {
+            // Fallback gradient if no covers available
+            setBackgroundImage("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching travel covers:", error);
+        setBackgroundImage("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+      }
+    };
+
+    fetchRandomCoverImage();
+  }, []);
 
   // Redirect if already authenticated
   if (user) {
@@ -177,16 +207,26 @@ export default function AuthPage() {
       </div>
 
       {/* Right side - Hero */}
-      <div className="hidden lg:flex items-center justify-center bg-accent/5 p-8">
-        <div className="max-w-md text-center space-y-8">
+      <div 
+        className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden"
+        style={{
+          backgroundImage: backgroundImage,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* Overlay oscuro para mejorar legibilidad */}
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="max-w-md text-center space-y-8 relative z-10">
           <div className="space-y-4">
             <div className="w-16 h-16 mx-auto bg-accent/10 rounded-full flex items-center justify-center">
               <Plane className="w-8 h-8 text-accent" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">
+            <h2 className="text-2xl font-bold text-white">
               Gestiona Viajes Como Un Profesional
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-white text-opacity-90">
               PLANNEALO te permite crear, organizar y administrar itinerarios de viaje 
               completos para tus clientes de manera eficiente y profesional.
             </p>
@@ -198,8 +238,8 @@ export default function AuthPage() {
                 <MapPin className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-medium text-foreground">Itinerarios Completos</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium text-white">Itinerarios Completos</h3>
+                <p className="text-sm text-white text-opacity-80">
                   Alojamientos, vuelos, actividades y transporte en un solo lugar
                 </p>
               </div>
@@ -210,8 +250,8 @@ export default function AuthPage() {
                 <Users className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-medium text-foreground">Gestión de Clientes</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium text-white">Gestión de Clientes</h3>
+                <p className="text-sm text-white text-opacity-80">
                   Organiza y administra las reservas de múltiples clientes
                 </p>
               </div>
@@ -222,8 +262,8 @@ export default function AuthPage() {
                 <Calendar className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <h3 className="font-medium text-foreground">Seguimiento Total</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-medium text-white">Seguimiento Total</h3>
+                <p className="text-sm text-white text-opacity-80">
                   Mantén el control de fechas, confirmaciones y detalles importantes
                 </p>
               </div>
