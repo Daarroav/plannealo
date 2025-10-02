@@ -614,6 +614,16 @@ export default function TravelPreview() {
                   </div>
                 </div>
               )}
+              {event.data.endDate && (
+                <div>
+                  <div className="font-medium text-gray-600 uppercase text-xs">
+                    FINALIZACIÓN
+                  </div>
+                  <div className="text-gray-900">
+                    {formatDateTime(event.data.endDate)}
+                  </div>
+                </div>
+              )}
               {event.data.provider && (
                 <div>
                   <div className="font-medium text-gray-600 uppercase text-xs">
