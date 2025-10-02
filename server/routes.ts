@@ -95,13 +95,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get list of cover images
   app.get('/api/covers-list', async (req, res) => {
     try {
-      const fs = require('fs').promises;
-      const path = require('path');
-      const coversDir = path.join(process.cwd(), 'uploads', 'covers');
+      const { promises: fsPromises } = await import('fs');
+      const { join } = await import('path');
+      const coversDir = join(process.cwd(), 'uploads', 'covers');
 
       // Check if directory exists
       try {
-        const files = await fs.readdir(coversDir);
+        const files = await fsPromises.readdir(coversDir);
         // Filter only image files
         const imageFiles = files.filter((file: string) =>
           /\.(jpg|jpeg|png|webp|gif)$/i.test(file)
