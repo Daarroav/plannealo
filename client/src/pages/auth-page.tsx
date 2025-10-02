@@ -28,7 +28,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
-  const [backgroundImage, setBackgroundImage] = useState<string>("");
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -61,10 +61,10 @@ export default function AuthPage() {
             const imageUrl = randomTravel.coverImage.startsWith("/objects/") 
               ? `/api${randomTravel.coverImage}` 
               : randomTravel.coverImage;
-            setBackgroundImage(`url(${imageUrl})`);
+            setBackgroundImage(imageUrl);
           } else {
             // Fallback gradient if no covers available
-            setBackgroundImage("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+            setBackgroundImage("gradient");
           }
         }
       } catch (error) {
@@ -208,19 +208,18 @@ export default function AuthPage() {
 
       {/* Right side - Hero */}
       <div className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden">
-        {/* Background Image */}
-        {backgroundImage && !backgroundImage.includes('linear-gradient') && (
+        {/* Background Image or Gradient */}
+        {backgroundImage && backgroundImage !== "gradient" ? (
           <img
-            src={backgroundImage.replace('url(', '').replace(')', '')}
+            src={backgroundImage}
             alt="Travel background"
             className="absolute inset-0 w-full h-full object-cover"
             onError={(e) => {
+              console.error("Error loading image:", backgroundImage);
               e.currentTarget.style.display = 'none';
             }}
           />
-        )}
-        {/* Gradient fallback */}
-        {(!backgroundImage || backgroundImage.includes('linear-gradient')) && (
+        ) : (
           <div 
             className="absolute inset-0"
             style={{
