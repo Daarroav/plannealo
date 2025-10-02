@@ -270,7 +270,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
       // Sync price formatting
       if (editingAccommodation.price) {
-        const formatted = formatNumber(editingAccommodation.price.toString());
+        // Convert price to cents and format
+        const priceInCents = Math.round(parseFloat(editingAccommodation.price) * 100).toString();
+        const formatted = formatNumber(priceInCents);
         setPrice(formatted);
       } else {
         setPrice("");
@@ -314,10 +316,22 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
  
   const formatNumber = (val: string) => {
-    return val
-      .replace(/\D/g, "")
-      .replace(/([0-9])([0-9]{2})$/, "$1.$2")
-      .replace(/\B(?=(\d{3})+(?!\d)\.?)/g, ",");
+    // Remove all non-digits
+    const digitsOnly = val.replace(/\D/g, "");
+    
+    if (!digitsOnly) return "";
+    
+    // Pad with zeros if less than 3 digits (to ensure we always have cents)
+    const paddedValue = digitsOnly.padStart(3, "0");
+    
+    // Insert decimal point before last 2 digits
+    const withDecimal = paddedValue.replace(/(\d+)(\d{2})$/, "$1.$2");
+    
+    // Add thousand separators
+    const parts = withDecimal.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    
+    return parts.join(".");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
