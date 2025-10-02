@@ -319,13 +319,13 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   // Format currency using Intl.NumberFormat
   const formatCurrency = (cents: number): string => {
-    const dollars = cents / 100;
+    const pesos = cents / 100;
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'MXN',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
-    }).format(dollars);
+    }).format(pesos);
   };
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
