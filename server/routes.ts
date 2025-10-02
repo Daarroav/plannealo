@@ -1812,16 +1812,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let endDate: Date | undefined;
       
       if (startDateParam) {
-        startDate = new Date(startDateParam);
-        startDate.setHours(0, 0, 0, 0);
+        try {
+          startDate = new Date(startDateParam);
+          if (isNaN(startDate.getTime())) {
+            return res.status(400).json({ error: "Invalid start date format" });
+          }
+          startDate.setHours(0, 0, 0, 0);
+        } catch (err) {
+          return res.status(400).json({ error: "Invalid start date" });
+        }
       }
       if (endDateParam) {
-        endDate = new Date(endDateParam);
-        endDate.setHours(23, 59, 59, 999);
+        try {
+          endDate = new Date(endDateParam);
+          if (isNaN(endDate.getTime())) {
+            return res.status(400).json({ error: "Invalid end date format" });
+          }
+          endDate.setHours(23, 59, 59, 999);
+        } catch (err) {
+          return res.status(400).json({ error: "Invalid end date" });
+        }
       }
       
       // Get all files in the uploads directory
-      const [allFiles] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
+      let allFiles;
+      try {
+        [allFiles] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
+      } catch (storageError: any) {
+        console.error('Error accessing storage bucket:', storageError);
+        return res.status(500).json({ 
+          error: "Error accessing storage", 
+          details: storageError.message 
+        });
+      }
       
       // Filter files by upload date if date range is specified
       let files = allFiles;
@@ -1852,8 +1875,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (files.length === 0) {
-        return res.status(404).json({ error: "No files found in storage" });
+        return res.status(404).json({ 
+          error: "No se encontraron archivos", 
+          details: startDate || endDate 
+            ? "No hay archivos en el rango de fechas seleccionado" 
+            : "No hay archivos en el almacenamiento"
+        });
       }
+      
+      console.log(`Starting backup with ${files.length} files`)
 
       // Set headers for ZIP download with better timeout handling
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -1873,27 +1903,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       let hasError = false;
+      let archiveFinalized = false;
 
       archive.on('error', (err) => {
         console.error('Archive error:', err);
         hasError = true;
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Error creating backup' });
+          res.status(500).json({ 
+            error: 'Error creating backup', 
+            details: err.message 
+          });
         } else {
-          res.end();
+          // If headers already sent, we can't send JSON error
+          // Just end the response
+          try {
+            res.end();
+          } catch (endError) {
+            console.error('Error ending response:', endError);
+          }
         }
       });
 
       archive.on('warning', (err) => {
         if (err.code === 'ENOENT') {
-          console.warn('Archive warning:', err);
+          console.warn('Archive warning (ENOENT):', err);
         } else {
           console.error('Archive warning (non-ENOENT):', err);
+          // For critical warnings, mark as error
+          if (err.code !== 'ENOENT') {
+            hasError = true;
+          }
         }
       });
 
-      // Pipe archive to response
-      archive.pipe(res);
+      archive.on('end', () => {
+        archiveFinalized = true;
+        console.log('Archive finalized successfully');
+      });
+
+      // Pipe archive to response with error handling
+      try {
+        archive.pipe(res);
+      } catch (pipeError: any) {
+        console.error('Error piping archive to response:', pipeError);
+        if (!res.headersSent) {
+          return res.status(500).json({ 
+            error: 'Error streaming backup', 
+            details: pipeError.message 
+          });
+        }
+        return;
+      }
 
       // Keep connection alive
       const keepAliveInterval = setInterval(() => {
@@ -1945,15 +2005,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Finalize the archive
       if (!hasError) {
-        await archive.finalize();
-        console.log(`Backup created successfully with ${processedCount}/${files.length} files`);
+        try {
+          await archive.finalize();
+          
+          // Wait a bit to ensure finalization completes
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          if (!archiveFinalized) {
+            console.warn('Archive finalize() called but end event not received');
+          }
+          
+          console.log(`Backup created successfully with ${processedCount}/${files.length} files`);
+        } catch (finalizeError: any) {
+          console.error('Error finalizing archive:', finalizeError);
+          if (!res.headersSent) {
+            return res.status(500).json({ 
+              error: 'Error completing backup', 
+              details: finalizeError.message 
+            });
+          }
+        }
+      } else {
+        console.error('Archive had errors, not finalizing');
+        if (!res.headersSent) {
+          return res.status(500).json({ 
+            error: 'Backup creation failed due to errors' 
+          });
+        }
       }
     } catch (error: any) {
       console.error("Error creating storage backup:", error);
+      console.error("Error stack:", error.stack);
+      
+      // Make sure we always send a response
       if (!res.headersSent) {
         res.status(500).json({ 
           error: "Error creating backup",
-          details: error.message 
+          details: error.message || 'Unknown error occurred'
         });
       }
     }

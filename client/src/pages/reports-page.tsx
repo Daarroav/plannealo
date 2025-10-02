@@ -81,39 +81,87 @@ export default function ReportsPage() {
 
       clearTimeout(timeoutId);
 
-      // Check response status
+      // Check response status first
       if (!response.ok) {
+        console.error('Response not OK:', response.status, response.statusText);
+        
+        // Try to get error details from response
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           try {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to download backup');
+            throw new Error(errorData.error || `Server error: ${response.status}`);
           } catch (jsonError) {
-            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
           }
         } else {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          // Try to read as text for better error messages
+          try {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            throw new Error(`Error del servidor (${response.status}): ${errorText.substring(0, 100)}`);
+          } catch {
+            throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+          }
         }
       }
 
       // Verify we have a response body
       if (!response.body) {
-        throw new Error('No response body received from server');
+        throw new Error('El servidor no envió ningún archivo');
       }
 
-      // Get the blob with error handling
+      // Validate content type before trying to read as blob
+      const contentType = response.headers.get('content-type');
+      console.log('Response content-type:', contentType);
+      
+      if (contentType && contentType.includes('application/json')) {
+        // This might be an error response that passed the OK check
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Respuesta inesperada del servidor');
+        } catch (e: any) {
+          if (e.message) {
+            throw e;
+          }
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      }
+
+      // Verify it's a zip file
+      if (contentType && !contentType.includes('application/zip') && !contentType.includes('application/octet-stream')) {
+        console.warn('Unexpected content type:', contentType);
+        throw new Error(`Tipo de archivo inesperado: ${contentType}. Se esperaba un archivo ZIP.`);
+      }
+
+      // Get the blob with proper error handling
       let blob;
       try {
         blob = await response.blob();
+        console.log('Blob created successfully:', blob.size, 'bytes, type:', blob.type);
       } catch (blobError: any) {
         console.error('Error converting response to blob:', blobError);
-        throw new Error('Error al procesar el archivo descargado');
+        console.error('Blob error details:', {
+          name: blobError?.name,
+          message: blobError?.message,
+          stack: blobError?.stack
+        });
+        throw new Error('Error al procesar el archivo descargado. El servidor puede haber enviado datos corruptos.');
       }
 
-      console.log('Blob received:', blob.size, 'bytes, type:', blob.type);
+      // Validate blob
+      if (!blob) {
+        throw new Error('No se pudo crear el archivo de respaldo');
+      }
 
-      if (!blob || blob.size === 0) {
-        throw new Error('Received empty file from server');
+      if (blob.size === 0) {
+        throw new Error('El archivo de respaldo está vacío. Puede que no haya archivos en el rango de fechas seleccionado.');
+      }
+
+      // Additional validation: check if blob is actually a zip file
+      if (blob.type && blob.type !== 'application/zip' && blob.type !== 'application/octet-stream' && blob.type !== '') {
+        console.warn('Blob type mismatch:', blob.type);
+        throw new Error(`Tipo de archivo incorrecto: ${blob.type}`);
       }
 
       // Create download link
@@ -150,27 +198,42 @@ export default function ReportsPage() {
       console.error('Error details:', {
         name: error?.name,
         message: error?.message,
-        stack: error?.stack
+        stack: error?.stack,
+        type: typeof error
       });
 
       // Close loading toast
       toastId.dismiss?.();
 
       let errorMessage = "No se pudo descargar el respaldo de archivos.";
+      let errorDescription = "";
 
       if (error.name === 'AbortError') {
-        errorMessage = "La descarga tardó demasiado tiempo (más de 3 minutos). Intenta con un rango de fechas más pequeño.";
-      } else if (error.message.includes('network') || error.message.includes('Failed to fetch') || error.message.includes('conexión')) {
-        errorMessage = "Error de red. Verifica tu conexión a internet e intenta nuevamente.";
+        errorMessage = "Tiempo de espera agotado";
+        errorDescription = "La descarga tardó más de 3 minutos. Intenta con un rango de fechas más pequeño o descarga sin filtro de fechas.";
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = "Error de conexión";
+        errorDescription = "No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta nuevamente.";
+      } else if (error.message.includes('blob') || error.message.includes('procesar')) {
+        errorMessage = "Error al procesar el archivo";
+        errorDescription = error.message + " Intenta nuevamente o contacta al administrador si el problema persiste.";
+      } else if (error.message.includes('servidor')) {
+        errorMessage = "Error del servidor";
+        errorDescription = error.message;
       } else if (error.message) {
         errorMessage = error.message;
+        // Extract more context if available
+        if (error.message.length > 60) {
+          errorDescription = error.message;
+          errorMessage = "Error al descargar respaldo";
+        }
       }
 
       toast({
-        title: "Error al descargar",
-        description: errorMessage,
+        title: errorMessage,
+        description: errorDescription || "Intenta nuevamente o contacta al administrador si el problema persiste.",
         variant: "destructive",
-        duration: 8000,
+        duration: 10000,
       });
     } finally {
       setIsDownloading(false);
