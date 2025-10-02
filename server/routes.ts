@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
-import { ObjectStorageService } from "./objectStorage";
+import { ObjectStorageService, objectStorageClient } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AeroDataBoxService } from "./aeroDataBoxService";
 import multer from 'multer';  // Instalacion  para subir archivos
@@ -14,6 +14,22 @@ import { Buffer } from 'buffer';
 
 // Initialize ObjectStorageService
 const objectStorageClient = new ObjectStorageService();
+
+// Helper function to parse object storage paths
+function parseObjectPath(path: string): { bucketName: string; objectName: string } {
+  if (!path.startsWith("/")) {
+    path = `/${path}`;
+  }
+  const pathParts = path.split("/");
+  if (pathParts.length < 3) {
+    throw new Error("Invalid path: must contain at least a bucket name");
+  }
+
+  const bucketName = pathParts[1];
+  const objectName = pathParts.slice(2).join("/");
+
+  return { bucketName, objectName };
+}
 
 // Helper function to upload file to Object Storage
 async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
@@ -1770,6 +1786,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Error getting metadata",
         details: error.message 
       });
+    }
+  });
+
+  // Create backup of all Object Storage files
+  app.get("/api/backup/storage", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.role !== 'admin') {
+      return res.status(403).json({ error: "Access denied. Admin only." });
+    }
+
+    const archiver = await import('archiver');
+    
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const privateDir = objectStorageService.getPrivateObjectDir();
+      const { bucketName, objectName } = parseObjectPath(privateDir);
+      
+      const bucket = objectStorageClient.bucket(bucketName);
+      
+      // Get all files in the uploads directory
+      const [files] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
+      
+      if (files.length === 0) {
+        return res.status(404).json({ error: "No files found in storage" });
+      }
+
+      // Set headers for ZIP download
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="storage_backup_${timestamp}.zip"`);
+
+      // Create ZIP archive
+      const archive = archiver.default('zip', {
+        zlib: { level: 9 } // Maximum compression
+      });
+
+      archive.on('error', (err) => {
+        console.error('Archive error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Error creating backup' });
+        }
+      });
+
+      archive.pipe(res);
+
+      // Add each file to the archive
+      for (const file of files) {
+        try {
+          const [metadata] = await file.getMetadata();
+          const originalName = metadata?.metadata?.originalName || file.name.split('/').pop() || 'unnamed';
+          const folder = metadata?.metadata?.folder || 'general';
+          
+          // Create a readable stream from the file
+          const stream = file.createReadStream();
+          
+          // Add to archive with organized folder structure
+          archive.append(stream, { 
+            name: `${folder}/${originalName}`,
+            date: metadata?.metadata?.uploadedAt ? new Date(metadata.metadata.uploadedAt) : new Date()
+          });
+        } catch (fileError) {
+          console.error(`Error processing file ${file.name}:`, fileError);
+          // Continue with other files
+        }
+      }
+
+      // Finalize the archive
+      await archive.finalize();
+      
+      console.log(`Backup created with ${files.length} files`);
+    } catch (error: any) {
+      console.error("Error creating storage backup:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: "Error creating backup",
+          details: error.message 
+        });
+      }
     }
   });
 
