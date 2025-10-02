@@ -1811,27 +1811,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "No files found in storage" });
       }
 
-      // Set headers for ZIP download
+      // Set headers for ZIP download with better timeout handling
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="storage_backup_${timestamp}.zip"`);
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Transfer-Encoding', 'chunked');
 
-      // Create ZIP archive
+      // Create ZIP archive with lower compression for faster processing
       const archive = archiver.default('zip', {
-        zlib: { level: 9 } // Maximum compression
+        zlib: { level: 6 } // Balanced compression (faster than 9)
       });
+
+      let hasError = false;
 
       archive.on('error', (err) => {
         console.error('Archive error:', err);
+        hasError = true;
         if (!res.headersSent) {
           res.status(500).json({ error: 'Error creating backup' });
+        } else {
+          res.end();
         }
       });
 
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn('Archive warning:', err);
+        } else {
+          console.error('Archive warning (non-ENOENT):', err);
+        }
+      });
+
+      // Pipe archive to response
       archive.pipe(res);
 
-      // Add each file to the archive
+      // Keep connection alive
+      const keepAliveInterval = setInterval(() => {
+        if (!hasError && !res.writableEnded) {
+          // Send a comment to keep connection alive
+          res.write('');
+        }
+      }, 5000);
+
+      // Add each file to the archive with error handling
+      let processedCount = 0;
       for (const file of files) {
+        if (hasError) break;
+        
         try {
           const [metadata] = await file.getMetadata();
           const originalName = metadata?.metadata?.originalName || file.name.split('/').pop() || 'unnamed';
@@ -1840,21 +1867,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Create a readable stream from the file
           const stream = file.createReadStream();
           
+          // Handle stream errors
+          stream.on('error', (streamErr) => {
+            console.error(`Stream error for ${file.name}:`, streamErr);
+            // Continue with other files instead of failing
+          });
+          
           // Add to archive with organized folder structure
           archive.append(stream, { 
             name: `${folder}/${originalName}`,
             date: metadata?.metadata?.uploadedAt ? new Date(metadata.metadata.uploadedAt) : new Date()
           });
+          
+          processedCount++;
+          
+          // Log progress every 50 files
+          if (processedCount % 50 === 0) {
+            console.log(`Processed ${processedCount}/${files.length} files`);
+          }
         } catch (fileError) {
           console.error(`Error processing file ${file.name}:`, fileError);
           // Continue with other files
         }
       }
 
+      // Clear keep-alive interval
+      clearInterval(keepAliveInterval);
+
       // Finalize the archive
-      await archive.finalize();
-      
-      console.log(`Backup created with ${files.length} files`);
+      if (!hasError) {
+        await archive.finalize();
+        console.log(`Backup created successfully with ${processedCount}/${files.length} files`);
+      }
     } catch (error: any) {
       console.error("Error creating storage backup:", error);
       if (!res.headersSent) {

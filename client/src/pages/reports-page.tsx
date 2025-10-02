@@ -32,47 +32,77 @@ export default function ReportsPage() {
   const { toast } = useToast();
 
   const handleBackupDownload = async () => {
-    setIsDownloading(true);
+    const toastId = toast({
+      title: "Preparando respaldo...",
+      description: "Esto puede tomar varios minutos dependiendo del tamaño.",
+      duration: Infinity,
+    });
+
     try {
       const response = await fetch('/api/backup/storage', {
         method: 'GET',
         credentials: 'include',
+        signal: AbortSignal.timeout(180000) // 3 minutes timeout
       });
 
       if (!response.ok) {
-        throw new Error('Error al crear el respaldo');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to download backup');
       }
 
-      // Get the filename from Content-Disposition header
-      const contentDisposition = response.headers.get('Content-Disposition');
-      const filename = contentDisposition
-        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
-        : `storage_backup_${new Date().toISOString().slice(0, 10)}.zip`;
+      // Check if we got a blob/stream response
+      if (!response.body) {
+        throw new Error('No response body received');
+      }
 
-      // Create blob and download
       const blob = await response.blob();
+
+      if (blob.size === 0) {
+        throw new Error('Received empty file');
+      }
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = `storage_backup_${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+
+      // Close loading toast
+      toastId.dismiss?.();
 
       toast({
-        title: "Respaldo creado",
-        description: "El archivo ZIP se ha descargado exitosamente",
+        title: "Respaldo descargado",
+        description: `Archivo descargado exitosamente (${(blob.size / 1024 / 1024).toFixed(2)} MB)`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading backup:', error);
+
+      // Close loading toast
+      toastId.dismiss?.();
+
+      let errorMessage = "No se pudo descargar el respaldo de archivos.";
+
+      if (error.name === 'TimeoutError') {
+        errorMessage = "La descarga tardó demasiado. Intenta nuevamente o contacta al soporte.";
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = "Error de conexión. Verifica tu internet e intenta nuevamente.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
-        title: "Error",
-        description: "No se pudo crear el respaldo",
+        title: "Error al descargar",
+        description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
-    } finally {
-      setIsDownloading(false);
     }
   };
 
