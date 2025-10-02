@@ -560,17 +560,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'flights');
+          attachments.push(attachment);
         }
       }
 
@@ -655,17 +646,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'transports');
+          attachments.push(attachment);
         }
       }
 
@@ -750,17 +732,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'cruises');
+          attachments.push(attachment);
         }
       }
 
@@ -848,17 +821,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Upload attachments to Object Storage
       if (files?.attachments) {
         for (const file of files.attachments) {
-          const uploadURL = await objectStorageClient.getObjectEntityUploadURL();
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: file.buffer,
-            headers: {
-              'Content-Type': file.mimetype,
-            },
-          });
-          if (uploadResult.ok) {
-            attachments.push(objectStorageClient.normalizeObjectEntityPath(uploadURL));
-          }
+          const attachment = await uploadFileToObjectStorage(file, 'insurances');
+          attachments.push(attachment);
         }
       }
 
