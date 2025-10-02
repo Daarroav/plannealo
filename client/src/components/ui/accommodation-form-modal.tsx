@@ -270,10 +270,15 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
       // Sync price formatting
       if (editingAccommodation.price) {
-        // Convert price to cents and format
-        const priceInCents = Math.round(parseFloat(editingAccommodation.price) * 100).toString();
-        const formatted = formatNumber(priceInCents);
-        setPrice(formatted);
+        // Convert price to cents and format - ensure we don't have leading zeros issue
+        const priceValue = parseFloat(editingAccommodation.price);
+        if (priceValue > 0) {
+          const priceInCents = Math.round(priceValue * 100).toString();
+          const formatted = formatNumber(priceInCents);
+          setPrice(formatted);
+        } else {
+          setPrice("");
+        }
       } else {
         setPrice("");
       }
@@ -321,8 +326,15 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     
     if (!digitsOnly) return "";
     
-    // Pad with zeros if less than 3 digits (to ensure we always have cents)
-    const paddedValue = digitsOnly.padStart(3, "0");
+    // If less than 3 digits, pad with zeros for cents
+    let paddedValue;
+    if (digitsOnly.length === 1) {
+      paddedValue = "00" + digitsOnly;
+    } else if (digitsOnly.length === 2) {
+      paddedValue = "0" + digitsOnly;
+    } else {
+      paddedValue = digitsOnly;
+    }
     
     // Insert decimal point before last 2 digits
     const withDecimal = paddedValue.replace(/(\d+)(\d{2})$/, "$1.$2");
