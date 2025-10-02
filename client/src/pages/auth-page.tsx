@@ -210,7 +210,9 @@ export default function AuthPage() {
       <div 
         className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden"
         style={{
-          backgroundImage: backgroundImage,
+          backgroundImage: backgroundImage.startsWith('linear-gradient') 
+            ? backgroundImage 
+            : `url(${backgroundImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
