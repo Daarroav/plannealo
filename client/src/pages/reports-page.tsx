@@ -40,6 +40,8 @@ export default function ReportsPage() {
   const { toast } = useToast();
 
   const handleBackupDownload = async () => {
+    setIsDownloading(true);
+    
     const toastId = toast({
       title: "Preparando respaldo...",
       description: "Esto puede tomar varios minutos dependiendo del tamaño.",
@@ -65,25 +67,41 @@ export default function ReportsPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to download backup');
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to download backup');
+        } else {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
       }
 
-      // Check if we got a blob/stream response
+      // Verify we have a response body
       if (!response.body) {
-        throw new Error('No response body received');
+        throw new Error('No response body received from server');
       }
 
+      // Get the blob
       const blob = await response.blob();
+      console.log('Blob received:', blob.size, 'bytes, type:', blob.type);
 
       if (blob.size === 0) {
-        throw new Error('Received empty file');
+        throw new Error('Received empty file from server');
       }
 
+      // Create download link
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `storage_backup_${new Date().toISOString().split('T')[0]}.zip`;
+      
+      // Generate filename
+      let filename = `storage_backup_${new Date().toISOString().split('T')[0]}`;
+      if (startDate || endDate) {
+        const dateRange = `${startDate ? startDate.toISOString().split('T')[0] : 'inicio'}_a_${endDate ? endDate.toISOString().split('T')[0] : 'fin'}`;
+        filename = `storage_backup_${dateRange}`;
+      }
+      a.download = `${filename}.zip`;
+      
       document.body.appendChild(a);
       a.click();
 
@@ -108,10 +126,10 @@ export default function ReportsPage() {
 
       let errorMessage = "No se pudo descargar el respaldo de archivos.";
 
-      if (error.name === 'TimeoutError') {
-        errorMessage = "La descarga tardó demasiado. Intenta nuevamente o contacta al soporte.";
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        errorMessage = "Error de conexión. Verifica tu internet e intenta nuevamente.";
+      if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+        errorMessage = "La descarga tardó demasiado tiempo (más de 3 minutos). Intenta con un rango de fechas más pequeño.";
+      } else if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
+        errorMessage = "Error de red. Verifica tu conexión a internet e intenta nuevamente.";
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -122,6 +140,8 @@ export default function ReportsPage() {
         variant: "destructive",
         duration: 8000,
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
