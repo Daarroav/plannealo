@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, User } from "lucide-react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
+import { Database } from "lucide-react";
 
 
 export function NavigationHeader() {
@@ -22,7 +23,7 @@ export function NavigationHeader() {
               </div>
             </div>
           </div>
-          
+
           <nav className="hidden md:flex space-x-8">
             <Link
               to="/"
@@ -42,10 +43,19 @@ export function NavigationHeader() {
             >
               Reportes
             </Link>
+            {user?.role === "admin" && (
+              <Link
+                to="/backups"
+                className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium ${location === "/backups" ? "border-b-2 border-accent" : ""}`}
+              >
+                <Database className="h-4 w-4" />
+                Respaldos
+              </Link>
+            )}
           </nav>
-          
+
           <div className="flex items-center space-x-4">
-         
+
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-muted-foreground" />
@@ -56,9 +66,9 @@ export function NavigationHeader() {
                   {user?.role === "admin" ? "Administrador" : "Agente de Viajes"}
                 </p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
               >

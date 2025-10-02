@@ -14,6 +14,7 @@ import TravelPreview from "@/pages/travel-preview";
 import NotFound from "@/pages/not-found";
 import ClientsPage from "@/pages/clients-page";
 import ReportsPage from "@/pages/reports-page";
+import BackupsPage from "@/pages/backups-page";
 
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <ProtectedRoute path="/travel/:id" component={TravelDetail} />
       <ProtectedRoute path="/clients" component={ClientsPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
+      <ProtectedRoute path="/backups" component={BackupsPage} adminOnly={true} />
       <Route path="/travel/:id/preview" component={TravelPreview} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
