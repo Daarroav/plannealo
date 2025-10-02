@@ -632,13 +632,15 @@ export default function TravelPreview() {
                   <div className="text-gray-900">{event.data.provider}</div>
                 </div>
               )}
-              {event.data.contactName && (
+              {(event.data.contactName || event.data.contactNumber) && (
                 <div>
                   <div className="font-medium text-gray-600 uppercase text-xs">
                     CONTACTO
                   </div>
                   <div className="text-gray-900">
-                    {event.data.contactName}: {event.data.contactNumber}
+                    {event.data.contactName 
+                      ? `${event.data.contactName}: ${event.data.contactNumber}` 
+                      : event.data.contactNumber}
                   </div>
                 </div>
               )}
