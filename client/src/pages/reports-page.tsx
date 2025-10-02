@@ -60,17 +60,37 @@ export default function ReportsPage() {
 
       const url = `/api/backup/storage${params.toString() ? `?${params.toString()}` : ''}`;
       
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        signal: AbortSignal.timeout(180000) // 3 minutes timeout
-      });
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes
 
+      let response;
+      try {
+        response = await fetch(url, {
+          method: 'GET',
+          credentials: 'include',
+          signal: controller.signal
+        });
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('La descarga tardó demasiado tiempo (más de 3 minutos). Intenta con un rango de fechas más pequeño.');
+        }
+        throw new Error('Error de red. Verifica tu conexión a internet e intenta nuevamente.');
+      }
+
+      clearTimeout(timeoutId);
+
+      // Check response status
       if (!response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to download backup');
+          try {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to download backup');
+          } catch (jsonError) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          }
         } else {
           throw new Error(`Server error: ${response.status} ${response.statusText}`);
         }
@@ -81,11 +101,18 @@ export default function ReportsPage() {
         throw new Error('No response body received from server');
       }
 
-      // Get the blob
-      const blob = await response.blob();
+      // Get the blob with error handling
+      let blob;
+      try {
+        blob = await response.blob();
+      } catch (blobError: any) {
+        console.error('Error converting response to blob:', blobError);
+        throw new Error('Error al procesar el archivo descargado');
+      }
+
       console.log('Blob received:', blob.size, 'bytes, type:', blob.type);
 
-      if (blob.size === 0) {
+      if (!blob || blob.size === 0) {
         throw new Error('Received empty file from server');
       }
 
@@ -120,15 +147,20 @@ export default function ReportsPage() {
       });
     } catch (error: any) {
       console.error('Error downloading backup:', error);
+      console.error('Error details:', {
+        name: error?.name,
+        message: error?.message,
+        stack: error?.stack
+      });
 
       // Close loading toast
       toastId.dismiss?.();
 
       let errorMessage = "No se pudo descargar el respaldo de archivos.";
 
-      if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      if (error.name === 'AbortError') {
         errorMessage = "La descarga tardó demasiado tiempo (más de 3 minutos). Intenta con un rango de fechas más pequeño.";
-      } else if (error.message.includes('network') || error.message.includes('Failed to fetch')) {
+      } else if (error.message.includes('network') || error.message.includes('Failed to fetch') || error.message.includes('conexión')) {
         errorMessage = "Error de red. Verifica tu conexión a internet e intenta nuevamente.";
       } else if (error.message) {
         errorMessage = error.message;
