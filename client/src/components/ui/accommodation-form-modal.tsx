@@ -232,7 +232,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     setCheckOutDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
-    setPrice("");
+    setPriceInCents(0);
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -270,17 +270,15 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
       // Sync price formatting
       if (editingAccommodation.price) {
-        // Convert price to cents and format - ensure we don't have leading zeros issue
         const priceValue = parseFloat(editingAccommodation.price);
         if (priceValue > 0) {
-          const priceInCents = Math.round(priceValue * 100).toString();
-          const formatted = formatNumber(priceInCents);
-          setPrice(formatted);
+          const cents = Math.round(priceValue * 100);
+          setPriceInCents(cents);
         } else {
-          setPrice("");
+          setPriceInCents(0);
         }
       } else {
-        setPrice("");
+        setPriceInCents(0);
       }
 
       // Reset attached files state - don't try to convert existing URLs to File objects
@@ -293,7 +291,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setCheckOutDate(undefined);
       setThumbnailRemoved(false);
       setThumbnail(null);
-      setPrice("");
+      setPriceInCents(0);
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
       
@@ -317,43 +315,38 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   }, [editingAccommodation, form, travelId]);
 
 
-  const [price, setPrice] = useState("");
+  const [priceInCents, setPriceInCents] = useState<number>(0);
 
- 
-  const formatNumber = (val: string) => {
-    // Remove all non-digits
-    const digitsOnly = val.replace(/\D/g, "");
-    
-    if (!digitsOnly) return "";
-    
-    // If less than 3 digits, pad with zeros for cents
-    let paddedValue;
-    if (digitsOnly.length === 1) {
-      paddedValue = "00" + digitsOnly;
-    } else if (digitsOnly.length === 2) {
-      paddedValue = "0" + digitsOnly;
-    } else {
-      paddedValue = digitsOnly;
-    }
-    
-    // Insert decimal point before last 2 digits
-    const withDecimal = paddedValue.replace(/(\d+)(\d{2})$/, "$1.$2");
-    
-    // Add thousand separators
-    const parts = withDecimal.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    
-    return parts.join(".");
+  // Format currency using Intl.NumberFormat
+  const formatCurrency = (cents: number): string => {
+    const dollars = cents / 100;
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(dollars);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const formatted = formatNumber(raw);
-    setPrice(formatted);
-
-    // guardar valor numérico en el form
-    const numeric = parseFloat(formatted.replace(/,/g, ""));
-    form.setValue("price", isNaN(numeric) ? "" : numeric.toString());
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    
+    // Remove all non-digits
+    const digitsOnly = input.replace(/\D/g, "");
+    
+    if (!digitsOnly) {
+      setPriceInCents(0);
+      form.setValue("price", "");
+      return;
+    }
+    
+    // Convert to number (this represents cents)
+    const cents = parseInt(digitsOnly, 10);
+    setPriceInCents(cents);
+    
+    // Save the dollar amount (cents / 100) as string in the form
+    const dollars = cents / 100;
+    form.setValue("price", dollars.toString());
   };
   
 
@@ -547,20 +540,14 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
             <label htmlFor="price" className="block mb-1 font-medium">
               Precio Total
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                $
-              </span>
-              <Input
-                id="price"
-                type="text"
-                value={price}
-                onChange={handleChange}
-                placeholder="15,000.00"
-                className="pl-8" // 👈 padding extra para no encimarse con el $
-              />
-              <input type="hidden" {...form.register("price")} />
-            </div>
+            <Input
+              id="price"
+              type="text"
+              value={priceInCents > 0 ? formatCurrency(priceInCents) : ""}
+              onChange={handlePriceChange}
+              placeholder="$15,000.00"
+            />
+            <input type="hidden" {...form.register("price")} />
             {form.formState.errors.price && (
               <p className="text-sm text-destructive mt-1">
                 {form.formState.errors.price.message}
