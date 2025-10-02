@@ -1804,8 +1804,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const bucket = storageClient.bucket(bucketName);
       
+      // Get date filters from query parameters
+      const startDateParam = req.query.startDate as string | undefined;
+      const endDateParam = req.query.endDate as string | undefined;
+      
+      let startDate: Date | undefined;
+      let endDate: Date | undefined;
+      
+      if (startDateParam) {
+        startDate = new Date(startDateParam);
+        startDate.setHours(0, 0, 0, 0);
+      }
+      if (endDateParam) {
+        endDate = new Date(endDateParam);
+        endDate.setHours(23, 59, 59, 999);
+      }
+      
       // Get all files in the uploads directory
-      const [files] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
+      const [allFiles] = await bucket.getFiles({ prefix: `${objectName}/uploads/` });
+      
+      // Filter files by upload date if date range is specified
+      let files = allFiles;
+      if (startDate || endDate) {
+        files = [];
+        for (const file of allFiles) {
+          try {
+            const [metadata] = await file.getMetadata();
+            const uploadedAt = metadata?.metadata?.uploadedAt 
+              ? new Date(metadata.metadata.uploadedAt)
+              : metadata?.timeCreated 
+                ? new Date(metadata.timeCreated)
+                : null;
+            
+            if (uploadedAt) {
+              const inRange = (!startDate || uploadedAt >= startDate) && 
+                             (!endDate || uploadedAt <= endDate);
+              if (inRange) {
+                files.push(file);
+              }
+            }
+          } catch (err) {
+            console.error(`Error checking metadata for ${file.name}:`, err);
+            // Include file if we can't determine date
+            files.push(file);
+          }
+        }
+      }
       
       if (files.length === 0) {
         return res.status(404).json({ error: "No files found in storage" });
@@ -1813,8 +1857,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set headers for ZIP download with better timeout handling
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      let filename = `storage_backup_${timestamp}`;
+      if (startDate || endDate) {
+        const dateRange = `${startDate ? startDate.toISOString().split('T')[0] : 'inicio'}_a_${endDate ? endDate.toISOString().split('T')[0] : 'fin'}`;
+        filename = `storage_backup_${dateRange}_${timestamp}`;
+      }
       res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', `attachment; filename="storage_backup_${timestamp}.zip"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.zip"`);
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Transfer-Encoding', 'chunked');
 

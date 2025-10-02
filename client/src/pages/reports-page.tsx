@@ -8,6 +8,12 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -29,6 +35,8 @@ export default function ReportsPage() {
     queryKey: ["/api/reports"],
   });
   const [isDownloading, setIsDownloading] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   const handleBackupDownload = async () => {
@@ -39,7 +47,18 @@ export default function ReportsPage() {
     });
 
     try {
-      const response = await fetch('/api/backup/storage', {
+      // Build query parameters for date filter
+      const params = new URLSearchParams();
+      if (startDate) {
+        params.append('startDate', startDate.toISOString());
+      }
+      if (endDate) {
+        params.append('endDate', endDate.toISOString());
+      }
+
+      const url = `/api/backup/storage${params.toString() ? `?${params.toString()}` : ''}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
         credentials: 'include',
         signal: AbortSignal.timeout(180000) // 3 minutes timeout
@@ -141,7 +160,53 @@ export default function ReportsPage() {
             <h2 className="text-3xl font-bold text-foreground mb-2">Reportes</h2>
             <p className="text-muted-foreground">Visualiza y administra los clientes de tus viajes</p>
           </div>
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex flex-col md:flex-row gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    !startDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, "PPP", { locale: es }) : "Fecha inicio"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "PPP", { locale: es }) : "Fecha fin"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
             <Button 
               onClick={handleBackupDownload} 
               disabled={isDownloading}
@@ -156,7 +221,7 @@ export default function ReportsPage() {
               ) : (
                 <>
                   <Download className="h-4 w-4" />
-                  Descargar Respaldo de Archivos
+                  Descargar Respaldo
                 </>
               )}
             </Button>
