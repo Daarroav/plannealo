@@ -47,33 +47,33 @@ export default function AuthPage() {
     },
   });
 
-  // Fetch random travel cover image
+  // Set random background image from static covers
   useEffect(() => {
-    const fetchRandomCoverImage = async () => {
+    const fetchCoverImages = async () => {
       try {
-        const response = await fetch('/api/travels');
+        // Intenta obtener la lista de archivos de la carpeta covers
+        const response = await fetch('/api/covers-list');
         if (response.ok) {
-          const travels = await response.json();
-          const travelsWithCover = travels.filter((t: any) => t.coverImage);
-          
-          if (travelsWithCover.length > 0) {
-            const randomTravel = travelsWithCover[Math.floor(Math.random() * travelsWithCover.length)];
-            const imageUrl = randomTravel.coverImage.startsWith("/objects/") 
-              ? `/api${randomTravel.coverImage}` 
-              : randomTravel.coverImage;
-            setBackgroundImage(imageUrl);
+          const files = await response.json();
+          if (files && files.length > 0) {
+            const randomImage = files[Math.floor(Math.random() * files.length)];
+            setBackgroundImage(`/uploads/covers/${randomImage}`);
           } else {
-            // Fallback gradient if no covers available
-            setBackgroundImage("gradient");
+            // Fallback: usa una imagen específica si existe
+            setBackgroundImage('/uploads/covers/travel1.jpg');
           }
+        } else {
+          // Fallback si el endpoint no existe
+          setBackgroundImage('/uploads/covers/travel1.jpg');
         }
       } catch (error) {
-        console.error("Error fetching travel covers:", error);
-        setBackgroundImage("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
+        console.error("Error fetching cover images:", error);
+        // Fallback a una imagen por defecto
+        setBackgroundImage('/uploads/covers/travel1.jpg');
       }
     };
 
-    fetchRandomCoverImage();
+    fetchCoverImages();
   }, []);
 
   // Redirect if already authenticated
@@ -139,8 +139,8 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
                       disabled={loginMutation.isPending}
                     >
@@ -191,8 +191,8 @@ export default function AuthPage() {
                         </p>
                       )}
                     </div>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full bg-accent hover:bg-accent/90"
                       disabled={registerMutation.isPending}
                     >
@@ -220,7 +220,7 @@ export default function AuthPage() {
             }}
           />
         ) : (
-          <div 
+          <div
             className="absolute inset-0"
             style={{
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
@@ -238,7 +238,7 @@ export default function AuthPage() {
               Gestiona Viajes Como Un Profesional
             </h2>
             <p className="text-white text-opacity-90">
-              PLANNEALO te permite crear, organizar y administrar itinerarios de viaje 
+              PLANNEALO te permite crear, organizar y administrar itinerarios de viaje
               completos para tus clientes de manera eficiente y profesional.
             </p>
           </div>
