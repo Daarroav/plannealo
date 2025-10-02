@@ -657,8 +657,8 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">Notas</p>
                 <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  <strong>Notas:</strong> <br />
                   {event.data.notes}
                 </div>
               </div>
@@ -730,8 +730,10 @@ export default function TravelPreview() {
             </div>
             {event.data.notes && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-2">Notas</p>
-                <div className="text-sm text-gray-600">{event.data.notes}</div>
+                <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                  <strong>Notas:</strong> <br />
+                  {event.data.notes}
+                </div>
               </div>
             )}
 
