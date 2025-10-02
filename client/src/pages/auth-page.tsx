@@ -61,7 +61,7 @@ export default function AuthPage() {
             const imageUrl = randomTravel.coverImage.startsWith("/objects/") 
               ? `/api${randomTravel.coverImage}` 
               : randomTravel.coverImage;
-            setBackgroundImage(imageUrl);
+            setBackgroundImage(`url(${imageUrl})`);
           } else {
             // Fallback gradient if no covers available
             setBackgroundImage("linear-gradient(135deg, #667eea 0%, #764ba2 100%)");
@@ -210,9 +210,7 @@ export default function AuthPage() {
       <div 
         className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden"
         style={{
-          backgroundImage: backgroundImage.startsWith('linear-gradient') 
-            ? backgroundImage 
-            : `url(${backgroundImage})`,
+          backgroundImage: backgroundImage,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
