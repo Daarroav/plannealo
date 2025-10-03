@@ -220,14 +220,24 @@ export class DatabaseStorage implements IStorage {
     }
     
     const { startDate, endDate, ...rest } = updates;
+    
+    // Prepare update object - only include dates if they were provided
+    const updateData: any = {
+      ...rest,
+      updatedAt: new Date(),
+    };
+    
+    // Only update dates if they were explicitly provided
+    if (startDate !== undefined) {
+      updateData.startDate = new Date(startDate);
+    }
+    if (endDate !== undefined) {
+      updateData.endDate = new Date(endDate);
+    }
+    
     const [travel] = await db
       .update(travels)
-      .set({
-        ...rest,
-        startDate: startDate ? new Date(startDate) : new Date(),  // ✅ parseamos
-        endDate: endDate ? new Date(endDate) : new Date(),
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(travels.id, id))
       .returning();
     if (!travel) {
