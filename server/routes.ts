@@ -138,56 +138,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
   // Travel routes
-      // Obtener estadísticas de clientes
-      app.get("/api/clients/stats", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.status(401).json({ message: "No autenticado" });
-        }
+  // Obtener estadísticas de clientes
+  app.get("/api/clients/stats", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
 
-        try {
-          const stats = await storage.getClientStats();
+    try {
+      const stats = await storage.getClientStats();
 
-          res.json(stats);
-        } catch (error) {
-          console.error("Error fetching client stats:", error);
-          res.status(500).json({ message: "Error al obtener estadísticas de clientes" });
-        }
-      });
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching client stats:", error);
+      res.status(500).json({ message: "Error al obtener estadísticas de clientes" });
+    }
+  });
 
       app.get("/api/users/:id", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.status(401).json({ message: "No autenticado" });
-        }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
 
-        try {
-          const user = await storage.getUser(req.params.id);
-          if (!user) {
-            return res.status(404).json({ message: "User not found" });
-          }
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-          res.json(user);
-        } catch (error) {
-          console.error("Error fetching user:", error);
-          res.status(500).json({ message: "Error al obtener usuario" });
-        }
-      });
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Error al obtener usuario" });
+    }
+  });
 
-      app.get("/api/reports", async (req, res) => {
+  app.get("/api/reports", async (req, res) => {
 
-        if (!req.isAuthenticated()) {
-          return res.status(401).json({ message: "No autenticado" });
-        }
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "No autenticado" });
+    }
 
-        try {
-          const reports = await storage.getTravelStats();
-          res.json(reports);
-        } catch (error) {
-          console.error("Error fetching reports:", error);
-          res.status(500).json({ message: "Error al obtener informes" });
-        }
-      });
+    try {
+      const reports = await storage.getTravelStats();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      res.status(500).json({ message: "Error al obtener informes" });
+    }
+  });
 
-      app.get("/api/travels", async (req, res) => {
+  app.get("/api/travels", async (req, res) => {
         if (!req.isAuthenticated()) {
           return res.sendStatus(401);
         }
@@ -2148,13 +2148,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
       const httpServer = createServer(app);
-      return httpServer;
-    } catch (error) {
-      console.error("Error setting up routes:", error);
-      throw error; // Re-throw the error to indicate setup failure
-    }
-  });
-
-  const httpServer = createServer(app);
   return httpServer;
 }
