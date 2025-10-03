@@ -92,6 +92,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }); // Configuración de multer para subir archivos
   app.use('/uploads', express.static('uploads')); // Configuración de archivos estáticos
 
+  // Backup endpoint
+  app.get('/api/backup', async (req, res) => {
+    try {
+      // Check if user is admin
+      const user = (req as any).user;
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied. Admin only.' });
+      }
+
+      // Backup logic would go here
+      res.json({ message: 'Backup endpoint - implementation pending' });
+    } catch (error) {
+      console.error('Error in backup endpoint:', error);
+      res.status(500).json({ error: 'Error in backup endpoint' });
+    }
+  });
+
   // Get list of cover images
   app.get('/api/covers-list', async (req, res) => {
     try {
@@ -117,18 +134,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Backup endpoint
-  app.get('/api/backup', async (req, res) => {
-    try {
-      // Check if user is admin
-      const user = (req as any).user;
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied. Admin only.' });
-      }
+  // Setup authentication routes first
+  setupAuth(app);
 
-      setupAuth(app);
-
-      // Travel routes
+  // Travel routes
       // Obtener estadísticas de clientes
       app.get("/api/clients/stats", async (req, res) => {
         if (!req.isAuthenticated()) {
