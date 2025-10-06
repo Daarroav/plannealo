@@ -52,7 +52,7 @@ export default function AuthPage() {
     const fetchCoverImages = async () => {
       try {
         // Intenta obtener la lista de archivos de la carpeta covers
-        const response = await fetch('/api/covers-list');
+        const response = await fetch("/api/covers-list");
         if (response.ok) {
           const files = await response.json();
           if (files && files.length > 0) {
@@ -60,16 +60,16 @@ export default function AuthPage() {
             setBackgroundImage(`/uploads/covers/${randomImage}`);
           } else {
             // Fallback: usa una imagen específica si existe
-            setBackgroundImage('/uploads/covers/travel1.jpg');
+            setBackgroundImage("/uploads/covers/travel1.jpg");
           }
         } else {
           // Fallback si el endpoint no existe
-          setBackgroundImage('/uploads/covers/travel1.jpg');
+          setBackgroundImage("/uploads/covers/travel1.jpg");
         }
       } catch (error) {
         console.error("Error fetching cover images:", error);
         // Fallback a una imagen por defecto
-        setBackgroundImage('/uploads/covers/travel1.jpg');
+        setBackgroundImage("/uploads/covers/travel1.jpg");
       }
     };
 
@@ -96,7 +96,9 @@ export default function AuthPage() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-foreground">PLANNEALO</h1>
-            <p className="text-muted-foreground mt-2">Gestión Profesional de Viajes</p>
+            <p className="text-muted-foreground mt-2">
+              Gestión Profesional de Viajes
+            </p>
           </div>
 
           <Card>
@@ -104,14 +106,17 @@ export default function AuthPage() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                  <TabsTrigger value="register">Registrarse</TabsTrigger>
+                  {/* <TabsTrigger value="register">Registrarse</TabsTrigger> */}
                 </TabsList>
               </Tabs>
             </CardHeader>
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsContent value="login" className="space-y-4">
-                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                  <form
+                    onSubmit={loginForm.handleSubmit(handleLogin)}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label htmlFor="login-username">Usuario</Label>
                       <Input
@@ -144,13 +149,18 @@ export default function AuthPage() {
                       className="w-full bg-accent hover:bg-accent/90"
                       disabled={loginMutation.isPending}
                     >
-                      {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar Sesión"}
+                      {loginMutation.isPending
+                        ? "Iniciando sesión..."
+                        : "Iniciar Sesión"}
                     </Button>
                   </form>
                 </TabsContent>
 
                 <TabsContent value="register" className="space-y-4">
-                  <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                  <form
+                    onSubmit={registerForm.handleSubmit(handleRegister)}
+                    className="space-y-4"
+                  >
                     <div>
                       <Label htmlFor="register-name">Nombre Completo</Label>
                       <Input
@@ -196,7 +206,9 @@ export default function AuthPage() {
                       className="w-full bg-accent hover:bg-accent/90"
                       disabled={registerMutation.isPending}
                     >
-                      {registerMutation.isPending ? "Registrando..." : "Registrarse"}
+                      {registerMutation.isPending
+                        ? "Registrando..."
+                        : "Registrarse"}
                     </Button>
                   </form>
                 </TabsContent>
@@ -216,14 +228,14 @@ export default function AuthPage() {
             className="absolute inset-0 w-full h-full object-cover"
             onError={(e) => {
               console.error("Error loading image:", backgroundImage);
-              e.currentTarget.style.display = 'none';
+              e.currentTarget.style.display = "none";
             }}
           />
         ) : (
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
           />
         )}
@@ -238,8 +250,9 @@ export default function AuthPage() {
               Gestiona Viajes Como Un Profesional
             </h2>
             <p className="text-white text-opacity-90">
-              PLANNEALO te permite crear, organizar y administrar itinerarios de viaje
-              completos para tus clientes de manera eficiente y profesional.
+              PLANNEALO te permite crear, organizar y administrar itinerarios de
+              viaje completos para tus clientes de manera eficiente y
+              profesional.
             </p>
           </div>
 
@@ -249,9 +262,12 @@ export default function AuthPage() {
                 <MapPin className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-medium text-white">Itinerarios Completos</h3>
+                <h3 className="font-medium text-white">
+                  Itinerarios Completos
+                </h3>
                 <p className="text-sm text-white text-opacity-80">
-                  Alojamientos, vuelos, actividades y transporte en un solo lugar
+                  Alojamientos, vuelos, actividades y transporte en un solo
+                  lugar
                 </p>
               </div>
             </div>
@@ -275,7 +291,8 @@ export default function AuthPage() {
               <div>
                 <h3 className="font-medium text-white">Seguimiento Total</h3>
                 <p className="text-sm text-white text-opacity-80">
-                  Mantén el control de fechas, confirmaciones y detalles importantes
+                  Mantén el control de fechas, confirmaciones y detalles
+                  importantes
                 </p>
               </div>
             </div>
