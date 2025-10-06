@@ -1,31 +1,42 @@
 
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from "crypto";
+import FormData from "form-data";
+import fetch from "node-fetch";
+
+type EmailProvider = 'mailgun' | 'ses';
 
 export class EmailService {
-  private sesClient: SESClient;
+  private sesClient?: SESClient;
   private fromEmail: string;
+  private provider: EmailProvider;
+  private mailgunApiKey?: string;
+  private mailgunDomain?: string;
 
   constructor() {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+    // Determine which provider to use (Mailgun by default)
+    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+      this.provider = 'mailgun';
+      this.mailgunApiKey = process.env.MAILGUN_API_KEY;
+      this.mailgunDomain = process.env.MAILGUN_DOMAIN;
+      this.fromEmail = process.env.MAILGUN_FROM_EMAIL || `PLANNEALO <noreply@${process.env.MAILGUN_DOMAIN}>`;
+      console.log('Email service initialized with Mailgun');
+    } else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
+      this.provider = 'ses';
+      this.sesClient = new SESClient({
+        region: process.env.AWS_REGION,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      });
+      this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@plannealo.com';
+      console.log('Email service initialized with AWS SES');
+    } else {
       throw new Error(
-        "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION environment variables are required",
+        "Email service requires either Mailgun (MAILGUN_API_KEY, MAILGUN_DOMAIN) or AWS SES (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) credentials",
       );
     }
-
-    if (!process.env.SES_FROM_EMAIL) {
-      throw new Error("SES_FROM_EMAIL environment variable is required");
-    }
-
-    this.sesClient = new SESClient({
-      region: process.env.AWS_REGION,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      },
-    });
-
-    this.fromEmail = process.env.SES_FROM_EMAIL;
   }
 
   async sendTravelShareEmail(
@@ -35,19 +46,70 @@ export class EmailService {
   ) {
     // Priority order: Production domain > Development domain > localhost
     const baseUrl = process.env.PRODUCTION_DOMAIN
-    ? `https://${process.env.PRODUCTION_DOMAIN}`
-    : process.env.REPLIT_DEV_DOMAIN
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : `http://localhost:${process.env.PORT || 3000}`;
-    
+      ? `https://${process.env.PRODUCTION_DOMAIN}`
+      : process.env.REPLIT_DEV_DOMAIN
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+      : `http://localhost:${process.env.PORT || 3000}`;
 
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
 
     const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
     const textContent = this.generatePlainTextEmail(travelData, itineraryUrl);
 
+    try {
+      if (this.provider === 'mailgun') {
+        return await this.sendWithMailgun(recipientEmail, htmlContent, textContent);
+      } else {
+        return await this.sendWithSES(recipientEmail, htmlContent, textContent);
+      }
+    } catch (error) {
+      console.error(`Error sending email with ${this.provider}:`, error);
+      throw error;
+    }
+  }
+
+  private async sendWithMailgun(
+    recipientEmail: string,
+    htmlContent: string,
+    textContent: string,
+  ) {
+    const form = new FormData();
+    form.append('from', this.fromEmail);
+    form.append('to', recipientEmail);
+    form.append('subject', 'Tu itinerario de viaje con Plannealo');
+    form.append('text', textContent);
+    form.append('html', htmlContent);
+
+    const response = await fetch(
+      `https://api.mailgun.net/v3/${this.mailgunDomain}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(`api:${this.mailgunApiKey}`).toString('base64')}`,
+        },
+        body: form,
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Mailgun API error: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
+
+  private async sendWithSES(
+    recipientEmail: string,
+    htmlContent: string,
+    textContent: string,
+  ) {
+    if (!this.sesClient) {
+      throw new Error('SES client not initialized');
+    }
+
     const params = {
-      Source: `PLANNEALO <${this.fromEmail}>`,
+      Source: this.fromEmail,
       Destination: {
         ToAddresses: [recipientEmail],
       },
@@ -69,14 +131,8 @@ export class EmailService {
       },
     };
 
-    try {
-      const command = new SendEmailCommand(params);
-      const result = await this.sesClient.send(command);
-      return result;
-    } catch (error) {
-      console.error("Error sending email with SES:", error);
-      throw error;
-    }
+    const command = new SendEmailCommand(params);
+    return await this.sesClient.send(command);
   }
 
   private generateEmailTemplate(travel: any, itineraryUrl: string): string {
