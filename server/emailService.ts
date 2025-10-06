@@ -1,24 +1,31 @@
-import formData from "form-data";
-import Mailgun from "mailgun.js";
+
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from "crypto";
 
 export class EmailService {
-  private mg: any;
-  private domain: string;
+  private sesClient: SESClient;
+  private fromEmail: string;
 
   constructor() {
-    if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
       throw new Error(
-        "MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables are required",
+        "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_REGION environment variables are required",
       );
     }
 
-    const mailgun = new Mailgun(formData);
-    this.mg = mailgun.client({
-      username: "api",
-      key: process.env.MAILGUN_API_KEY,
+    if (!process.env.SES_FROM_EMAIL) {
+      throw new Error("SES_FROM_EMAIL environment variable is required");
+    }
+
+    this.sesClient = new SESClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
     });
-    this.domain = process.env.MAILGUN_DOMAIN;
+
+    this.fromEmail = process.env.SES_FROM_EMAIL;
   }
 
   async sendTravelShareEmail(
@@ -37,19 +44,37 @@ export class EmailService {
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
 
     const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
+    const textContent = this.generatePlainTextEmail(travelData, itineraryUrl);
+
+    const params = {
+      Source: `PLANNEALO <${this.fromEmail}>`,
+      Destination: {
+        ToAddresses: [recipientEmail],
+      },
+      Message: {
+        Subject: {
+          Data: "Tu itinerario de viaje con Plannealo",
+          Charset: "UTF-8",
+        },
+        Body: {
+          Html: {
+            Data: htmlContent,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textContent,
+            Charset: "UTF-8",
+          },
+        },
+      },
+    };
 
     try {
-      const result = await this.mg.messages.create(this.domain, {
-        from: "PLANNEALO <itinerarios@plannealo.com>",
-        to: [recipientEmail],
-        subject: "Tu itinerario de viaje con Plannealo",
-        html: htmlContent,
-        text: this.generatePlainTextEmail(travelData, itineraryUrl),
-      });
-
+      const command = new SendEmailCommand(params);
+      const result = await this.sesClient.send(command);
       return result;
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("Error sending email with SES:", error);
       throw error;
     }
   }
