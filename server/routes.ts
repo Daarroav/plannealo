@@ -2145,6 +2145,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // AWS SNS Webhook endpoint for email bounce notifications
+      app.post("/api/webhooks/sns/email-bounce", express.json({ type: 'text/plain' }), async (req, res) => {
+        try {
+          const messageType = req.headers['x-amz-sns-message-type'];
+          
+          // Parse the SNS message
+          let message;
+          if (typeof req.body === 'string') {
+            message = JSON.parse(req.body);
+          } else {
+            message = req.body;
+          }
+
+          console.log('SNS Message Type:', messageType);
+          console.log('SNS Message:', JSON.stringify(message, null, 2));
+
+          // Handle subscription confirmation
+          if (messageType === 'SubscriptionConfirmation') {
+            console.log('Confirming SNS subscription...');
+            const subscribeURL = message.SubscribeURL;
+            
+            // Confirm the subscription by making a GET request to SubscribeURL
+            const response = await fetch(subscribeURL);
+            
+            if (response.ok) {
+              console.log('SNS subscription confirmed successfully');
+              return res.status(200).json({ 
+                message: 'Subscription confirmed',
+                subscriptionArn: message.SubscriptionArn 
+              });
+            } else {
+              console.error('Failed to confirm subscription:', await response.text());
+              return res.status(500).json({ error: 'Failed to confirm subscription' });
+            }
+          }
+
+          // Handle notification messages (bounces, complaints, etc.)
+          if (messageType === 'Notification') {
+            const snsMessage = typeof message.Message === 'string' 
+              ? JSON.parse(message.Message) 
+              : message.Message;
+
+            console.log('SNS Notification Message:', JSON.stringify(snsMessage, null, 2));
+
+            // Handle bounce notifications
+            if (snsMessage.notificationType === 'Bounce') {
+              const bounce = snsMessage.bounce;
+              const bouncedRecipients = bounce.bouncedRecipients || [];
+              
+              console.log('Email Bounce Detected:');
+              console.log('- Bounce Type:', bounce.bounceType);
+              console.log('- Bounce Subtype:', bounce.bounceSubType);
+              console.log('- Bounced Recipients:', bouncedRecipients.map((r: any) => r.emailAddress).join(', '));
+              
+              // Log each bounced email
+              for (const recipient of bouncedRecipients) {
+                console.log(`Bounced email: ${recipient.emailAddress}`);
+                console.log(`Status: ${recipient.status || 'N/A'}`);
+                console.log(`Diagnostic Code: ${recipient.diagnosticCode || 'N/A'}`);
+                
+                // TODO: Implement business logic here:
+                // - Mark email as invalid in database
+                // - Notify admin
+                // - Update user status
+              }
+            }
+
+            // Handle complaint notifications
+            if (snsMessage.notificationType === 'Complaint') {
+              const complaint = snsMessage.complaint;
+              const complainedRecipients = complaint.complainedRecipients || [];
+              
+              console.log('Email Complaint Detected:');
+              console.log('- Complaint Feedback Type:', complaint.complaintFeedbackType);
+              console.log('- Complained Recipients:', complainedRecipients.map((r: any) => r.emailAddress).join(', '));
+              
+              // TODO: Implement business logic here:
+              // - Remove from mailing list
+              // - Log complaint
+            }
+
+            // Handle delivery notifications (optional)
+            if (snsMessage.notificationType === 'Delivery') {
+              const delivery = snsMessage.delivery;
+              console.log('Email Delivered Successfully:');
+              console.log('- Recipients:', delivery.recipients.join(', '));
+            }
+
+            return res.status(200).json({ message: 'Notification processed' });
+          }
+
+          // Handle unsubscribe confirmation
+          if (messageType === 'UnsubscribeConfirmation') {
+            console.log('SNS Unsubscribe Confirmation received');
+            return res.status(200).json({ message: 'Unsubscribe noted' });
+          }
+
+          // Unknown message type
+          console.warn('Unknown SNS message type:', messageType);
+          return res.status(400).json({ error: 'Unknown message type' });
+
+        } catch (error: any) {
+          console.error('Error processing SNS webhook:', error);
+          console.error('Error details:', error.message);
+          console.error('Request body:', req.body);
+          
+          // Return 200 to prevent SNS from retrying
+          return res.status(200).json({ 
+            error: 'Error processing webhook',
+            details: error.message 
+          });
+        }
+      });
+
 
 
       const httpServer = createServer(app);
