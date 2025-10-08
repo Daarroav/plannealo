@@ -24,6 +24,7 @@ import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote,
 // utils
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 // schemas or types
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
@@ -831,6 +832,47 @@ export default function TravelDetail() {
     return result;
   };
 
+  // Formatear fecha/hora de vuelo usando la zona horaria del aeropuerto
+  const formatFlightDateTime = (
+    date: Date | string | null,
+    cityString: string | null
+  ): string => {
+    if (!date) return "";
+
+    const d = new Date(date);
+    
+    // Extraer código IATA y obtener zona horaria
+    const iataCode = extractIataCode(cityString || '');
+    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    
+    // Formatear fecha y hora en la zona horaria del aeropuerto
+    const dateFmt = new Intl.DateTimeFormat("es-MX", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: timezone,
+    });
+
+    const parts = dateFmt.formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    let month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
+
+    month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
+
+    const timeParts = new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: timezone,
+    }).formatToParts(d);
+
+    const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
+    const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+
+    return `${day} ${month} ${year}, ${hour}:${minute}`;
+  };
+
   // Handlers for editing
   const handleEditAccommodation = (accommodation: Accommodation) => {
     setEditingAccommodation(accommodation);
@@ -1345,10 +1387,10 @@ export default function TravelDetail() {
                                 <span className="font-medium">Destino:</span> {flight.arrivalCity}
                               </div>
                               <div>
-                                <span className="font-medium">Salida:</span> {formatDateTime(flight.departureDate, true)}
+                                <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate, flight.departureCity)}
                               </div>
                               <div>
-                                <span className="font-medium">Llegada:</span> {formatDateTime(flight.arrivalDate, true)}
+                                <span className="font-medium">Llegada:</span> {formatFlightDateTime(flight.arrivalDate, flight.arrivalCity)}
                               </div>
                             </div>
                           </div>

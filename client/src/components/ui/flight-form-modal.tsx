@@ -12,10 +12,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { toDate } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
+import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -243,9 +245,36 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     // Get the most current form values
     const currentValues = form.getValues();
     
-    // Combine date and time for departure and arrival
-    const departureDateTime = new Date(`${currentValues.departureDateField}T${currentValues.departureTimeField}:00`);
-    const arrivalDateTime = new Date(`${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`);
+    // Extraer códigos IATA de las ciudades para determinar zonas horarias
+    const departureIata = extractIataCode(currentValues.departureCity || '');
+    const arrivalIata = extractIataCode(currentValues.arrivalCity || '');
+    
+    // Obtener zonas horarias basadas en los códigos IATA
+    const departureTz = getTimezoneForAirport(departureIata, 'America/Mexico_City');
+    const arrivalTz = getTimezoneForAirport(arrivalIata, 'America/Mexico_City');
+    
+    // Combinar fecha y hora como string en formato local
+    const departureDateTimeStr = `${currentValues.departureDateField} ${currentValues.departureTimeField}:00`;
+    const arrivalDateTimeStr = `${currentValues.arrivalDateField} ${currentValues.arrivalTimeField}:00`;
+    
+    // Convertir a UTC usando la zona horaria del aeropuerto correspondiente
+    const departureDateTime = toDate(departureDateTimeStr, { timeZone: departureTz });
+    const arrivalDateTime = toDate(arrivalDateTimeStr, { timeZone: arrivalTz });
+    
+    console.log('Timezone conversion:', {
+      departure: {
+        iata: departureIata,
+        timezone: departureTz,
+        localTime: departureDateTimeStr,
+        utc: departureDateTime.toISOString()
+      },
+      arrival: {
+        iata: arrivalIata,
+        timezone: arrivalTz,
+        localTime: arrivalDateTimeStr,
+        utc: arrivalDateTime.toISOString()
+      }
+    });
 
     // Create FormData
     const formData = new FormData();

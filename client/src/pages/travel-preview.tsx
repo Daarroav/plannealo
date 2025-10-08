@@ -23,6 +23,7 @@ import {
   Globe,
 } from "lucide-react";
 import { AttachmentList } from "@/components/AttachmentLink";
+import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 interface TravelData {
@@ -90,6 +91,27 @@ export default function TravelPreview() {
       hour12: true, // 👈 Esto forza el formato AM/PM
     });
   };
+
+  // Formatear fecha/hora de vuelo usando la zona horaria del aeropuerto
+  const formatFlightDateTime = (dateTime: string | Date, cityString: string) => {
+    const date = new Date(dateTime);
+    
+    // Extraer código IATA y obtener zona horaria
+    const iataCode = extractIataCode(cityString || '');
+    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    
+    // Formatear en la zona horaria correcta
+    return date.toLocaleString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: timezone,
+    });
+  };
+
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -510,7 +532,7 @@ export default function TravelPreview() {
                   SALIDA
                 </div>
                 <div className="text-gray-900">
-                  {formatDateTime(event.data.departureDate)}
+                  {formatFlightDateTime(event.data.departureDate, event.data.departureCity)}
                 </div>
               </div>
               <div>
@@ -518,7 +540,7 @@ export default function TravelPreview() {
                   LLEGADA
                 </div>
                 <div className="text-gray-900">
-                  {formatDateTime(event.data.arrivalDate)}
+                  {formatFlightDateTime(event.data.arrivalDate, event.data.arrivalCity)}
                 </div>
               </div>
               <div>
