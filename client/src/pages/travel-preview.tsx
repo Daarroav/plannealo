@@ -163,6 +163,29 @@ export default function TravelPreview() {
     notes,
   } = data;
 
+  // Obtener fecha en zona horaria específica para agrupación
+  const getDateInTimezone = (dateTime: string | Date, cityString: string): Date => {
+    const date = new Date(dateTime);
+    const iataCode = extractIataCode(cityString || '');
+    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    
+    // Obtener componentes de fecha en la zona horaria específica
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    
+    const parts = formatter.formatToParts(date);
+    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+    
+    // Crear fecha local usando estos componentes
+    return new Date(year, month, day);
+  };
+
   // Combinar y ordenar todos los eventos cronológicamente
   const getAllEvents = () => {
     const events: Array<{
@@ -188,12 +211,12 @@ export default function TravelPreview() {
       });
     });
 
-    // Agregar vuelos
+    // Agregar vuelos - usar zona horaria del aeropuerto de salida
     flights.forEach((flight) => {
       events.push({
         id: flight.id,
         type: "flight",
-        date: new Date(flight.departureDate),
+        date: getDateInTimezone(flight.departureDate, flight.departureCity),
         data: flight,
       });
     });
