@@ -229,12 +229,12 @@ export default function TravelPreview() {
       });
     });
 
-    // Agregar vuelos - usar zona horaria del aeropuerto de salida
+    // Agregar vuelos - usar fecha original para ordenar, zona horaria se usa solo para agrupar
     flights.forEach((flight) => {
       events.push({
         id: flight.id,
         type: "flight",
-        date: getDateInTimezone(flight.departureDate, flight.departureCity, flight.departureTimezone),
+        date: new Date(flight.departureDate),
         data: flight,
       });
     });
@@ -327,11 +327,26 @@ export default function TravelPreview() {
 
     events.forEach((event) => {
       const d = new Date(event.date); // Puede ser string o Date
+      
+      let year: number, month: string, day: string;
 
-      // 👇 Usamos siempre la fecha LOCAL
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
+      // Para vuelos, usar la zona horaria guardada o detectada para determinar el día local
+      if (event.type === 'flight') {
+        const flight = event.data;
+        const localDate = getDateInTimezone(
+          event.date, 
+          flight.departureCity, 
+          flight.departureTimezone
+        );
+        year = localDate.getFullYear();
+        month = String(localDate.getMonth() + 1).padStart(2, "0");
+        day = String(localDate.getDate()).padStart(2, "0");
+      } else {
+        // Para otros eventos, usar la fecha local del navegador
+        year = d.getFullYear();
+        month = String(d.getMonth() + 1).padStart(2, "0");
+        day = String(d.getDate()).padStart(2, "0");
+      }
 
       const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD local
 
@@ -347,7 +362,7 @@ export default function TravelPreview() {
         // 👇 medianoche local (NO UTC)
         const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día
+        // Ordenar eventos dentro del día por su hora UTC real
         groups[dateKey].sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
         );
