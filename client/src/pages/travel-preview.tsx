@@ -172,10 +172,20 @@ export default function TravelPreview() {
   } = data;
 
   // Obtener fecha en zona horaria específica para agrupación
-  const getDateInTimezone = (dateTime: string | Date, cityString: string): Date => {
+  const getDateInTimezone = (dateTime: string | Date, cityString: string, savedTimezone?: string | null): Date => {
     const date = new Date(dateTime);
-    const iataCode = extractIataCode(cityString || '');
-    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    
+    // Determinar la zona horaria a usar (misma lógica que formatFlightDateTime)
+    let timezone = 'America/Mexico_City'; // Fallback por defecto
+    
+    if (savedTimezone) {
+      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
+      timezone = savedTimezone;
+    } else {
+      // Si no hay zona horaria guardada, extraer código IATA y buscar
+      const iataCode = extractIataCode(cityString || '');
+      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    }
     
     // Obtener componentes de fecha en la zona horaria específica
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -224,7 +234,7 @@ export default function TravelPreview() {
       events.push({
         id: flight.id,
         type: "flight",
-        date: getDateInTimezone(flight.departureDate, flight.departureCity),
+        date: getDateInTimezone(flight.departureDate, flight.departureCity, flight.departureTimezone),
         data: flight,
       });
     });
