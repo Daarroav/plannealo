@@ -57,7 +57,9 @@ export function NoteFormModal({
     if (editingNote) {
       const noteDateTime = editingNote.noteDate ? new Date(editingNote.noteDate) : null;
       const noteDate = noteDateTime ? noteDateTime.toISOString().split('T')[0] : "";
-      const noteTime = noteDateTime ? noteDateTime.toTimeString().slice(0, 5) : ""; // HH:mm format
+      // Extraer la hora local del timestamp
+      const noteTime = noteDateTime ? 
+        `${String(noteDateTime.getHours()).padStart(2, '0')}:${String(noteDateTime.getMinutes()).padStart(2, '0')}` : "";
       
       form.reset({
         title: editingNote.title || "",
@@ -120,16 +122,20 @@ export function NoteFormModal({
     }
     formData.append('title', currentValues.title);
     
-    // Combinar fecha y hora en un solo timestamp
+    // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada)
     let dateTimeString = currentValues.noteDate;
     if (currentValues.noteTime) {
-      // Si hay hora, combinarla con la fecha
-      dateTimeString = `${currentValues.noteDate}T${currentValues.noteTime}:00`;
+      // Si hay hora, combinarla con la fecha y crear timestamp local
+      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
+      const [hours, minutes] = currentValues.noteTime.split(':').map(Number);
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0);
+      formData.append('noteDate', localDate.toISOString());
     } else {
       // Si no hay hora, usar medianoche
-      dateTimeString = `${currentValues.noteDate}T00:00:00`;
+      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
+      const localDate = new Date(year, month - 1, day, 0, 0, 0);
+      formData.append('noteDate', localDate.toISOString());
     }
-    formData.append('noteDate', new Date(dateTimeString).toISOString());
     
     formData.append('content', currentValues.content);
     formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
