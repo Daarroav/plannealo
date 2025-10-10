@@ -268,7 +268,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const arrivalIata = extractIataCode(currentValues.arrivalCity || '');
     
     // Validar que se haya seleccionado zona horaria manual cuando no hay IATA
-    if (!departureIata && !manualDepartureTimezone && !editingFlight?.departureTimezone) {
+    // La validación es estricta: si no hay IATA, debe haber selección manual actual
+    if (!departureIata && !manualDepartureTimezone) {
       form.setError('departureCity', {
         type: 'manual',
         message: 'Debes seleccionar una zona horaria de salida cuando no usas búsqueda automática'
@@ -276,7 +277,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       return;
     }
     
-    if (!arrivalIata && !manualArrivalTimezone && !editingFlight?.arrivalTimezone) {
+    if (!arrivalIata && !manualArrivalTimezone) {
       form.setError('arrivalCity', {
         type: 'manual',
         message: 'Debes seleccionar una zona horaria de llegada cuando no usas búsqueda automática'
