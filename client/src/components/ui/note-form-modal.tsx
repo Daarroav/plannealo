@@ -57,9 +57,9 @@ export function NoteFormModal({
     if (editingNote) {
       const noteDateTime = editingNote.noteDate ? new Date(editingNote.noteDate) : null;
       const noteDate = noteDateTime ? noteDateTime.toISOString().split('T')[0] : "";
-      // Extraer la hora local del timestamp
+      // Extraer la hora UTC del timestamp (sin conversión a hora local)
       const noteTime = noteDateTime ? 
-        `${String(noteDateTime.getHours()).padStart(2, '0')}:${String(noteDateTime.getMinutes()).padStart(2, '0')}` : "";
+        `${String(noteDateTime.getUTCHours()).padStart(2, '0')}:${String(noteDateTime.getUTCMinutes()).padStart(2, '0')}` : "";
       
       form.reset({
         title: editingNote.title || "",
@@ -122,19 +122,18 @@ export function NoteFormModal({
     }
     formData.append('title', currentValues.title);
     
-    // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada)
-    let dateTimeString = currentValues.noteDate;
+    // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada como UTC)
     if (currentValues.noteTime) {
-      // Si hay hora, combinarla con la fecha y crear timestamp local
+      // Si hay hora, combinarla con la fecha usando UTC directamente
       const [year, month, day] = currentValues.noteDate.split('-').map(Number);
       const [hours, minutes] = currentValues.noteTime.split(':').map(Number);
-      const localDate = new Date(year, month - 1, day, hours, minutes, 0);
-      formData.append('noteDate', localDate.toISOString());
+      const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
+      formData.append('noteDate', utcDate.toISOString());
     } else {
-      // Si no hay hora, usar medianoche
+      // Si no hay hora, usar medianoche UTC
       const [year, month, day] = currentValues.noteDate.split('-').map(Number);
-      const localDate = new Date(year, month - 1, day, 0, 0, 0);
-      formData.append('noteDate', localDate.toISOString());
+      const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+      formData.append('noteDate', utcDate.toISOString());
     }
     
     formData.append('content', currentValues.content);
