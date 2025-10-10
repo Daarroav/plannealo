@@ -55,11 +55,14 @@ export function NoteFormModal({
   // Reset form when editing note changes
   React.useEffect(() => {
     if (editingNote) {
-      const noteDate = editingNote.noteDate ? new Date(editingNote.noteDate).toISOString().split('T')[0] : "";
+      const noteDateTime = editingNote.noteDate ? new Date(editingNote.noteDate) : null;
+      const noteDate = noteDateTime ? noteDateTime.toISOString().split('T')[0] : "";
+      const noteTime = noteDateTime ? noteDateTime.toTimeString().slice(0, 5) : ""; // HH:mm format
+      
       form.reset({
         title: editingNote.title || "",
         noteDate,
-        noteTime: editingNote.noteTime || "",
+        noteTime,
         content: editingNote.content || "",
         visibleToTravelers: editingNote.visibleToTravelers ?? true,
         attachments: editingNote.attachments || [],
@@ -116,8 +119,18 @@ export function NoteFormModal({
       formData.append('id', editingNote.id);
     }
     formData.append('title', currentValues.title);
-    formData.append('noteDate', new Date(currentValues.noteDate).toISOString());
-    formData.append('noteTime', currentValues.noteTime || '');
+    
+    // Combinar fecha y hora en un solo timestamp
+    let dateTimeString = currentValues.noteDate;
+    if (currentValues.noteTime) {
+      // Si hay hora, combinarla con la fecha
+      dateTimeString = `${currentValues.noteDate}T${currentValues.noteTime}:00`;
+    } else {
+      // Si no hay hora, usar medianoche
+      dateTimeString = `${currentValues.noteDate}T00:00:00`;
+    }
+    formData.append('noteDate', new Date(dateTimeString).toISOString());
+    
     formData.append('content', currentValues.content);
     formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
     
@@ -133,7 +146,7 @@ export function NoteFormModal({
 
     // For editing, send current remaining attachments to preserve them
     if (editingNote?.attachments) {
-      const remainingAttachments = editingNote.attachments.filter((_, index) => 
+      const remainingAttachments = editingNote.attachments.filter((_: string, index: number) => 
         !removedExistingAttachments.includes(index)
       );
       if (remainingAttachments.length > 0) {
@@ -289,8 +302,8 @@ export function NoteFormModal({
                   
                   {/* Show existing attachments */}
                   {editingNote?.attachments
-                    ?.filter((_, index) => !removedExistingAttachments.includes(index))
-                    ?.map((url, index) => {
+                    ?.filter((_: string, index: number) => !removedExistingAttachments.includes(index))
+                    ?.map((url: string, index: number) => {
                       const originalIndex = editingNote.attachments?.indexOf(url) ?? -1;
                       return (
                         <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
