@@ -1012,7 +1012,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const noteData = {
             travelId: req.params.id,
             title: title,
-            noteDate: noteDate, // Let the schema handle the date transformation
+            noteDate: new Date(noteDate), // Convert to Date object
             content: content,
             visibleToTravelers: visibleToTravelers === 'true',
             attachments: attachments,
