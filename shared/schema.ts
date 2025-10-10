@@ -79,6 +79,8 @@ export const flights = pgTable("flights", {
   class: text("class").notNull(),
   reservationNumber: text("reservation_number").notNull(),
   attachments: text("attachments").array(), // Archivos adjuntos
+  departureTimezone: text("departure_timezone"), // Zona horaria manual del aeropuerto de salida
+  arrivalTimezone: text("arrival_timezone"), // Zona horaria manual del aeropuerto de llegada
 });
 
 export const transports = pgTable("transports", {

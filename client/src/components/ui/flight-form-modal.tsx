@@ -18,6 +18,7 @@ import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
 import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
+import { TIMEZONE_CATALOG, type TimezoneOption } from "@/lib/timezone-catalog";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -100,6 +101,10 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  
+  // Zonas horarias manuales (cuando no se usa búsqueda automática)
+  const [manualDepartureTimezone, setManualDepartureTimezone] = useState<string>("");
+  const [manualArrivalTimezone, setManualArrivalTimezone] = useState<string>("");
 
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
@@ -146,6 +151,19 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         class: editingFlight.class || "",
         attachments: editingFlight.attachments || [],
       });
+      
+      // Hidratar zonas horarias manuales si existen
+      if (editingFlight.departureTimezone) {
+        setManualDepartureTimezone(editingFlight.departureTimezone);
+      } else {
+        setManualDepartureTimezone("");
+      }
+      
+      if (editingFlight.arrivalTimezone) {
+        setManualArrivalTimezone(editingFlight.arrivalTimezone);
+      } else {
+        setManualArrivalTimezone("");
+      }
       
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
@@ -249,9 +267,48 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const departureIata = extractIataCode(currentValues.departureCity || '');
     const arrivalIata = extractIataCode(currentValues.arrivalCity || '');
     
-    // Obtener zonas horarias basadas en los códigos IATA
-    const departureTz = getTimezoneForAirport(departureIata, 'America/Mexico_City');
-    const arrivalTz = getTimezoneForAirport(arrivalIata, 'America/Mexico_City');
+    // Validar que se haya seleccionado zona horaria manual cuando no hay IATA
+    if (!departureIata && !manualDepartureTimezone && !editingFlight?.departureTimezone) {
+      form.setError('departureCity', {
+        type: 'manual',
+        message: 'Debes seleccionar una zona horaria de salida cuando no usas búsqueda automática'
+      });
+      return;
+    }
+    
+    if (!arrivalIata && !manualArrivalTimezone && !editingFlight?.arrivalTimezone) {
+      form.setError('arrivalCity', {
+        type: 'manual',
+        message: 'Debes seleccionar una zona horaria de llegada cuando no usas búsqueda automática'
+      });
+      return;
+    }
+    
+    // Obtener zonas horarias: prioridad: IATA > manual > guardada > fallback
+    let departureTz = 'America/Mexico_City';
+    let arrivalTz = 'America/Mexico_City';
+    
+    if (departureIata) {
+      // Si hay código IATA, usar automático (mayor prioridad)
+      departureTz = getTimezoneForAirport(departureIata, 'America/Mexico_City');
+    } else if (manualDepartureTimezone) {
+      // Si no hay IATA pero hay zona horaria manual, usarla
+      departureTz = manualDepartureTimezone;
+    } else if (editingFlight?.departureTimezone) {
+      // Si estamos editando y había zona horaria guardada, usarla
+      departureTz = editingFlight.departureTimezone;
+    }
+    
+    if (arrivalIata) {
+      // Si hay código IATA, usar automático (mayor prioridad)
+      arrivalTz = getTimezoneForAirport(arrivalIata, 'America/Mexico_City');
+    } else if (manualArrivalTimezone) {
+      // Si no hay IATA pero hay zona horaria manual, usarla
+      arrivalTz = manualArrivalTimezone;
+    } else if (editingFlight?.arrivalTimezone) {
+      // Si estamos editando y había zona horaria guardada, usarla
+      arrivalTz = editingFlight.arrivalTimezone;
+    }
     
     // Combinar fecha y hora como string en formato local
     const departureDateTimeStr = `${currentValues.departureDateField} ${currentValues.departureTimeField}:00`;
@@ -295,6 +352,14 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     formData.append('arrivalTerminal', currentValues.arrivalTerminal || '');
     formData.append('class', currentValues.class || '');
     
+    // Agregar zonas horarias manuales si existen
+    if (manualDepartureTimezone) {
+      formData.append('departureTimezone', manualDepartureTimezone);
+    }
+    if (manualArrivalTimezone) {
+      formData.append('arrivalTimezone', manualArrivalTimezone);
+    }
+    
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -307,7 +372,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
 
     // For editing, send current remaining attachments to preserve them
     if (editingFlight?.attachments) {
-      const remainingAttachments = editingFlight.attachments.filter((_, index) => 
+      const remainingAttachments = editingFlight.attachments.filter((_: string, index: number) => 
         !removedExistingAttachments.includes(index)
       );
       if (remainingAttachments.length > 0) {
@@ -321,6 +386,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     setArrivalDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setManualDepartureTimezone("");
+    setManualArrivalTimezone("");
   };
 
   const handleClose = () => {
@@ -329,6 +396,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     setArrivalDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setManualDepartureTimezone("");
+    setManualArrivalTimezone("");
     onClose();
   };
 
@@ -457,6 +526,38 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               )}
             </div>
 
+            {/* Zona horaria manual de salida - Solo mostrar si NO hay código IATA */}
+            {!extractIataCode(form.watch("departureCity") || '') && (
+              <div>
+                <Label htmlFor="departureTimezone">Zona Horaria de Salida *</Label>
+                <Select
+                  value={manualDepartureTimezone}
+                  onValueChange={setManualDepartureTimezone}
+                >
+                  <SelectTrigger id="departureTimezone" data-testid="select-departure-timezone">
+                    <SelectValue placeholder="Seleccionar zona horaria..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {TIMEZONE_CATALOG.map((region) => (
+                      <React.Fragment key={region.region}>
+                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted">
+                          {region.region}
+                        </div>
+                        {region.timezones.map((tz) => (
+                          <SelectItem key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecciona la zona horaria del aeropuerto de salida
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label>Fecha de Salida *</Label>
@@ -526,6 +627,38 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 </p>
               )}
             </div>
+
+            {/* Zona horaria manual de llegada - Solo mostrar si NO hay código IATA */}
+            {!extractIataCode(form.watch("arrivalCity") || '') && (
+              <div>
+                <Label htmlFor="arrivalTimezone">Zona Horaria de Llegada *</Label>
+                <Select
+                  value={manualArrivalTimezone}
+                  onValueChange={setManualArrivalTimezone}
+                >
+                  <SelectTrigger id="arrivalTimezone" data-testid="select-arrival-timezone">
+                    <SelectValue placeholder="Seleccionar zona horaria..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {TIMEZONE_CATALOG.map((region) => (
+                      <React.Fragment key={region.region}>
+                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted">
+                          {region.region}
+                        </div>
+                        {region.timezones.map((tz) => (
+                          <SelectItem key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecciona la zona horaria del aeropuerto de llegada
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -652,8 +785,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 
                 {/* Show existing attachments */}
                 {editingFlight?.attachments
-                  ?.filter((_, index) => !removedExistingAttachments.includes(index))
-                  ?.map((url, index) => {
+                  ?.filter((_: string, index: number) => !removedExistingAttachments.includes(index))
+                  ?.map((url: string, index: number) => {
                     const originalIndex = editingFlight.attachments?.indexOf(url) ?? -1;
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
