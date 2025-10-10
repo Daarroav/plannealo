@@ -19,6 +19,7 @@ import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
 import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 import { TIMEZONE_CATALOG, type TimezoneOption } from "@/lib/timezone-catalog";
+import { TimezoneCombobox } from "./timezone-combobox";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -190,6 +191,41 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       setRemovedExistingAttachments([]);
     }
   }, [editingFlight, form, travelId]);
+
+  // Auto-completar zonas horarias cuando se detecta código IATA
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      // Solo actuar si cambió departureCity o arrivalCity
+      if (name === "departureCity" || name === "arrivalCity") {
+        const departureCity = value.departureCity || '';
+        const arrivalCity = value.arrivalCity || '';
+        
+        // Auto-completar zona horaria de salida
+        if (name === "departureCity") {
+          const departureIata = extractIataCode(departureCity);
+          if (departureIata) {
+            const timezone = getTimezoneForAirport(departureIata, '');
+            if (timezone) {
+              setManualDepartureTimezone(timezone);
+            }
+          }
+        }
+        
+        // Auto-completar zona horaria de llegada
+        if (name === "arrivalCity") {
+          const arrivalIata = extractIataCode(arrivalCity);
+          if (arrivalIata) {
+            const timezone = getTimezoneForAirport(arrivalIata, '');
+            if (timezone) {
+              setManualArrivalTimezone(timezone);
+            }
+          }
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -527,37 +563,22 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               )}
             </div>
 
-            {/* Zona horaria manual de salida - Solo mostrar si NO hay código IATA */}
-            {!extractIataCode(form.watch("departureCity") || '') && (
-              <div>
-                <Label htmlFor="departureTimezone">Zona Horaria de Salida *</Label>
-                <Select
-                  value={manualDepartureTimezone}
-                  onValueChange={setManualDepartureTimezone}
-                >
-                  <SelectTrigger id="departureTimezone" data-testid="select-departure-timezone">
-                    <SelectValue placeholder="Seleccionar zona horaria..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {TIMEZONE_CATALOG.map((region) => (
-                      <React.Fragment key={region.region}>
-                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted">
-                          {region.region}
-                        </div>
-                        {region.timezones.map((tz) => (
-                          <SelectItem key={tz.value} value={tz.value}>
-                            {tz.label}
-                          </SelectItem>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selecciona la zona horaria del aeropuerto de salida
-                </p>
-              </div>
-            )}
+            {/* Zona horaria de salida - Siempre visible, se auto-completa si hay IATA */}
+            <div>
+              <Label htmlFor="departureTimezone">Zona Horaria de Salida *</Label>
+              <TimezoneCombobox
+                id="departureTimezone"
+                testId="select-departure-timezone"
+                value={manualDepartureTimezone}
+                onValueChange={setManualDepartureTimezone}
+                placeholder="Buscar zona horaria..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {extractIataCode(form.watch("departureCity") || '') 
+                  ? "Se auto-completó según el aeropuerto. Puedes cambiarla si es necesario."
+                  : "Selecciona la zona horaria del aeropuerto de salida"}
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
@@ -629,37 +650,22 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               )}
             </div>
 
-            {/* Zona horaria manual de llegada - Solo mostrar si NO hay código IATA */}
-            {!extractIataCode(form.watch("arrivalCity") || '') && (
-              <div>
-                <Label htmlFor="arrivalTimezone">Zona Horaria de Llegada *</Label>
-                <Select
-                  value={manualArrivalTimezone}
-                  onValueChange={setManualArrivalTimezone}
-                >
-                  <SelectTrigger id="arrivalTimezone" data-testid="select-arrival-timezone">
-                    <SelectValue placeholder="Seleccionar zona horaria..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
-                    {TIMEZONE_CATALOG.map((region) => (
-                      <React.Fragment key={region.region}>
-                        <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground bg-muted">
-                          {region.region}
-                        </div>
-                        {region.timezones.map((tz) => (
-                          <SelectItem key={tz.value} value={tz.value}>
-                            {tz.label}
-                          </SelectItem>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selecciona la zona horaria del aeropuerto de llegada
-                </p>
-              </div>
-            )}
+            {/* Zona horaria de llegada - Siempre visible, se auto-completa si hay IATA */}
+            <div>
+              <Label htmlFor="arrivalTimezone">Zona Horaria de Llegada *</Label>
+              <TimezoneCombobox
+                id="arrivalTimezone"
+                testId="select-arrival-timezone"
+                value={manualArrivalTimezone}
+                onValueChange={setManualArrivalTimezone}
+                placeholder="Buscar zona horaria..."
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {extractIataCode(form.watch("arrivalCity") || '') 
+                  ? "Se auto-completó según el aeropuerto. Puedes cambiarla si es necesario."
+                  : "Selecciona la zona horaria del aeropuerto de llegada"}
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">

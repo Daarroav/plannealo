@@ -1,0 +1,94 @@
+import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { TIMEZONE_CATALOG } from "@/lib/timezone-catalog";
+
+interface TimezoneComboboxProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  placeholder?: string;
+  id?: string;
+  testId?: string;
+}
+
+export function TimezoneCombobox({
+  value,
+  onValueChange,
+  placeholder = "Buscar zona horaria...",
+  id,
+  testId,
+}: TimezoneComboboxProps) {
+  const [open, setOpen] = React.useState(false);
+
+  // Encontrar el label de la zona horaria seleccionada
+  const selectedLabel = React.useMemo(() => {
+    if (!value) return null;
+    for (const region of TIMEZONE_CATALOG) {
+      const tz = region.timezones.find((t) => t.value === value);
+      if (tz) return tz.label;
+    }
+    return null;
+  }, [value]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          id={id}
+          data-testid={testId}
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between"
+        >
+          {selectedLabel || placeholder}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Buscar zona horaria..." />
+          <CommandList>
+            <CommandEmpty>No se encontró zona horaria.</CommandEmpty>
+            {TIMEZONE_CATALOG.map((region) => (
+              <CommandGroup key={region.region} heading={region.region}>
+                {region.timezones.map((tz) => (
+                  <CommandItem
+                    key={tz.value}
+                    value={tz.label}
+                    onSelect={() => {
+                      onValueChange(tz.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === tz.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {tz.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
