@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { toDate } from "date-fns-tz";
+import { toDate, formatInTimeZone } from "date-fns-tz";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
@@ -130,8 +130,19 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingFlight) {
-      const depDateTime = new Date(editingFlight.departureDate);
-      const arrDateTime = new Date(editingFlight.arrivalDate);
+      // Obtener las zonas horarias guardadas o usar fallback
+      const depTz = editingFlight.departureTimezone || 'America/Mexico_City';
+      const arrTz = editingFlight.arrivalTimezone || 'America/Mexico_City';
+      
+      // Usar formatInTimeZone para mostrar la hora en la zona horaria correcta
+      const depDateStr = formatInTimeZone(new Date(editingFlight.departureDate), depTz, "yyyy-MM-dd");
+      const depTimeStr = formatInTimeZone(new Date(editingFlight.departureDate), depTz, "HH:mm");
+      const arrDateStr = formatInTimeZone(new Date(editingFlight.arrivalDate), arrTz, "yyyy-MM-dd");
+      const arrTimeStr = formatInTimeZone(new Date(editingFlight.arrivalDate), arrTz, "HH:mm");
+      
+      // Crear objetos Date para los calendarios usando la fecha/hora en la zona horaria correcta
+      const depDateTime = toDate(`${depDateStr} ${depTimeStr}:00`, { timeZone: depTz });
+      const arrDateTime = toDate(`${arrDateStr} ${arrTimeStr}:00`, { timeZone: arrTz });
       
       setDepartureDate(depDateTime);
       setArrivalDate(arrDateTime);
@@ -143,10 +154,10 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         reservationNumber: editingFlight.reservationNumber || "",
         departureCity: editingFlight.departureCity || "",
         arrivalCity: editingFlight.arrivalCity || "",
-        departureDateField: format(depDateTime, "yyyy-MM-dd"),
-        departureTimeField: format(depDateTime, "HH:mm"),
-        arrivalDateField: format(arrDateTime, "yyyy-MM-dd"),
-        arrivalTimeField: format(arrDateTime, "HH:mm"),
+        departureDateField: depDateStr,
+        departureTimeField: depTimeStr,
+        arrivalDateField: arrDateStr,
+        arrivalTimeField: arrTimeStr,
         departureTerminal: editingFlight.departureTerminal || "",
         arrivalTerminal: editingFlight.arrivalTerminal || "",
         class: editingFlight.class || "",
