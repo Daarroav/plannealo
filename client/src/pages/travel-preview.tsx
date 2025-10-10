@@ -92,13 +92,21 @@ export default function TravelPreview() {
     });
   };
 
-  // Formatear fecha/hora de vuelo usando la zona horaria del aeropuerto
-  const formatFlightDateTime = (dateTime: string | Date, cityString: string) => {
+  // Formatear fecha/hora de vuelo usando la zona horaria guardada o detectada
+  const formatFlightDateTime = (dateTime: string | Date, cityString: string, savedTimezone?: string | null) => {
     const date = new Date(dateTime);
     
-    // Extraer código IATA y obtener zona horaria
-    const iataCode = extractIataCode(cityString || '');
-    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    // Determinar la zona horaria a usar
+    let timezone = 'America/Mexico_City'; // Fallback por defecto
+    
+    if (savedTimezone) {
+      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
+      timezone = savedTimezone;
+    } else {
+      // Si no hay zona horaria guardada, extraer código IATA y buscar
+      const iataCode = extractIataCode(cityString || '');
+      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    }
     
     // Formatear en la zona horaria correcta
     return date.toLocaleString("es-ES", {
@@ -555,7 +563,7 @@ export default function TravelPreview() {
                   SALIDA
                 </div>
                 <div className="text-gray-900">
-                  {formatFlightDateTime(event.data.departureDate, event.data.departureCity)}
+                  {formatFlightDateTime(event.data.departureDate, event.data.departureCity, event.data.departureTimezone)}
                 </div>
               </div>
               <div>
@@ -563,7 +571,7 @@ export default function TravelPreview() {
                   LLEGADA
                 </div>
                 <div className="text-gray-900">
-                  {formatFlightDateTime(event.data.arrivalDate, event.data.arrivalCity)}
+                  {formatFlightDateTime(event.data.arrivalDate, event.data.arrivalCity, event.data.arrivalTimezone)}
                 </div>
               </div>
               <div>

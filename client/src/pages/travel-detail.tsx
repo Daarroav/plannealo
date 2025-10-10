@@ -832,20 +832,29 @@ export default function TravelDetail() {
     return result;
   };
 
-  // Formatear fecha/hora de vuelo usando la zona horaria del aeropuerto
+  // Formatear fecha/hora de vuelo usando la zona horaria guardada o detectada
   const formatFlightDateTime = (
     date: Date | string | null,
-    cityString: string | null
+    cityString: string | null,
+    savedTimezone?: string | null
   ): string => {
     if (!date) return "";
 
     const d = new Date(date);
     
-    // Extraer código IATA y obtener zona horaria
-    const iataCode = extractIataCode(cityString || '');
-    const timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    // Determinar la zona horaria a usar
+    let timezone = 'America/Mexico_City'; // Fallback por defecto
     
-    // Formatear fecha y hora en la zona horaria del aeropuerto
+    if (savedTimezone) {
+      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
+      timezone = savedTimezone;
+    } else {
+      // Si no hay zona horaria guardada, extraer código IATA y buscar
+      const iataCode = extractIataCode(cityString || '');
+      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
+    }
+    
+    // Formatear fecha y hora en la zona horaria correcta
     const dateFmt = new Intl.DateTimeFormat("es-MX", {
       day: "2-digit",
       month: "short",
@@ -1387,10 +1396,10 @@ export default function TravelDetail() {
                                 <span className="font-medium">Destino:</span> {flight.arrivalCity}
                               </div>
                               <div>
-                                <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate, flight.departureCity)}
+                                <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate, flight.departureCity, flight.departureTimezone)}
                               </div>
                               <div>
-                                <span className="font-medium">Llegada:</span> {formatFlightDateTime(flight.arrivalDate, flight.arrivalCity)}
+                                <span className="font-medium">Llegada:</span> {formatFlightDateTime(flight.arrivalDate, flight.arrivalCity, flight.arrivalTimezone)}
                               </div>
                             </div>
                           </div>
