@@ -326,6 +326,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+// Delete travel - PROTEGIDO: No elimina si tiene datos relacionados
+  app.delete('/api/travels/:id', async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+
+    if (!user) {
+      return res.status(401).send('Not authenticated');
+    }
+
+    try {
+      // Verificar si hay datos relacionados antes de eliminar
+      const accommodations = await storage.getAccommodations(id);
+      const activities = await storage.getActivities(id);
+      const flights = await storage.getFlights(id);
+      const transports = await storage.getTransports(id);
+
+      const hasRelatedData =
+        accommodations.length > 0 ||
+        activities.length > 0 ||
+        flights.length > 0 ||
+        transports.length > 0;
+
+      if (hasRelatedData) {
+        return res.status(400).json({
+          error: 'Cannot delete travel with related data',
+          message: 'Este viaje tiene alojamientos, actividades, vuelos o transportes asociados. Elimínalos primero.'
+        });
+      }
+
+      await storage.deleteTravel(Number.parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting travel:', error);
+      res.status(500).send('Error deleting travel');
+    }
+  });
 
       // Accommodation routes
       app.get("/api/travels/:travelId/accommodations", async (req, res) => {
@@ -2149,7 +2185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       app.post("/api/webhooks/sns/email-bounce", express.json({ type: 'text/plain' }), async (req, res) => {
         try {
           const messageType = req.headers['x-amz-sns-message-type'];
-          
+
           // Parse the SNS message
           let message;
           if (typeof req.body === 'string') {
@@ -2165,15 +2201,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (messageType === 'SubscriptionConfirmation') {
             console.log('Confirming SNS subscription...');
             const subscribeURL = message.SubscribeURL;
-            
+
             // Confirm the subscription by making a GET request to SubscribeURL
             const response = await fetch(subscribeURL);
-            
+
             if (response.ok) {
               console.log('SNS subscription confirmed successfully');
-              return res.status(200).json({ 
+              return res.status(200).json({
                 message: 'Subscription confirmed',
-                subscriptionArn: message.SubscriptionArn 
+                subscriptionArn: message.SubscriptionArn
               });
             } else {
               console.error('Failed to confirm subscription:', await response.text());
@@ -2183,8 +2219,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Handle notification messages (bounces, complaints, etc.)
           if (messageType === 'Notification') {
-            const snsMessage = typeof message.Message === 'string' 
-              ? JSON.parse(message.Message) 
+            const snsMessage = typeof message.Message === 'string'
+              ? JSON.parse(message.Message)
               : message.Message;
 
             console.log('SNS Notification Message:', JSON.stringify(snsMessage, null, 2));
@@ -2193,18 +2229,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (snsMessage.notificationType === 'Bounce') {
               const bounce = snsMessage.bounce;
               const bouncedRecipients = bounce.bouncedRecipients || [];
-              
+
               console.log('Email Bounce Detected:');
               console.log('- Bounce Type:', bounce.bounceType);
               console.log('- Bounce Subtype:', bounce.bounceSubType);
               console.log('- Bounced Recipients:', bouncedRecipients.map((r: any) => r.emailAddress).join(', '));
-              
+
               // Log each bounced email
               for (const recipient of bouncedRecipients) {
                 console.log(`Bounced email: ${recipient.emailAddress}`);
                 console.log(`Status: ${recipient.status || 'N/A'}`);
                 console.log(`Diagnostic Code: ${recipient.diagnosticCode || 'N/A'}`);
-                
+
                 // TODO: Implement business logic here:
                 // - Mark email as invalid in database
                 // - Notify admin
@@ -2216,11 +2252,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (snsMessage.notificationType === 'Complaint') {
               const complaint = snsMessage.complaint;
               const complainedRecipients = complaint.complainedRecipients || [];
-              
+
               console.log('Email Complaint Detected:');
               console.log('- Complaint Feedback Type:', complaint.complaintFeedbackType);
               console.log('- Complained Recipients:', complainedRecipients.map((r: any) => r.emailAddress).join(', '));
-              
+
               // TODO: Implement business logic here:
               // - Remove from mailing list
               // - Log complaint
@@ -2250,11 +2286,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Error processing SNS webhook:', error);
           console.error('Error details:', error.message);
           console.error('Request body:', req.body);
-          
+
           // Return 200 to prevent SNS from retrying
-          return res.status(200).json({ 
+          return res.status(200).json({
             error: 'Error processing webhook',
-            details: error.message 
+            details: error.message
           });
         }
       });

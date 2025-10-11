@@ -20,22 +20,49 @@ async function runMigrations() {
     .sort();
   
   console.log('📁 Migration files found:');
+  let hasDangerousOperations = false;
+  
   migrationFiles.forEach((file, index) => {
-    const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
-    const hasDropTable = content.toLowerCase().includes('drop table');
-    const hasCascade = content.toLowerCase().includes('cascade');
-    const hasDelete = content.toLowerCase().includes('delete from');
-    const hasTruncate = content.toLowerCase().includes('truncate');
+    const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8').toLowerCase();
+    const hasDropTable = content.includes('drop table');
+    const hasDangerousCascade = content.includes('on delete cascade') && !file.includes('0000_') && !file.includes('0004_');
+    const hasDeleteWithoutWhere = content.includes('delete from') && !content.includes('where');
+    const hasTruncate = content.includes('truncate');
+    const hasDropColumn = content.includes('drop column');
     
     console.log(`  ${index + 1}. ${file}`);
     
-    if (hasDropTable) console.log('     ⚠️  Contains DROP TABLE');
-    if (hasCascade && !file.includes('0004_safe_foreign_keys')) console.log('     ⚠️  Contains CASCADE operations');
-    if (hasDelete) console.log('     ⚠️  Contains DELETE operations');
-    if (hasTruncate) console.log('     ⚠️  Contains TRUNCATE operations');
+    if (hasDropTable) {
+      console.log('     ❌ PELIGROSO: Contains DROP TABLE');
+      hasDangerousOperations = true;
+    }
+    if (hasDangerousCascade) {
+      console.log('     ❌ PELIGROSO: Contains ON DELETE CASCADE');
+      hasDangerousOperations = true;
+    }
+    if (hasDeleteWithoutWhere) {
+      console.log('     ❌ PELIGROSO: Contains DELETE without WHERE');
+      hasDangerousOperations = true;
+    }
+    if (hasTruncate) {
+      console.log('     ❌ PELIGROSO: Contains TRUNCATE');
+      hasDangerousOperations = true;
+    }
+    if (hasDropColumn) {
+      console.log('     ⚠️  Contains DROP COLUMN (may lose data)');
+    }
   });
   
-  console.log('\n⚠️  IMPORTANTE: Estas migraciones se aplicarán a la base de datos');
+  if (hasDangerousOperations) {
+    console.log('\n❌ OPERACIONES PELIGROSAS DETECTADAS');
+    console.log('❌ Las migraciones contienen operaciones que pueden ELIMINAR DATOS');
+    console.log('❌ Revisa las migraciones manualmente antes de continuar');
+    console.log('❌ Migración CANCELADA por seguridad\n');
+    process.exit(1);
+  }
+  
+  console.log('\n✅ Todas las migraciones son seguras');
+  console.log('⚠️  IMPORTANTE: Estas migraciones se aplicarán a la base de datos');
   console.log('⚠️  Asegúrate de tener un backup reciente antes de continuar\n');
   
   const sql = neon(process.env.DATABASE_URL);

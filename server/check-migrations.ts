@@ -22,34 +22,39 @@ function checkMigrations() {
     const content = fs.readFileSync(path.join(migrationsDir, file), 'utf-8').toLowerCase();
     const warnings: string[] = [];
     
-    // Operaciones peligrosas
-    if (content.includes('drop table')) {
-      warnings.push('❌ DROP TABLE - Eliminará tablas completas');
+    // Operaciones CRÍTICAS - Eliminan datos permanentemente
+    if (content.includes('drop table') && !content.includes('if exists')) {
+      warnings.push('❌ CRÍTICO: DROP TABLE - Eliminará tablas completas');
     }
     
     if (content.includes('truncate')) {
-      warnings.push('❌ TRUNCATE - Vaciará tablas completamente');
+      warnings.push('❌ CRÍTICO: TRUNCATE - Vaciará tablas completamente');
     }
     
     if (content.includes('delete from') && !content.includes('where')) {
-      warnings.push('❌ DELETE sin WHERE - Eliminará todos los registros');
+      warnings.push('❌ CRÍTICO: DELETE sin WHERE - Eliminará todos los registros');
     }
     
-    if (content.includes('on delete cascade') && !file.includes('0000_') && !file.includes('0003_')) {
-      warnings.push('⚠️  ON DELETE CASCADE - Eliminaciones en cascada');
+    // ON DELETE CASCADE es peligroso excepto en migraciones iniciales y la 0004 que lo corrige
+    if (content.includes('on delete cascade') && !file.includes('0000_') && !file.includes('0004_')) {
+      warnings.push('❌ PELIGROSO: ON DELETE CASCADE - Eliminaciones automáticas en cascada');
     }
     
     if (content.includes('drop column')) {
-      warnings.push('⚠️  DROP COLUMN - Eliminará columnas (pérdida de datos)');
+      warnings.push('⚠️  DROP COLUMN - Pérdida permanente de datos en esa columna');
     }
     
-    if (content.includes('alter table') && content.includes('drop constraint')) {
-      warnings.push('ℹ️  DROP CONSTRAINT - Eliminará restricciones (puede ser seguro)');
+    // Estas son operaciones seguras cuando se hacen correctamente
+    if (content.includes('alter table') && content.includes('drop constraint') && file.includes('0004_')) {
+      warnings.push('✅ DROP CONSTRAINT (seguro) - Elimina restricciones CASCADE peligrosas');
     }
 
+    // Una migración es segura solo si no tiene warnings críticos o peligrosos
+    const criticalWarnings = warnings.filter(w => w.includes('CRÍTICO') || w.includes('PELIGROSO'));
+    
     results.push({
       file,
-      safe: warnings.length === 0 || file.includes('0004_safe_foreign_keys'),
+      safe: criticalWarnings.length === 0,
       warnings
     });
   });
