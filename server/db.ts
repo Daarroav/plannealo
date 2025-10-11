@@ -1,14 +1,23 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
-import * as schema from "@shared/schema";
 
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 
-neonConfig.webSocketConstructor = ws;
+// Seleccionar la URL correcta según el entorno
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const databaseUrl = isDevelopment 
+  ? process.env.DATABASE_URL_DEV 
+  : process.env.DATABASE_URL;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+if (!databaseUrl) {
+  throw new Error(
+    isDevelopment 
+      ? "❌ DATABASE_URL_DEV no está configurada para desarrollo"
+      : "❌ DATABASE_URL no está configurada para producción"
+  );
 }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+console.log(`🔌 Conectando a base de datos: ${isDevelopment ? 'DESARROLLO' : 'PRODUCCIÓN'}`);
+console.log(`📍 URL: ${databaseUrl.substring(0, 50)}...`);
+
+const sql = neon(databaseUrl);
+export const db = drizzle(sql);
