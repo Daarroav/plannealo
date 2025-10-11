@@ -2,6 +2,11 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Prevent automatic migrations in production
+if (process.env.NODE_ENV === 'production') {
+  console.warn('⚠️ Production mode: Migrations must be run manually');
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
