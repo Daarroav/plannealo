@@ -123,6 +123,20 @@ export class DatabaseStorage implements IStorage {
   public sessionStore: Store;
 
   constructor() {
+    // En desarrollo usa DATABASE_URL_DEV, en producción usa DATABASE_URL
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const connectionString = isDevelopment 
+      ? process.env.DATABASE_URL_DEV 
+      : process.env.DATABASE_URL;
+
+    if (!connectionString) {
+      throw new Error(
+        isDevelopment 
+          ? "DATABASE_URL_DEV environment variable is not set for development"
+          : "DATABASE_URL environment variable is not set for production"
+      );
+    }
+    
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -170,11 +184,11 @@ export class DatabaseStorage implements IStorage {
     const startDate = insertTravel.startDate instanceof Date 
       ? insertTravel.startDate 
       : new Date(insertTravel.startDate);
-      
+
     const endDate = insertTravel.endDate instanceof Date 
       ? insertTravel.endDate 
       : new Date(insertTravel.endDate);
-    
+
     // Normalizamos las fechas
     const normalized = {
       ...insertTravel,
@@ -218,15 +232,15 @@ export class DatabaseStorage implements IStorage {
     if(updates.endDate){
       updates.endDate = DatabaseStorage.normalizeNoteDate(updates.endDate) as any;
     }
-    
+
     const { startDate, endDate, ...rest } = updates;
-    
+
     // Prepare update object - only include dates if they were provided
     const updateData: any = {
       ...rest,
       updatedAt: new Date(),
     };
-    
+
     // Only update dates if they were explicitly provided
     if (startDate !== undefined) {
       updateData.startDate = new Date(startDate);
@@ -234,7 +248,7 @@ export class DatabaseStorage implements IStorage {
     if (endDate !== undefined) {
       updateData.endDate = new Date(endDate);
     }
-    
+
     const [travel] = await db
       .update(travels)
       .set(updateData)
@@ -293,6 +307,7 @@ export class DatabaseStorage implements IStorage {
     return activity;
   }
 
+  async getActivitiesByTravel(travelId: string): Promise<Activity[]>;
   async getActivitiesByTravel(travelId: string): Promise<Activity[]> {
     const result = await db.select()
       .from(activities)
@@ -443,25 +458,25 @@ export class DatabaseStorage implements IStorage {
     await db.delete(insurances).where(eq(insurances.id, id));
   }
 
-  
+
 
   // Note methods
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = randomUUID();
-  
+
     const normalized = {
       ...insertNote,
       noteDate: DatabaseStorage.normalizeNoteDate(insertNote.noteDate),
     };
-  
+
     const [note] = await db
       .insert(notes)
       .values({ ...normalized, id })
       .returning();
-  
+
     return note;
   }
-  
+
 
   async getNotesByTravel(travelId: string): Promise<Note[]> {
     return await db.select()
@@ -473,20 +488,20 @@ export class DatabaseStorage implements IStorage {
     if (updates.noteDate) {
       updates.noteDate = DatabaseStorage.normalizeNoteDate(updates.noteDate) as any;
     }
-  
+
     const [note] = await db
       .update(notes)
       .set(updates)
       .where(eq(notes.id, id))
       .returning();
-  
+
     if (!note) {
       throw new Error("Note not found");
     }
-  
+
     return note;
   }
-  
+
 
   static normalizeNoteDate(input: string | Date): Date {
     const d = new Date(input);
@@ -497,7 +512,7 @@ export class DatabaseStorage implements IStorage {
       12, 0, 0 // 👈 siempre fija a 12:00 UTC
     ));
   }
-  
+
 
   async deleteNote(id: string): Promise<void> {
     await db.delete(notes).where(eq(notes.id, id));
@@ -513,7 +528,7 @@ export class DatabaseStorage implements IStorage {
 
     // Procesar los datos
     const clientsMap = new Map();
-    
+
     // Agrupar viajes por cliente
     clients.forEach(({ users: user, travels: travel }) => {
       if (!clientsMap.has(user.id)) {
@@ -525,7 +540,7 @@ export class DatabaseStorage implements IStorage {
           travels: [],
         });
       }
-      
+
       if (travel) {
         clientsMap.get(user.id).travels.push(travel);
       }
@@ -597,7 +612,7 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-  
+
 }
 
 export const storage = new DatabaseStorage();

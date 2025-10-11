@@ -1,7 +1,17 @@
 import { defineConfig } from "drizzle-kit";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL, ensure the database is provisioned");
+// En desarrollo usa DATABASE_URL_DEV, en producción usa DATABASE_URL
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const databaseUrl = isDevelopment 
+  ? process.env.DATABASE_URL_DEV 
+  : process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    isDevelopment 
+      ? "DATABASE_URL_DEV not found for development environment"
+      : "DATABASE_URL not found for production environment"
+  );
 }
 
 export default defineConfig({
@@ -9,6 +19,6 @@ export default defineConfig({
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: databaseUrl,
   },
 });
