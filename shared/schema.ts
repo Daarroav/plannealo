@@ -31,7 +31,7 @@ export const travels = pgTable("travels", {
 
 export const accommodations = pgTable("accommodations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'cascade' }),
+  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'restrict' }),
   name: text("name").notNull(),
   type: text("type").notNull(), // hotel, hostal, resort
   location: text("location").notNull(),
@@ -48,7 +48,7 @@ export const accommodations = pgTable("accommodations", {
 
 export const activities = pgTable("activities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'cascade' }),
+  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'restrict' }),
   name: text("name").notNull(),
   type: text("type").notNull(), // tour, restaurant, spa, theater, excursion, class, etc.
   provider: text("provider"),
@@ -67,7 +67,7 @@ export const activities = pgTable("activities", {
 
 export const flights = pgTable("flights", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'cascade' }),
+  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'restrict' }),
   airline: text("airline").notNull(),
   flightNumber: text("flight_number").notNull(),
   departureCity: text("departure_city").notNull(),
@@ -85,7 +85,7 @@ export const flights = pgTable("flights", {
 
 export const transports = pgTable("transports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'cascade' }),
+  travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'restrict' }),
   type: text("type").notNull(), // autobus, alquiler_auto, uber, taxi, transporte_publico, tren, embarcacion
   name: text("name").notNull(),
   provider: text("provider"),
