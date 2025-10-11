@@ -35,8 +35,25 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Verificar SESSION_SECRET
+  let sessionSecret = process.env.SESSION_SECRET;
+  
+  if (!sessionSecret) {
+    // En producción, SESSION_SECRET es obligatorio
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ CRITICAL: SESSION_SECRET environment variable is not set in production');
+      console.error('❌ Please configure SESSION_SECRET in Replit Secrets');
+      throw new Error('SESSION_SECRET is required in production');
+    }
+    
+    // En desarrollo/preview, usar valor por defecto con advertencia
+    console.warn('⚠️  SESSION_SECRET not found - using default for development/preview');
+    console.warn('⚠️  Configure SESSION_SECRET in Replit Secrets for security');
+    sessionSecret = 'dev-' + randomBytes(32).toString('hex');
+  }
+  
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
