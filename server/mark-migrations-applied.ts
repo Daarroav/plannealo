@@ -32,7 +32,9 @@ async function markMigrationsAsApplied() {
     const migrationsToMark = [
       '0000_overrated_the_captain.sql',
       '0001_hot_medusa.sql', 
-      '0002_late_proudstar.sql'
+      '0002_late_proudstar.sql',
+      '0004_safe_foreign_keys.sql',
+      '0005_add_timezone_columns.sql'
     ];
 
     console.log('2️⃣ Calculando hashes de las migraciones...');
