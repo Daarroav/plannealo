@@ -6,11 +6,22 @@ import fs from 'fs';
 import path from 'path';
 
 async function runMigrations() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is not set');
+  // En desarrollo usa DATABASE_URL_DEV, en producción usa DATABASE_URL
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const databaseUrl = isDevelopment 
+    ? process.env.DATABASE_URL_DEV 
+    : process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error(
+      isDevelopment 
+        ? 'DATABASE_URL_DEV is not set for development environment'
+        : 'DATABASE_URL is not set for production environment'
+    );
   }
 
-  console.log('🔄 Preparing to run migrations...');
+  console.log(`🔄 Preparing to run migrations in ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
+  console.log(`📍 Database: ${isDevelopment ? 'DATABASE_URL_DEV' : 'DATABASE_URL'}`);
   console.log('📋 Checking migration files...\n');
   
   // Listar migraciones pendientes
@@ -65,7 +76,7 @@ async function runMigrations() {
   console.log('⚠️  IMPORTANTE: Estas migraciones se aplicarán a la base de datos');
   console.log('⚠️  Asegúrate de tener un backup reciente antes de continuar\n');
   
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(databaseUrl);
   const db = drizzle(sql);
 
   try {
