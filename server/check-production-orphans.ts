@@ -19,24 +19,28 @@ async function checkProductionOrphans() {
     let totalOrphans = 0;
 
     for (const table of tables) {
-      const result = await sql`
+      // Usar consultas SQL seguras sin interpolación de nombres de tabla
+      const query = `
         SELECT COUNT(*) as count 
-        FROM ${sql(table)} 
+        FROM ${table} 
         WHERE travel_id NOT IN (SELECT id FROM travels)
       `;
       
+      const result = await sql(query);
       const count = parseInt(result[0].count);
       
       if (count > 0) {
         console.log(`❌ ${table}: ${count} registros huérfanos`);
         
         // Mostrar algunos ejemplos
-        const examples = await sql`
+        const examplesQuery = `
           SELECT id, travel_id 
-          FROM ${sql(table)} 
+          FROM ${table} 
           WHERE travel_id NOT IN (SELECT id FROM travels)
           LIMIT 5
         `;
+        
+        const examples = await sql(examplesQuery);
         
         console.log('   Ejemplos:');
         examples.forEach(ex => {
