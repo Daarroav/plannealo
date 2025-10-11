@@ -1,0 +1,164 @@
+2025-10-11 11:41:22.55
+535a7419
+User
+validateStatus: [Function: validateStatus],
+2025-10-11 11:41:22.55
+535a7419
+User
+errorRedactor: [Function: defaultErrorRedactor]
+2025-10-11 11:41:22.55
+535a7419
+User
+},
+2025-10-11 11:41:22.55
+535a7419
+User
+response: {
+2025-10-11 11:41:22.55
+535a7419
+User
+config: {
+2025-10-11 11:41:22.55
+535a7419
+User
+retry: true,
+2025-10-11 11:41:22.55
+535a7419
+User
+retryConfig: [Object],
+2025-10-11 11:41:22.55
+535a7419
+User
+url: 'http://127.0.0.1:1106/token',
+2025-10-11 11:41:22.55
+535a7419
+User
+method: 'POST',
+2025-10-11 11:41:22.55
+535a7419
+User
+headers: [Object],
+2025-10-11 11:41:22.55
+535a7419
+User
+data: '< - See `errorRedactor` option in `gaxios` for configuration>.',
+2025-10-11 11:41:22.55
+535a7419
+User
+responseType: 'json',
+2025-10-11 11:41:22.55
+535a7419
+User
+paramsSerializer: [Function: paramsSerializer],
+2025-10-11 11:41:22.55
+535a7419
+User
+body: '< - See `errorRedactor` option in `gaxios` for configuration>.',
+2025-10-11 11:41:22.55
+535a7419
+User
+validateStatus: [Function: validateStatus],
+2025-10-11 11:41:22.55
+535a7419
+User
+errorRedactor: [Function: defaultErrorRedactor]
+2025-10-11 11:41:22.55
+535a7419
+User
+},
+2025-10-11 11:41:22.55
+535a7419
+User
+data: '',
+2025-10-11 11:41:22.55
+535a7419
+User
+headers: { 'content-length': '0', date: 'Sat, 11 Oct 2025 17:41:22 GMT' },
+2025-10-11 11:41:22.55
+535a7419
+User
+status: 500,
+2025-10-11 11:41:22.55
+535a7419
+User
+statusText: 'Internal Server Error',
+2025-10-11 11:41:22.55
+535a7419
+User
+request: { responseURL: 'http://127.0.0.1:1106/token' }
+2025-10-11 11:41:22.55
+535a7419
+User
+},
+2025-10-11 11:41:22.55
+535a7419
+User
+error: undefined,
+2025-10-11 11:41:22.55
+535a7419
+User
+status: 500
+2025-10-11 11:41:22.55
+535a7419
+User
+}
+2025-10-11 11:41:22.55
+535a7419
+User
+Error details: {
+2025-10-11 11:41:22.55
+535a7419
+User
+message: 'Error code undefined',
+2025-10-11 11:41:22.55
+535a7419
+User
+stack: 'Error\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at Gaxios._request (/home/runner/workspace/node_modules/gaxios/build/src/gaxios.js:142:23)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async StsCredentials.exchangeToken (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/stscredentials.js:91:30)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async IdentityPoolClient._BaseExternalAccountClient_internalRefreshAccessTokenAsync (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/baseexternalclient.js:435:25)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async IdentityPoolClient.refreshAccessTokenAsync (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/baseexternalclient.js:316:20)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async IdentityPoolClient.getAccessToken (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/baseexternalclient.js:190:13)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async IdentityPoolClient.getRequestHeaders (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/baseexternalclient.js:207:37)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async GoogleAuth.authorizeRequest (/home/runner/workspace/node_modules/@google-cloud/storage/node_modules/google-auth-library/build/src/auth/googleauth.js:742:25)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async Promise.all (index 1)\n' +
+2025-10-11 11:41:22.55
+535a7419
+User
+' at async prepareRequest (file:///home/runner/workspace/node_modules/@google-cloud/storage/build/esm/src/nodejs-common/util.js:463:61)',
+2025-10-11 11:41:22.55
+535a7419
+User
+objectPath: '/objects/uploads/c6363c09-29f3-462c-8852-17e9f59f403d'
+2025-10-11 11:41:22.55
+535a7419
+User
+}
