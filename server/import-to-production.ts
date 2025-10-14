@@ -210,6 +210,39 @@ async function importToProduction() {
   console.log(`   Insurances encontrados: ${relatedCounts.insurances}`);
   console.log(`   Notes encontrados: ${relatedCounts.notes}`);
 
+  // DEBUG EXTRA: Mostrar las primeras líneas de cada sección
+  console.log('\n🔍 DEBUG EXTRA - Primeras líneas de cada tabla:');
+  
+  if (actMatches) {
+    const allActivityLines = actMatches[1].trim().split('\n');
+    console.log(`\n📋 ACTIVITIES (total líneas: ${allActivityLines.length}):`);
+    allActivityLines.slice(0, 5).forEach((line, i) => {
+      const vals = parseTSVLine(line);
+      console.log(`   ${i + 1}. ID: ${vals[0]}, Travel ID: ${vals[1]}, Name: ${vals[2]}`);
+    });
+    console.log(`   Buscando travel_id: ${targetTravelId}`);
+  }
+
+  if (cruMatches) {
+    const allCruiseLines = cruMatches[1].trim().split('\n');
+    console.log(`\n🚢 CRUISES (total líneas: ${allCruiseLines.length}):`);
+    allCruiseLines.slice(0, 5).forEach((line, i) => {
+      const vals = parseTSVLine(line);
+      console.log(`   ${i + 1}. ID: ${vals[0]}, Travel ID: ${vals[1]}, Cruise Line: ${vals[2]}`);
+    });
+    console.log(`   Buscando travel_id: ${targetTravelId}`);
+  }
+
+  if (insMatches) {
+    const allInsuranceLines = insMatches[1].trim().split('\n');
+    console.log(`\n🛡️ INSURANCES (total líneas: ${allInsuranceLines.length}):`);
+    allInsuranceLines.slice(0, 5).forEach((line, i) => {
+      const vals = parseTSVLine(line);
+      console.log(`   ${i + 1}. ID: ${vals[0]}, Travel ID: ${vals[1]}, Provider: ${vals[2]}`);
+    });
+    console.log(`   Buscando travel_id: ${targetTravelId}`);
+  }
+
   // Mostrar preview detallado
   console.log('━'.repeat(80));
   console.log('📋 PREVIEW DE DATOS A IMPORTAR A PRODUCCIÓN');
