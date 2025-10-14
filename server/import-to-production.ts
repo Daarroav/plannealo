@@ -6,31 +6,21 @@ import { eq } from 'drizzle-orm';
 import { travels, accommodations, activities, flights, transports, cruises, insurances, notes } from '../shared/schema';
 import readline from 'readline';
 
-// Función para parsear líneas TSV
+// Función para parsear líneas TSV - maneja tabs literales y escapes
 function parseTSVLine(line: string): string[] {
+  // Primero separar por tabs reales
+  const parts = line.split('\t');
   const values: string[] = [];
-  let current = '';
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '\\' && line[i + 1] === 't') {
-      values.push(current);
-      current = '';
-      i++;
-    } else if (char === '\\' && line[i + 1] === 'n') {
-      current += '\n';
-      i++;
-    } else if (char === '\\' && line[i + 1] === '\\') {
-      current += '\\';
-      i++;
-    } else {
-      current += char;
-    }
-  }
   
-  if (current) {
-    values.push(current);
+  for (const part of parts) {
+    let processed = part;
+    
+    // Procesar escapes
+    processed = processed.replace(/\\n/g, '\n');
+    processed = processed.replace(/\\r/g, '\r');
+    processed = processed.replace(/\\\\/g, '\\');
+    
+    values.push(processed);
   }
   
   return values;
