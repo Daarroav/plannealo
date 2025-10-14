@@ -139,7 +139,8 @@ async function importToProduction() {
   // Contar todos los tipos de registros relacionados
   const accMatches = backupContent.match(/COPY public\.accommodations.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (accMatches) {
-    relatedCounts.accommodations = accMatches[1].trim().split('\n').filter(line => {
+    const lines = accMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.accommodations = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -147,7 +148,8 @@ async function importToProduction() {
 
   const actMatches = backupContent.match(/COPY public\.activities.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (actMatches) {
-    relatedCounts.activities = actMatches[1].trim().split('\n').filter(line => {
+    const lines = actMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.activities = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -155,7 +157,8 @@ async function importToProduction() {
 
   const fliMatches = backupContent.match(/COPY public\.flights.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (fliMatches) {
-    relatedCounts.flights = fliMatches[1].trim().split('\n').filter(line => {
+    const lines = fliMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.flights = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -163,7 +166,8 @@ async function importToProduction() {
 
   const traMatches = backupContent.match(/COPY public\.transports.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (traMatches) {
-    relatedCounts.transports = traMatches[1].trim().split('\n').filter(line => {
+    const lines = traMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.transports = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -171,7 +175,8 @@ async function importToProduction() {
 
   const cruMatches = backupContent.match(/COPY public\.cruises.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (cruMatches) {
-    relatedCounts.cruises = cruMatches[1].trim().split('\n').filter(line => {
+    const lines = cruMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.cruises = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -179,7 +184,8 @@ async function importToProduction() {
 
   const insMatches = backupContent.match(/COPY public\.insurances.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (insMatches) {
-    relatedCounts.insurances = insMatches[1].trim().split('\n').filter(line => {
+    const lines = insMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.insurances = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
@@ -187,11 +193,22 @@ async function importToProduction() {
 
   const noteMatches = backupContent.match(/COPY public\.notes.*?FROM stdin;([\s\S]*?)\\\.$/m);
   if (noteMatches) {
-    relatedCounts.notes = noteMatches[1].trim().split('\n').filter(line => {
+    const lines = noteMatches[1].trim().split('\n').filter(line => line.trim());
+    relatedCounts.notes = lines.filter(line => {
       const lineValues = parseTSVLine(line);
       return lineValues[1] === targetTravelId;
     }).length;
   }
+
+  // DEBUG: Mostrar detalles del conteo
+  console.log('\n🔍 DEBUG - Conteo de registros:');
+  console.log(`   Accommodations encontrados: ${relatedCounts.accommodations}`);
+  console.log(`   Activities encontrados: ${relatedCounts.activities}`);
+  console.log(`   Flights encontrados: ${relatedCounts.flights}`);
+  console.log(`   Transports encontrados: ${relatedCounts.transports}`);
+  console.log(`   Cruises encontrados: ${relatedCounts.cruises}`);
+  console.log(`   Insurances encontrados: ${relatedCounts.insurances}`);
+  console.log(`   Notes encontrados: ${relatedCounts.notes}`);
 
   // Mostrar preview detallado
   console.log('━'.repeat(80));
