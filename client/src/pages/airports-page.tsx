@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { Airport } from "@/../../shared/schema";
 import { TimezoneCombobox } from "@/components/ui/timezone-combobox";
+import { LocationCombobox } from "@/components/ui/location-combobox";
 
 interface TimezoneEntry {
   timezone: string;
@@ -24,14 +25,16 @@ export default function AirportsPage() {
   const [timezones, setTimezones] = useState<TimezoneEntry[]>([
     { timezone: "" }
   ]);
+  // Estados para los catálogos de ubicación (IDs)
+  const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>();
+  const [selectedStateId, setSelectedStateId] = useState<string | undefined>();
+  const [selectedCityId, setSelectedCityId] = useState<string | undefined>();
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const form = useForm({
     defaultValues: {
-      country: "",
-      city: "",
-      state: "",
       airportName: "",
       iataCode: "",
       icaoCode: "",
@@ -56,7 +59,13 @@ export default function AirportsPage() {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, timezones }),
+        body: JSON.stringify({ 
+          ...data,
+          countryId: selectedCountryId,
+          stateId: selectedStateId,
+          cityId: selectedCityId,
+          timezones 
+        }),
         credentials: "include",
       });
 
@@ -69,6 +78,9 @@ export default function AirportsPage() {
       setEditingAirport(null);
       form.reset();
       setTimezones([{ timezone: "" }]);
+      setSelectedCountryId(undefined);
+      setSelectedStateId(undefined);
+      setSelectedCityId(undefined);
       toast({
         title: editingAirport ? "Aeropuerto actualizado" : "Aeropuerto creado",
         description: "La operación se completó exitosamente",
@@ -103,6 +115,16 @@ export default function AirportsPage() {
   });
 
   const handleSubmit = form.handleSubmit((data) => {
+    // Validar ubicaciones
+    if (!selectedCountryId || !selectedStateId || !selectedCityId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes seleccionar país, estado y ciudad",
+      });
+      return;
+    }
+    
     // Validar que todas las zonas horarias tengan un timezone seleccionado
     const invalidTimezone = timezones.find(tz => !tz.timezone);
     if (invalidTimezone) {
@@ -119,15 +141,15 @@ export default function AirportsPage() {
   const handleEdit = (airport: Airport) => {
     setEditingAirport(airport);
     form.reset({
-      country: airport.country,
-      city: airport.city,
-      state: airport.state || "",
       airportName: airport.airportName,
       iataCode: airport.iataCode || "",
       icaoCode: airport.icaoCode || "",
       latitude: airport.latitude || "",
       longitude: airport.longitude || "",
     });
+    setSelectedCountryId(airport.countryId);
+    setSelectedStateId(airport.stateId || undefined);
+    setSelectedCityId(airport.cityId || undefined);
     setTimezones(airport.timezones as TimezoneEntry[] || [{ timezone: "" }]);
     setShowModal(true);
   };
@@ -176,6 +198,9 @@ export default function AirportsPage() {
             setEditingAirport(null);
             form.reset();
             setTimezones([{ timezone: "" }]);
+            setSelectedCountryId(undefined);
+            setSelectedStateId(undefined);
+            setSelectedCityId(undefined);
             setShowModal(true);
           }}>
             <Plus className="w-4 h-4 mr-2" />
@@ -270,27 +295,39 @@ export default function AirportsPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="country">País *</Label>
-                  <Input
-                    id="country"
-                    {...form.register("country", { required: true })}
-                    placeholder="Ej: México"
+                  <LocationCombobox
+                    type="country"
+                    value={selectedCountryId}
+                    onChange={(value) => {
+                      setSelectedCountryId(value);
+                      // Resetear estado y ciudad cuando cambie el país
+                      setSelectedStateId(undefined);
+                      setSelectedCityId(undefined);
+                    }}
+                    label="País *"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="city">Ciudad *</Label>
-                  <Input
-                    id="city"
-                    {...form.register("city", { required: true })}
-                    placeholder="Ej: Ciudad de México"
+                  <LocationCombobox
+                    type="state"
+                    value={selectedStateId}
+                    onChange={(value) => {
+                      setSelectedStateId(value);
+                      // Resetear ciudad cuando cambie el estado
+                      setSelectedCityId(undefined);
+                    }}
+                    parentId={selectedCountryId}
+                    label="Estado *"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="state">Estado *</Label>
-                  <Input
-                    id="state"
-                    {...form.register("state", { required: true })}
-                    placeholder="Ej: Ciudad de México"
+                  <LocationCombobox
+                    type="city"
+                    value={selectedCityId}
+                    onChange={setSelectedCityId}
+                    parentId={selectedStateId}
+                    countryId={selectedCountryId}
+                    label="Ciudad *"
                   />
                 </div>
                 <div>
