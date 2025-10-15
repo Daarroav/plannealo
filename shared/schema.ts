@@ -145,6 +145,9 @@ export const airports = pgTable("airports", {
   airportName: text("airport_name").notNull(), // Nombre del aeropuerto
   iataCode: text("iata_code"), // Código IATA (opcional, 3 letras)
   icaoCode: text("icao_code"), // Código ICAO (opcional, 4 letras)
+  latitude: text("latitude"), // Latitud (opcional)
+  longitude: text("longitude"), // Longitud (opcional)
+  timezones: json("timezones").notNull(), // Array de zonas horarias con rangos de fechas
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -260,6 +263,13 @@ export const insertAirportSchema = createInsertSchema(airports).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  timezones: z.array(z.object({
+    name: z.string(),
+    timezone: z.string(),
+    startDate: z.string().optional(), // Formato MM-DD
+    endDate: z.string().optional(), // Formato MM-DD
+  })).min(1, "Debe tener al menos una zona horaria"),
 });
 
 // Types

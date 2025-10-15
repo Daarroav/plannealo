@@ -7,15 +7,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Plane } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Plane, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { Airport } from "@/../../shared/schema";
+import { TimezoneCombobox } from "@/components/ui/timezone-combobox";
+
+interface TimezoneEntry {
+  name: string;
+  timezone: string;
+  startDate?: string; // MM-DD format
+  endDate?: string; // MM-DD format
+}
 
 export default function AirportsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [timezones, setTimezones] = useState<TimezoneEntry[]>([
+    { name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }
+  ]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -27,6 +38,8 @@ export default function AirportsPage() {
       airportName: "",
       iataCode: "",
       icaoCode: "",
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -46,7 +59,7 @@ export default function AirportsPage() {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, timezones }),
         credentials: "include",
       });
 
@@ -58,6 +71,7 @@ export default function AirportsPage() {
       setShowModal(false);
       setEditingAirport(null);
       form.reset();
+      setTimezones([{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
       toast({
         title: editingAirport ? "Aeropuerto actualizado" : "Aeropuerto creado",
         description: "La operación se completó exitosamente",
@@ -92,6 +106,16 @@ export default function AirportsPage() {
   });
 
   const handleSubmit = form.handleSubmit((data) => {
+    // Validar que todas las zonas horarias tengan un timezone seleccionado
+    const invalidTimezone = timezones.find(tz => !tz.timezone);
+    if (invalidTimezone) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Todas las zonas horarias deben tener una zona seleccionada",
+      });
+      return;
+    }
     saveMutation.mutate(data);
   });
 
@@ -104,7 +128,10 @@ export default function AirportsPage() {
       airportName: airport.airportName,
       iataCode: airport.iataCode || "",
       icaoCode: airport.icaoCode || "",
+      latitude: airport.latitude || "",
+      longitude: airport.longitude || "",
     });
+    setTimezones(airport.timezones as TimezoneEntry[] || [{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
     setShowModal(true);
   };
 
@@ -112,6 +139,28 @@ export default function AirportsPage() {
     if (confirm("¿Estás seguro de eliminar este aeropuerto?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const addTimezone = () => {
+    const newIndex = timezones.length + 1;
+    setTimezones([...timezones, {
+      name: `Zona horaria ${newIndex}`,
+      timezone: "",
+      startDate: "01-01",
+      endDate: "12-31"
+    }]);
+  };
+
+  const removeTimezone = (index: number) => {
+    if (timezones.length > 1) {
+      setTimezones(timezones.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateTimezone = (index: number, field: keyof TimezoneEntry, value: string) => {
+    const updated = [...timezones];
+    updated[index] = { ...updated[index], [field]: value };
+    setTimezones(updated);
   };
 
   const filteredAirports = airports.filter((airport: Airport) =>
@@ -129,10 +178,15 @@ export default function AirportsPage() {
           <div>
             <h1 className="text-3xl font-bold text-foreground">Catálogo de Aeropuertos</h1>
             <p className="text-muted-foreground mt-2">
-              Gestiona la información de aeropuertos
+              Gestiona la información de aeropuertos y sus zonas horarias
             </p>
           </div>
-          <Button onClick={() => { setEditingAirport(null); form.reset(); setShowModal(true); }}>
+          <Button onClick={() => {
+            setEditingAirport(null);
+            form.reset();
+            setTimezones([{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
+            setShowModal(true);
+          }}>
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Aeropuerto
           </Button>
@@ -181,6 +235,16 @@ export default function AirportsPage() {
                         </span>
                       )}
                     </div>
+                    {airport.timezones && Array.isArray(airport.timezones) && airport.timezones.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <p className="font-semibold text-xs mb-1">Zonas horarias:</p>
+                        {(airport.timezones as TimezoneEntry[]).map((tz, idx) => (
+                          <p key={idx} className="text-xs text-muted-foreground">
+                            • {tz.name}: {tz.timezone}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
@@ -206,13 +270,13 @@ export default function AirportsPage() {
 
         {/* Modal de formulario */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingAirport ? "Editar Aeropuerto" : "Nuevo Aeropuerto"}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="country">País *</Label>
@@ -231,10 +295,10 @@ export default function AirportsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="state">Estado</Label>
+                  <Label htmlFor="state">Estado *</Label>
                   <Input
                     id="state"
-                    {...form.register("state")}
+                    {...form.register("state", { required: true })}
                     placeholder="Ej: Ciudad de México"
                   />
                 </div>
@@ -264,7 +328,92 @@ export default function AirportsPage() {
                     maxLength={4}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="latitude">Latitud</Label>
+                  <Input
+                    id="latitude"
+                    {...form.register("latitude")}
+                    placeholder="Ej: 19.4363"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="longitude">Longitud</Label>
+                  <Input
+                    id="longitude"
+                    {...form.register("longitude")}
+                    placeholder="Ej: -99.0721"
+                  />
+                </div>
               </div>
+
+              {/* Zonas horarias */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <Label className="text-base">Zonas Horarias *</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addTimezone}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Zona Horaria
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {timezones.map((tz, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <Input
+                            value={tz.name}
+                            onChange={(e) => updateTimezone(index, "name", e.target.value)}
+                            placeholder="Nombre de la zona horaria"
+                            className="flex-1 mr-2"
+                          />
+                          {timezones.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeTimezone(index)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label>Zona Horaria *</Label>
+                          <TimezoneCombobox
+                            value={tz.timezone}
+                            onValueChange={(value) => updateTimezone(index, "timezone", value)}
+                            placeholder="Seleccionar zona horaria..."
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Fecha Inicio (MM-DD)</Label>
+                            <Input
+                              value={tz.startDate || ""}
+                              onChange={(e) => updateTimezone(index, "startDate", e.target.value)}
+                              placeholder="01-01"
+                              maxLength={5}
+                            />
+                          </div>
+                          <div>
+                            <Label>Fecha Fin (MM-DD)</Label>
+                            <Input
+                              value={tz.endDate || ""}
+                              onChange={(e) => updateTimezone(index, "endDate", e.target.value)}
+                              placeholder="12-31"
+                              maxLength={5}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
