@@ -113,8 +113,7 @@ export const TIMEZONE_CATALOG: TimezoneRegion[] = [
   {
     region: "Asia - Sur",
     timezones: [
-      { label: "Nueva Delhi (GMT+5:30)", value: "Asia/Kolkata", offset: "GMT+5:30" },
-      { label: "Mumbai (GMT+5:30)", value: "Asia/Kolkata", offset: "GMT+5:30" },
+      { label: "IST - India Standard Time (UTC+5:30)", value: "Asia/Kolkata", offset: "UTC+5:30" },
       { label: "Karachi (GMT+5)", value: "Asia/Karachi", offset: "GMT+5" },
       { label: "Dhaka (GMT+6)", value: "Asia/Dhaka", offset: "GMT+6" },
       { label: "Colombo (GMT+5:30)", value: "Asia/Colombo", offset: "GMT+5:30" },

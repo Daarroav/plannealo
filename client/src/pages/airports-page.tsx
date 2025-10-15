@@ -14,10 +14,7 @@ import type { Airport } from "@/../../shared/schema";
 import { TimezoneCombobox } from "@/components/ui/timezone-combobox";
 
 interface TimezoneEntry {
-  name: string;
   timezone: string;
-  startDate?: string; // MM-DD format
-  endDate?: string; // MM-DD format
 }
 
 export default function AirportsPage() {
@@ -25,7 +22,7 @@ export default function AirportsPage() {
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [timezones, setTimezones] = useState<TimezoneEntry[]>([
-    { name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }
+    { timezone: "" }
   ]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -71,7 +68,7 @@ export default function AirportsPage() {
       setShowModal(false);
       setEditingAirport(null);
       form.reset();
-      setTimezones([{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
+      setTimezones([{ timezone: "" }]);
       toast({
         title: editingAirport ? "Aeropuerto actualizado" : "Aeropuerto creado",
         description: "La operación se completó exitosamente",
@@ -131,7 +128,7 @@ export default function AirportsPage() {
       latitude: airport.latitude || "",
       longitude: airport.longitude || "",
     });
-    setTimezones(airport.timezones as TimezoneEntry[] || [{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
+    setTimezones(airport.timezones as TimezoneEntry[] || [{ timezone: "" }]);
     setShowModal(true);
   };
 
@@ -142,13 +139,7 @@ export default function AirportsPage() {
   };
 
   const addTimezone = () => {
-    const newIndex = timezones.length + 1;
-    setTimezones([...timezones, {
-      name: `Zona horaria ${newIndex}`,
-      timezone: "",
-      startDate: "01-01",
-      endDate: "12-31"
-    }]);
+    setTimezones([...timezones, { timezone: "" }]);
   };
 
   const removeTimezone = (index: number) => {
@@ -184,7 +175,7 @@ export default function AirportsPage() {
           <Button onClick={() => {
             setEditingAirport(null);
             form.reset();
-            setTimezones([{ name: "Zona horaria (1 enero - 31 diciembre)", timezone: "", startDate: "01-01", endDate: "12-31" }]);
+            setTimezones([{ timezone: "" }]);
             setShowModal(true);
           }}>
             <Plus className="w-4 h-4 mr-2" />
@@ -240,7 +231,7 @@ export default function AirportsPage() {
                         <p className="font-semibold text-xs mb-1">Zonas horarias:</p>
                         {(airport.timezones as TimezoneEntry[]).map((tz, idx) => (
                           <p key={idx} className="text-xs text-muted-foreground">
-                            • {tz.name}: {tz.timezone}
+                            • {tz.timezone}
                           </p>
                         ))}
                       </div>
@@ -356,60 +347,27 @@ export default function AirportsPage() {
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {timezones.map((tz, index) => (
-                    <Card key={index} className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <Input
-                            value={tz.name}
-                            onChange={(e) => updateTimezone(index, "name", e.target.value)}
-                            placeholder="Nombre de la zona horaria"
-                            className="flex-1 mr-2"
-                          />
-                          {timezones.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeTimezone(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <div>
-                          <Label>Zona Horaria *</Label>
-                          <TimezoneCombobox
-                            value={tz.timezone}
-                            onValueChange={(value) => updateTimezone(index, "timezone", value)}
-                            placeholder="Seleccionar zona horaria..."
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label>Fecha Inicio (MM-DD)</Label>
-                            <Input
-                              value={tz.startDate || ""}
-                              onChange={(e) => updateTimezone(index, "startDate", e.target.value)}
-                              placeholder="01-01"
-                              maxLength={5}
-                            />
-                          </div>
-                          <div>
-                            <Label>Fecha Fin (MM-DD)</Label>
-                            <Input
-                              value={tz.endDate || ""}
-                              onChange={(e) => updateTimezone(index, "endDate", e.target.value)}
-                              placeholder="12-31"
-                              maxLength={5}
-                            />
-                          </div>
-                        </div>
+                    <div key={index} className="flex gap-2 items-start">
+                      <div className="flex-1">
+                        <TimezoneCombobox
+                          value={tz.timezone}
+                          onValueChange={(value) => updateTimezone(index, "timezone", value)}
+                          placeholder="Seleccionar zona horaria..."
+                        />
                       </div>
-                    </Card>
+                      {timezones.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTimezone(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
