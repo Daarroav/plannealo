@@ -352,13 +352,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Fetch all related data in parallel
           const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
-            storage.getAccommodations(req.params.id),
-            storage.getActivities(req.params.id),
-            storage.getFlights(req.params.id),
-            storage.getTransports(req.params.id),
-            storage.getCruises(req.params.id),
-            storage.getInsurances(req.params.id),
-            storage.getNotes(req.params.id),
+            storage.getAccommodationsByTravel(req.params.id),
+            storage.getActivitiesByTravel(req.params.id),
+            storage.getFlightsByTravel(req.params.id),
+            storage.getTransportsByTravel(req.params.id),
+            storage.getCruisesByTravel(req.params.id),
+            storage.getInsurancesByTravel(req.params.id),
+            storage.getNotesByTravel(req.params.id),
           ]);
 
           res.json({
