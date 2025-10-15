@@ -77,13 +77,17 @@ export function LocationCombobox({
         if (countryId) payload.countryId = countryId;
       }
 
-      return apiRequest({
-        url: `/api/locations/${type}`,
+      const response = await fetch(`/api/locations/${type}`, {
         method: "POST",
-        data: payload,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
+      
+      if (!response.ok) throw new Error("Failed to create location");
+      return response.json();
     },
-    onSuccess: (newLocation) => {
+    onSuccess: (newLocation: LocationItem) => {
       queryClient.invalidateQueries({ queryKey: ["/api/locations", type] });
       onChange(newLocation.id);
       setOpen(false);

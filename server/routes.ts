@@ -1328,7 +1328,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const allAirports = await db.select().from(airports).orderBy(airports.country, airports.city);
+      const { countries, states, cities } = await import("../shared/schema");
+      
+      const allAirports = await db
+        .select({
+          id: airports.id,
+          airportName: airports.airportName,
+          iataCode: airports.iataCode,
+          icaoCode: airports.icaoCode,
+          latitude: airports.latitude,
+          longitude: airports.longitude,
+          timezones: airports.timezones,
+          countryId: airports.countryId,
+          stateId: airports.stateId,
+          cityId: airports.cityId,
+          country: countries.name,
+          state: states.name,
+          city: cities.name,
+          createdBy: airports.createdBy,
+          createdAt: airports.createdAt,
+          updatedAt: airports.updatedAt,
+        })
+        .from(airports)
+        .leftJoin(countries, eq(airports.countryId, countries.id))
+        .leftJoin(states, eq(airports.stateId, states.id))
+        .leftJoin(cities, eq(airports.cityId, cities.id))
+        .orderBy(countries.name, cities.name);
+        
       return res.json(allAirports);
     } catch (error: any) {
       console.error("Error fetching airports:", error);

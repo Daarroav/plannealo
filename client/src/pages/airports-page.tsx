@@ -44,7 +44,7 @@ export default function AirportsPage() {
   });
 
   // Fetch airports
-  const { data: airports = [], isLoading } = useQuery({
+  const { data: airports = [], isLoading } = useQuery<Airport[]>({
     queryKey: ["/api/airports"],
   });
 
@@ -147,7 +147,7 @@ export default function AirportsPage() {
       latitude: airport.latitude || "",
       longitude: airport.longitude || "",
     });
-    setSelectedCountryId(airport.countryId);
+    setSelectedCountryId(airport.countryId || undefined);
     setSelectedStateId(airport.stateId || undefined);
     setSelectedCityId(airport.cityId || undefined);
     setTimezones(airport.timezones as TimezoneEntry[] || [{ timezone: "" }]);
@@ -179,7 +179,7 @@ export default function AirportsPage() {
   const filteredAirports = airports.filter((airport: Airport) =>
     [airport.country, airport.city, airport.airportName, airport.iataCode, airport.icaoCode]
       .filter(Boolean)
-      .some((field) => field.toLowerCase().includes(searchTerm.toLowerCase()))
+      .some((field) => field && field.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
