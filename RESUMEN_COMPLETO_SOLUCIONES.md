@@ -26,6 +26,19 @@
 
 ---
 
+### 3. Error heap_create_with_catalog en Migraciones ✅
+**Error:** "heap_create_with_catalog" al intentar ejecutar migraciones manuales
+
+**Solución Aplicada:**
+- ✅ Eliminadas migraciones SQL manuales fallidas
+- ✅ Limpiado journal de migraciones duplicadas
+- ✅ Tabla `airports` creada correctamente con SQL directo
+- ✅ Guía creada para prevenir este problema en el futuro
+
+**Documentación:** `NUNCA_MIGRACIONES_MANUALES.md`
+
+---
+
 ## 🚀 Cómo Publicar Tu Aplicación (PROCESO COMPLETO)
 
 ### Antes de Publicar
@@ -84,8 +97,9 @@ NODE_ENV=production npx drizzle-kit push --force
 ### Guías Principales
 1. **`RESUMEN_SOLUCION.md`** ⭐ - Solución a errores de migración
 2. **`SOLUCION_ERROR_500_PREVIEW.md`** ⭐ - Solución al error 500 en preview
-3. **`DATABASE_SAFETY_GUIDE.md`** - Seguridad de base de datos
-4. **`GUIA_PUBLICACION_SEGURA.md`** - Proceso de publicación paso a paso
+3. **`NUNCA_MIGRACIONES_MANUALES.md`** ⭐ - Por qué NUNCA escribir migraciones SQL manuales
+4. **`DATABASE_SAFETY_GUIDE.md`** - Seguridad de base de datos
+5. **`GUIA_PUBLICACION_SEGURA.md`** - Proceso de publicación paso a paso
 
 ### Scripts de Utilidad
 - `scripts/prepare-for-publish.ts` - Preparación antes de publicar
@@ -159,6 +173,10 @@ npx tsx scripts/fix-migration-state.ts
 **Causa:** Estado de migraciones desincronizado  
 **Solución:** Ejecutar `npx tsx scripts/fix-migration-state.ts`
 
+### Error heap_create_with_catalog
+**Causa:** Migraciones SQL escritas manualmente con errores  
+**Solución:** NUNCA escribas SQL manual, usa `npm run db:push` (Ver: `NUNCA_MIGRACIONES_MANUALES.md`)
+
 ### Datos Borrados (MUY RARO)
 **Solución:** 
 1. Usa Replit Checkpoints para restaurar
@@ -176,11 +194,12 @@ npx tsx scripts/fix-migration-state.ts
 - Haz backup con Replit Checkpoints
 
 ### ❌ NUNCA
-- Uses `npm run db:push` directamente en producción
+- Escribas migraciones SQL manuales (usa `npm run db:push` siempre)
 - Modifiques tipos de columnas ID (serial ↔ varchar)
 - Cambies foreign keys sin entender el impacto
 - Publiques sin probar en development
 - Ignores advertencias de seguridad
+- Crees archivos .sql en migrations/ manualmente
 
 ---
 

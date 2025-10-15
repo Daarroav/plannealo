@@ -22,34 +22,20 @@
       "when": 1757876721228,
       "tag": "0002_late_proudstar",
       "breakpoints": true
-      },
-      {
-        "idx": 3,
-        "version": "7",
-        "when": 1760130430000,
-        "tag": "0004_safe_foreign_keys",
-        "breakpoints": true
-      },
-      {
-        "idx": 4,
-        "version": "7",
-        "when": 1760131000000,
-        "tag": "0005_add_timezone_columns",
-        "breakpoints": true
-      },
-      {
-        "idx": 5,
-        "version": "7",
-        "when": 1760562000000,
-        "tag": "0006_create_airports_table",
-        "breakpoints": true
-      },
-      {
-        "idx": 6,
-        "version": "7",
-        "when": 1760563000000,
-        "tag": "0007_add_airport_timezones",
-        "breakpoints": true
-      }
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760130430000,
+      "tag": "0004_safe_foreign_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1760562747241,
+      "tag": "0005_flimsy_wolverine",
+      "breakpoints": true
+    }
   ]
 }
