@@ -291,6 +291,9 @@ export const insertAirportSchema = createInsertSchema(airports).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
+  country: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
   timezones: z.array(z.object({
     timezone: z.string(),
   })).min(1, "Debe tener al menos una zona horaria"),
