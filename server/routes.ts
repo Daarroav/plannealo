@@ -11,6 +11,10 @@ import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
 import fs from "fs";  // Para crear carpetas
 import { Buffer } from 'buffer';
+import { eq } from "drizzle-orm";
+import { airports, insertAirportSchema } from "../shared/schema";
+import { db } from "./db";
+
 
 // Initialize ObjectStorageService
 const objectStorageService = new ObjectStorageService();
@@ -1138,612 +1142,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // AeroDataBox API endpoints
-      app.get("/api/airports/search", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.sendStatus(401);
-        }
+      // ==================== AIRPORTS ENDPOINTS ====================
 
-        try {
-          const { q } = req.query;
-          if (!q || typeof q !== 'string') {
-            return res.status(400).json({ message: "Query parameter 'q' is required" });
-          }
+  // Obtener todos los aeropuertos
+  app.get("/api/airports", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
 
-          // Validar longitud mínima en el servidor también
-          if (q.trim().length < 3) {
-            return res.json([]); // Retornar array vacío para términos cortos
-          }
+    try {
+      const allAirports = await db.select().from(airports).orderBy(airports.country, airports.city);
+      return res.json(allAirports);
+    } catch (error: any) {
+      console.error("Error fetching airports:", error);
+      return res.status(500).send("Error fetching airports");
+    }
+  });
 
-          const airports = await AeroDataBoxService.searchAirports(q);
-          res.json(airports);
-        } catch (error) {
-          console.error("Error searching airports:", error);
-          res.status(500).json({ message: "Error searching airports" });
-        }
+  // Crear aeropuerto
+  app.post("/api/airports", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const validatedData = insertAirportSchema.parse({
+        ...req.body,
+        createdBy: req.user.id,
       });
 
-      app.get("/api/flights/search", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.sendStatus(401);
-        }
+      const [newAirport] = await db
+        .insert(airports)
+        .values(validatedData)
+        .returning();
 
-        try {
-          const { origin, destination, date } = req.query;
+      return res.json(newAirport);
+    } catch (error: any) {
+      console.error("Error creating airport:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
 
-          if (!origin || !destination || !date) {
-            return res.status(400).json({
-              message: "Parameters 'origin', 'destination', and 'date' are required"
-            });
-          }
+  // Actualizar aeropuerto
+  app.patch("/api/airports/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
 
-          const result = await AeroDataBoxService.searchFlightsBetweenAirports(
-            origin as string,
-            destination as string,
-            date as string
-          );
+    try {
+      const { id } = req.params;
+      const validatedData = insertAirportSchema.partial().parse(req.body);
 
-          res.json(result);
-        } catch (error) {
-          console.error("Error searching flights:", error);
-          res.status(500).json({ message: "Error searching flights" });
-        }
-      });
+      const [updatedAirport] = await db
+        .update(airports)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(eq(airports.id, id))
+        .returning();
 
+      if (!updatedAirport) {
+        return res.status(404).send("Airport not found");
+      }
 
+      return res.json(updatedAirport);
+    } catch (error: any) {
+      console.error("Error updating airport:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
 
-      // Statistics endpoint
-      app.get("/api/stats", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.sendStatus(401);
-        }
+  // Eliminar aeropuerto
+  app.delete("/api/airports/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
 
-        try {
-          let travels;
-          if (req.user && req.user.role === "admin") {
-            // If admin, get all travels
-            travels = await storage.getTravels();
-          } else if (req.user) {
-            // If regular user, get only their travels
-            travels = await storage.getTravelsByUser(req.user.id);
-          } else {
-            return res.sendStatus(401);
-          }
+    try {
+      const { id } = req.params;
 
-          const activeTrips = travels.filter(t => t.status === "published").length;
-          const drafts = travels.filter(t => t.status === "draft").length;
+      const [deletedAirport] = await db
+        .delete(airports)
+        .where(eq(airports.id, id))
+        .returning();
 
-          // For clients, we'll count unique client names
-          const uniqueClients = new Set(travels.map(t => t.clientName)).size;
+      if (!deletedAirport) {
+        return res.status(404).send("Airport not found");
+      }
 
-          res.json({
-            activeTrips,
-            drafts,
-            clients: uniqueClients,
-          });
-        } catch (error) {
-          console.error("Error fetching stats:", error);
-          res.status(500).json({ message: "Error fetching stats" });
-        }
-      });
+      return res.json({ message: "Airport deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting airport:", error);
+      return res.status(500).send("Error deleting airport");
+    }
+  });
 
-      // Get full travel data (for preview and PDF generation)
-      app.get("/api/travels/:id/full", async (req, res) => {
-        try {
-          const publicToken = req.query.token as string;
-          let travel;
-
-          if (publicToken) {
-            // Acceso público con token
-            travel = await storage.getTravelByPublicToken(publicToken);
-            if (!travel) {
-              return res.status(404).json({ error: "Travel not found or token invalid" });
-            }
-
-            // Verificar que el token no haya expirado
-            if (travel.publicTokenExpiry && travel.publicTokenExpiry < new Date()) {
-              return res.status(403).json({ error: "Access link has expired" });
-            }
-
-            // Verificar que el ID coincida con el token
-            if (travel.id !== req.params.id) {
-              return res.status(404).json({ error: "Travel not found" });
-            }
-          } else {
-            // Acceso autenticado normal
-            if (!req.isAuthenticated()) {
-              return res.sendStatus(401);
-            }
-            travel = await storage.getTravel(req.params.id);
-            if (!travel) {
-              return res.status(404).json({ error: "Travel not found" });
-            }
-          }
-
-          const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
-            storage.getAccommodationsByTravel(req.params.id),
-            storage.getActivitiesByTravel(req.params.id),
-            storage.getFlightsByTravel(req.params.id),
-            storage.getTransportsByTravel(req.params.id),
-            storage.getCruisesByTravel(req.params.id),
-            storage.getInsurancesByTravel(req.params.id),
-            storage.getNotesByTravel(req.params.id)
-          ]);
-
-          res.json({
-            travel,
-            accommodations,
-            activities,
-            flights,
-            transports,
-            cruises,
-            insurances,
-            notes
-          });
-        } catch (error) {
-          console.error("Error fetching full travel data:", error);
-          res.status(500).json({ error: "Error fetching travel data" });
-        }
-      });
-
-      // Share travel via email (placeholder - not connected to SendGrid)
-      app.post("/api/travels/:id/share/email", async (req, res) => {
-        try {
-          const { clientEmail, clientName, message } = req.body;
-
-          if (!clientEmail || !clientName) {
-            return res.status(400).json({ error: "Client email and name are required" });
-          }
-
-          const travel = await storage.getTravel(req.params.id);
-          if (!travel) {
-            return res.status(404).json({ error: "Travel not found" });
-          }
-
-          // TODO: Integrate with SendGrid when API key is available
-          // For now, just simulate success
-          console.log(`Email would be sent to: ${clientEmail}`);
-          console.log(`Client name: ${clientName}`);
-          console.log(`Travel: ${travel.name}`);
-          console.log(`Message: ${message || 'No message'}`);
-
-          // Simulate email sending delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-          res.json({
-            success: true,
-            message: "Itinerario enviado exitosamente"
-          });
-        } catch (error) {
-          console.error("Error sharing travel:", error);
-          res.status(500).json({ error: "Error sharing travel" });
-        }
-      });
-
-      // Generate PDF for travel using Puppeteer
-      app.get("/api/travels/:id/generate-pdf", async (req, res) => {
-        const puppeteer = await import('puppeteer');
-        let browser;
-
-        try {
-          const travel = await storage.getTravel(req.params.id);
-          if (!travel) {
-            return res.status(404).json({ error: "Travel not found" });
-          }
-
-          // Get all travel data
-          const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
-            storage.getAccommodationsByTravel(req.params.id),
-            storage.getActivitiesByTravel(req.params.id),
-            storage.getFlightsByTravel(req.params.id),
-            storage.getTransportsByTravel(req.params.id),
-            storage.getCruisesByTravel(req.params.id),
-            storage.getInsurancesByTravel(req.params.id),
-            storage.getNotesByTravel(req.params.id)
-          ]);
-
-          // Filter notes to only show those visible to travelers
-          const visibleNotes = notes.filter(note => note.visibleToTravelers);
-
-          // Create a simple HTML content for PDF generation
-          const formatDate = (date: Date) => {
-            return new Date(date).toLocaleDateString('es-ES', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-          };
-
-          const formatDateTime = (dateTime: Date) => {
-            return new Date(dateTime).toLocaleString('es-ES', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-          };
-
-          let htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="UTF-8">
-              <title>Itinerario - ${travel.name}</title>
-              <style>
-                @page { margin: 40px; }
-                body {
-                  font-family: Arial, sans-serif;
-                  margin: 0;
-                  padding: 0;
-                  line-height: 1.4;
-                  font-size: 11px;
-                  color: #333;
-                }
-                .header {
-                  text-align: center;
-                  margin-bottom: 40px;
-                  padding-bottom: 20px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  position: relative;
-                }
-                .logo {
-                  font-size: 24px;
-                  font-weight: bold;
-                  color: #dc2626;
-                  text-transform: uppercase;
-                  letter-spacing: 2px;
-                }
-                .header-center {
-                  flex: 1;
-                  text-align: center;
-                }
-                .client-title {
-                  font-size: 18px;
-                  font-weight: bold;
-                  margin-bottom: 10px;
-                  text-transform: uppercase;
-                  letter-spacing: 1px;
-                }
-                .dates {
-                  font-size: 14px;
-                  margin: 15px 0;
-                  color: #666;
-                }
-                .cover-image {
-                  width: 100%;
-                  max-width: 500px;
-                  height: 250px;
-                  object-fit: cover;
-                  margin: 20px auto;
-                  display: block;
-                  border: 1px solid #ddd;
-                }
-                .agency-info {
-                  margin-top: 30px;
-                  text-align: right;
-                  font-size: 12px;
-                  color: #666;
-                }
-                .day-section {
-                  margin-bottom: 30px;
-                  page-break-inside: avoid;
-                }
-                .day-header {
-                  display: flex;
-                  align-items: center;
-                  margin-bottom: 15px;
-                  border-bottom: 1px solid #ddd;
-                  padding-bottom: 10px;
-                }
-                .day-box {
-                  background: #f8f9fa;
-                  border: 1px solid #ddd;
-                  padding: 8px 12px;
-                  margin-right: 15px;
-                  text-align: center;
-                  min-width: 50px;
-                  font-weight: bold;
-                }
-                .day-month {
-                  font-size: 10px;
-                  text-transform: uppercase;
-                  display: block;
-                }
-                .day-number {
-                  font-size: 16px;
-                  display: block;
-                }
-                .activity-item {
-                  margin-bottom: 20px;
-                  padding: 15px;
-                  border-left: 3px solid #dc2626;
-                  background: #fafafa;
-                }
-                .activity-title {
-                  font-size: 14px;
-                  font-weight: bold;
-                  margin-bottom: 10px;
-                  text-transform: uppercase;
-                }
-                .activity-details {
-                  display: grid;
-                  grid-template-columns: 1fr 1fr 1fr;
-                  gap: 15px;
-                  margin-bottom: 10px;
-                }
-                .detail-item {
-                  font-size: 10px;
-                }
-                .detail-label {
-                  font-weight: bold;
-                  text-transform: uppercase;
-                  margin-bottom: 2px;
-                }
-                .detail-value {
-                  color: #666;
-                }
-                .notes {
-                  margin-top: 10px;
-                  font-style: italic;
-                  color: #666;
-                  font-size: 10px;
-                }
-                .footer {
-                  position: fixed;
-                  bottom: 20px;
-                  left: 40px;
-                  right: 40px;
-                  text-align: center;
-                  font-size: 9px;
-                  color: #999;
-                  border-top: 1px solid #eee;
-                  padding-top: 10px;
-                }
-                .time-label {
-                  font-weight: bold;
-                  color: #dc2626;
-                  margin-right: 10px;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <div class="logo">PLANNEALO</div>
-                <div class="header-center">
-                  <div class="client-title">${travel.clientName}</div>
-                  <div class="dates">Start: ${formatDate(travel.startDate)} &nbsp;&nbsp;&nbsp;&nbsp; End: ${formatDate(travel.endDate)}</div>
-                  ${travel.coverImage ? `<img src="${travel.coverImage}" alt="Imagen de portada" class="cover-image" />` : ''}
-                </div>
-                <div class="agency-info">
-                  <div style="font-weight: bold;">PLANNEALO</div>
-                  <div>e: plannealo@gmail.com</div>
-                </div>
-              </div>
-          `;
-
-          // Group all activities by date
-          const allActivities = [
-            ...accommodations.map(acc => ({
-              type: 'accommodation',
-              date: acc.checkIn,
-              title: acc.name,
-              subtitle: 'Check-In',
-              details: {
-                'ACCOMMODATIONS': acc.name,
-                'BOOKING #': acc.confirmationNumber || '',
-                'CHECK-IN': formatDateTime(acc.checkIn),
-                'CHECK-OUT': formatDateTime(acc.checkOut)
-              },
-              notes: acc.notes,
-              location: acc.location
-            })),
-            ...activities.map(activity => ({
-              type: 'activity',
-              date: activity.date,
-              title: activity.name,
-              subtitle: activity.type,
-              details: {
-                'ABOUT': activity.name,
-                'BOOKING #': activity.confirmationNumber || '',
-                'START': formatDateTime(activity.date) + (activity.startTime ? ` ${activity.startTime}` : ''),
-                'FINISH': activity.endTime || ''
-              },
-              notes: activity.notes
-            })),
-            ...flights.map(flight => ({
-              type: 'flight',
-              date: flight.departureDate,
-              title: `Flight to: ${flight.arrivalCity}`,
-              subtitle: 'Flight',
-              details: {
-                'AIRLINE & FLIGHT #': `${flight.airline} ${flight.flightNumber}`,
-                'DEPARTURE': formatDateTime(flight.departureDate),
-                'ARRIVAL': formatDateTime(flight.arrivalDate)
-              },
-              notes: '',
-              location: `${flight.departureCity} - ${flight.arrivalCity}`
-            })),
-            ...transports.map(transport => ({
-              type: 'transport',
-              date: transport.pickupDate,
-              title: transport.type,
-              subtitle: 'Transport',
-              details: {
-                'CONTACT': transport.provider || '',
-                'BOOKING #': transport.confirmationNumber || '',
-                'START': formatDateTime(transport.pickupDate),
-                'FINISH': transport.endDate ? formatDateTime(transport.endDate) : ''
-              },
-              notes: transport.notes,
-              location: `${transport.pickupLocation} - ${transport.dropoffLocation || ''}`
-            }))
-          ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-          // Group by date
-          const activitiesByDate = allActivities.reduce((acc, activity) => {
-            const dateKey = formatDate(activity.date);
-            if (!acc[dateKey]) acc[dateKey] = [];
-            acc[dateKey].push(activity);
-            return acc;
-          }, {} as Record<string, any[]>);
-
-          Object.entries(activitiesByDate).forEach(([date, dayActivities]) => {
-            const dayDate = new Date(dayActivities[0].date);
-            const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-            const monthName = dayDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-            const dayNumber = dayDate.getDate();
-
-            htmlContent += `
-              <div class="day-section">
-                <div class="day-header">
-                  <div class="day-box">
-                    <span class="day-month">${dayName}<br/>${monthName}</span>
-                    <span class="day-number">${dayNumber}</span>
-                  </div>
-                  <div style="flex: 1;">
-                    ${dayActivities.map(activity => `<strong>${activity.title}</strong>`).join(' • ')}
-                  </div>
-                </div>
-            `;
-
-            dayActivities.forEach(activity => {
-              htmlContent += `
-                <div class="activity-item">
-                  <div class="activity-title">${activity.title}</div>
-                  <div class="activity-details">
-                    ${Object.entries(activity.details).map(([key, value]) => `
-                      <div class="detail-item">
-                        <div class="detail-label">${key}</div>
-                        <div class="detail-value">${value}</div>
-                      </div>
-                    `).join('')}
-                  </div>
-                  ${activity.notes ? `<div class="notes">${activity.notes}</div>` : ''}
-                </div>
-              `;
-            });
-
-            htmlContent += `</div>`;
-          });
-
-          // Add remaining notes section
-          if (visibleNotes.length > 0) {
-            htmlContent += `
-              <div class="day-section">
-                <div class="day-header">
-                  <div class="day-box">
-                    <span class="day-month">NOTAS</span>
-                  </div>
-                  <div style="flex: 1;"><strong>Información Adicional</strong></div>
-                </div>
-            `;
-            visibleNotes.forEach(note => {
-              htmlContent += `
-                <div class="activity-item">
-                  <div class="activity-title">${note.title}</div>
-                  <div class="notes">${note.content}</div>
-                </div>
-              `;
-            });
-            htmlContent += `</div>`;
-          }
-
-          // Add footer
-          htmlContent += `
-              <div class="footer">
-                PLANNEALO &nbsp;&nbsp;&nbsp; e: plannealo@gmail.com &nbsp;&nbsp;&nbsp; page 1 of 1
-              </div>
-            </body></html>`;
-
-          // Try to generate PDF using Puppeteer, fallback to HTML if it fails
-          try {
-            browser = await puppeteer.launch({
-              headless: true,
-              args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu'
-              ]
-            });
-            const page = await browser.newPage();
-            await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-
-            const pdfBuffer = await page.pdf({
-              format: 'A4',
-              printBackground: true,
-              margin: {
-                top: '40px',
-                right: '40px',
-                bottom: '40px',
-                left: '40px'
-              }
-            });
-
-            // Set headers for PDF download
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.pdf"`);
-
-            res.send(pdfBuffer);
-          } catch (puppeteerError: any) {
-            console.warn('Puppeteer failed, falling back to printable HTML:', puppeteerError.message);
-
-            // Fallback: return HTML optimized for printing/PDF conversion
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.setHeader('Content-Disposition', `inline; filename="itinerario-${travel.name.replace(/\s+/g, '-').toLowerCase()}.html"`);
-
-            // Add print-specific CSS and auto-print script
-            const printableHtml = htmlContent.replace(
-              '</head>',
-              `
-              <style media="print">
-                @page { size: A4; margin: 40px; }
-                body { -webkit-print-color-adjust: exact; }
-              </style>
-              <script>
-                window.addEventListener('load', function() {
-                  setTimeout(function() {
-                    window.print();
-                  }, 1000);
-                });
-              </script>
-              </head>`
-            );
-
-            res.send(printableHtml);
-          }
-
-        } catch (error) {
-          console.error("Error generating PDF:", error);
-          res.status(500).json({ error: "Error generating PDF" });
-        } finally {
-          if (browser) {
-            await browser.close();
-          }
-        }
-      });
-
-      // Object Storage endpoints for travel cover images
-      app.post("/api/objects/upload", async (req, res) => {
-        try {
-          const objectStorageService = new ObjectStorageService();
-          const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-          res.json({ uploadURL });
-        } catch (error) {
-          console.error("Error getting upload URL:", error);
-          res.status(500).json({ error: "Error getting upload URL" });
-        }
-      });
-
-      // Serve object storage files
-      app.get("/api/objects/*", async (req, res) => {
+      // OBJETO DE STORAGE
+      app.get("/api/objects/:key(*)", async (req, res) => {
         try {
           const objectPath = req.path.replace("/api", "");
           console.log("Serving object path:", objectPath);

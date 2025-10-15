@@ -36,6 +36,13 @@
         "when": 1760131000000,
         "tag": "0005_add_timezone_columns",
         "breakpoints": true
+      },
+      {
+        "idx": 5,
+        "version": "7",
+        "when": 1760562000000,
+        "tag": "0006_create_airports_table",
+        "breakpoints": true
       }
   ]
 }

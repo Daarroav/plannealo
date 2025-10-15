@@ -137,6 +137,19 @@ export const notes = pgTable("notes", {
   attachments: text("attachments").array(), // Archivos adjuntos
 });
 
+export const airports = pgTable("airports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  country: text("country").notNull(), // País
+  city: text("city").notNull(), // Ciudad
+  state: text("state"), // Estado (opcional)
+  airportName: text("airport_name").notNull(), // Nombre del aeropuerto
+  iataCode: text("iata_code"), // Código IATA (opcional, 3 letras)
+  icaoCode: text("icao_code"), // Código ICAO (opcional, 4 letras)
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -243,6 +256,12 @@ export const insertNoteSchema = createInsertSchema(notes).omit({
   }),
 });
 
+export const insertAirportSchema = createInsertSchema(airports).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -262,3 +281,5 @@ export type InsertInsurance = z.infer<typeof insertInsuranceSchema>;
 export type Insurance = typeof insurances.$inferSelect;
 export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type Note = typeof notes.$inferSelect;
+export type InsertAirport = z.infer<typeof insertAirportSchema>;
+export type Airport = typeof airports.$inferSelect;
