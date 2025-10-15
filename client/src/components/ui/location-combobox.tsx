@@ -88,6 +88,9 @@ export function LocationCombobox({
       return response.json();
     },
     onSuccess: (newLocation: LocationItem) => {
+      // Invalidar el query específico con parentId si existe
+      queryClient.invalidateQueries({ queryKey: ["/api/locations", type, parentId] });
+      // También invalidar sin parentId para refrescar listas generales
       queryClient.invalidateQueries({ queryKey: ["/api/locations", type] });
       onChange(newLocation.id);
       setOpen(false);
