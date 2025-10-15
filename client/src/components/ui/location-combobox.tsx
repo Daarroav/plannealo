@@ -63,6 +63,13 @@ export function LocationCombobox({
   const { data: locations = [], isLoading } = useQuery<LocationItem[]>({
     queryKey: ["/api/locations", type, parentId],
     enabled: shouldFetch,
+    queryFn: async () => {
+      const response = await fetch(`/api/locations/${type}${queryString}`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch locations");
+      return response.json();
+    },
   });
 
   // Create location mutation
