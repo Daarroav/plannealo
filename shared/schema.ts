@@ -163,8 +163,8 @@ export const cities = pgTable("cities", {
 
 export const airports = pgTable("airports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  country: text("country").notNull(), // País (mantener por compatibilidad)
-  city: text("city").notNull(), // Ciudad (mantener por compatibilidad)
+  country: text("country"), // País (mantener por compatibilidad, ahora opcional)
+  city: text("city"), // Ciudad (mantener por compatibilidad, ahora opcional)
   state: text("state"), // Estado (mantener por compatibilidad)
   countryId: varchar("country_id").references(() => countries.id),
   stateId: varchar("state_id").references(() => states.id),
