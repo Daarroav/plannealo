@@ -1189,7 +1189,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // ==================== AIRPORTS ENDPOINTS ====================
+      // ==================== LOCATION CATALOGS ENDPOINTS ====================
+
+  // Obtener países
+  app.get("/api/locations/country", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { countries } = await import("../shared/schema");
+      const allCountries = await db.select().from(countries).orderBy(countries.name);
+      return res.json(allCountries);
+    } catch (error: any) {
+      console.error("Error fetching countries:", error);
+      return res.status(500).send("Error fetching countries");
+    }
+  });
+
+  // Crear país
+  app.post("/api/locations/country", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { countries } = await import("../shared/schema");
+      const { name } = req.body;
+
+      const [newCountry] = await db
+        .insert(countries)
+        .values({ name })
+        .returning();
+
+      return res.json(newCountry);
+    } catch (error: any) {
+      console.error("Error creating country:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Obtener estados
+  app.get("/api/locations/state", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { states } = await import("../shared/schema");
+      const { parentId } = req.query;
+
+      let query = db.select().from(states);
+      if (parentId) {
+        query = query.where(eq(states.countryId, parentId as string));
+      }
+
+      const allStates = await query.orderBy(states.name);
+      return res.json(allStates);
+    } catch (error: any) {
+      console.error("Error fetching states:", error);
+      return res.status(500).send("Error fetching states");
+    }
+  });
+
+  // Crear estado
+  app.post("/api/locations/state", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { states } = await import("../shared/schema");
+      const { name, countryId } = req.body;
+
+      const [newState] = await db
+        .insert(states)
+        .values({ name, countryId })
+        .returning();
+
+      return res.json(newState);
+    } catch (error: any) {
+      console.error("Error creating state:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Obtener ciudades
+  app.get("/api/locations/city", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { cities } = await import("../shared/schema");
+      const { parentId } = req.query;
+
+      let query = db.select().from(cities);
+      if (parentId) {
+        query = query.where(eq(cities.stateId, parentId as string));
+      }
+
+      const allCities = await query.orderBy(cities.name);
+      return res.json(allCities);
+    } catch (error: any) {
+      console.error("Error fetching cities:", error);
+      return res.status(500).send("Error fetching cities");
+    }
+  });
+
+  // Crear ciudad
+  app.post("/api/locations/city", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { cities } = await import("../shared/schema");
+      const { name, stateId, countryId } = req.body;
+
+      const [newCity] = await db
+        .insert(cities)
+        .values({ name, stateId, countryId })
+        .returning();
+
+      return res.json(newCity);
+    } catch (error: any) {
+      console.error("Error creating city:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
+
+  // ==================== AIRPORTS ENDPOINTS ====================
 
   // Obtener todos los aeropuertos
   app.get("/api/airports", async (req, res) => {

@@ -137,11 +137,38 @@ export const notes = pgTable("notes", {
   attachments: text("attachments").array(), // Archivos adjuntos
 });
 
+export const countries = pgTable("countries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const states = pgTable("states", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  countryId: varchar("country_id").notNull().references(() => countries.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const cities = pgTable("cities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  stateId: varchar("state_id").references(() => states.id, { onDelete: 'cascade' }),
+  countryId: varchar("country_id").notNull().references(() => countries.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const airports = pgTable("airports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  country: text("country").notNull(), // País
-  city: text("city").notNull(), // Ciudad
-  state: text("state"), // Estado (opcional)
+  country: text("country").notNull(), // País (mantener por compatibilidad)
+  city: text("city").notNull(), // Ciudad (mantener por compatibilidad)
+  state: text("state"), // Estado (mantener por compatibilidad)
+  countryId: varchar("country_id").references(() => countries.id),
+  stateId: varchar("state_id").references(() => states.id),
+  cityId: varchar("city_id").references(() => cities.id),
   airportName: text("airport_name").notNull(), // Nombre del aeropuerto
   iataCode: text("iata_code"), // Código IATA (opcional, 3 letras)
   icaoCode: text("icao_code"), // Código ICAO (opcional, 4 letras)
@@ -290,3 +317,6 @@ export type InsertNote = z.infer<typeof insertNoteSchema>;
 export type Note = typeof notes.$inferSelect;
 export type InsertAirport = z.infer<typeof insertAirportSchema>;
 export type Airport = typeof airports.$inferSelect;
+export type Country = typeof countries.$inferSelect;
+export type State = typeof states.$inferSelect;
+export type City = typeof cities.$inferSelect;

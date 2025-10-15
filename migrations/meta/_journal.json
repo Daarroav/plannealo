@@ -51,6 +51,13 @@
       "when": 1760562747243,
       "tag": "0007_add_airport_timezones",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1760563500000,
+      "tag": "0008_create_location_catalogs",
+      "breakpoints": true
     }
   ]
 }
