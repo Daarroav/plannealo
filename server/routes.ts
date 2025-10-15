@@ -330,6 +330,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Get complete travel data with all related entities
+      app.get("/api/travels/:id/full", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+
+        try {
+          const travel = await storage.getTravel(req.params.id);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          // Condiciones para el acceso al viaje
+          const isOwner = travel.createdBy === req.user!.id;
+          const isAdmin = req.user!.role === "admin";
+
+          if (!isOwner && !isAdmin) {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          // Fetch all related data in parallel
+          const [accommodations, activities, flights, transports, cruises, insurances, notes] = await Promise.all([
+            storage.getAccommodations(req.params.id),
+            storage.getActivities(req.params.id),
+            storage.getFlights(req.params.id),
+            storage.getTransports(req.params.id),
+            storage.getCruises(req.params.id),
+            storage.getInsurances(req.params.id),
+            storage.getNotes(req.params.id),
+          ]);
+
+          res.json({
+            travel,
+            accommodations,
+            activities,
+            flights,
+            transports,
+            cruises,
+            insurances,
+            notes,
+          });
+        } catch (error) {
+          console.error("Error fetching travel data:", error);
+          res.status(500).json({ message: "Error fetching travel data" });
+        }
+      });
+
 // Delete travel - PROTEGIDO: No elimina si tiene datos relacionados
   app.delete('/api/travels/:id', async (req, res) => {
     const { id } = req.params;
