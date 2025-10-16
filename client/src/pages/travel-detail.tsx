@@ -1483,7 +1483,17 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    [...activities].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((activity) => (
+                    [...activities].sort((a, b) => {
+                      const dateA = new Date(a.date).getTime();
+                      const dateB = new Date(b.date).getTime();
+                      if (dateA !== dateB) return dateA - dateB;
+                      
+                      // Si las fechas son iguales, ordenar por hora de inicio
+                      if (a.startTime && b.startTime) {
+                        return a.startTime.localeCompare(b.startTime);
+                      }
+                      return 0;
+                    }).map((activity) => (
                       <Card key={activity.id} className="p-4 border-l-4 border-l-green-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -1854,7 +1864,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    insurances.map((insurance) => (
+                    [...insurances].sort((a, b) => new Date(a.effectiveDate).getTime() - new Date(b.effectiveDate).getTime()).map((insurance) => (
                       <Card key={insurance.id} className="p-4 border-l-4 border-l-red-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -1933,7 +1943,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    notes.map((note) => (
+                    [...notes].sort((a, b) => new Date(a.noteDate).getTime() - new Date(b.noteDate).getTime()).map((note) => (
                       <Card key={note.id} className="p-4 border-l-4 border-l-gray-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
