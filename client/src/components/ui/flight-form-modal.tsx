@@ -20,6 +20,7 @@ import { FlightSearchModal } from "./flight-search-modal";
 import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 import { TIMEZONE_CATALOG, type TimezoneOption } from "@/lib/timezone-catalog";
 import { TimezoneCombobox } from "./timezone-combobox";
+import { AirportCombobox } from "./airport-combobox";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -561,11 +562,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
           {/* Departure Information */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="departureCity">Aeropuerto de salida *</Label>
-              <Input
-                id="departureCity"
-                {...form.register("departureCity")}
-                placeholder="Buscar Aeropuerto de salida *"
+              <AirportCombobox
+                label="Aeropuerto de salida *"
+                value={form.watch("departureCity")}
+                onChange={(value) => form.setValue("departureCity", value || "")}
+                placeholder="Buscar Aeropuerto de salida..."
               />
               {form.formState.errors.departureCity && (
                 <p className="text-sm text-destructive mt-1">
@@ -648,11 +649,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
           {/* Arrival Information */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="arrivalCity">Aeropuerto de llegada *</Label>
-              <Input
-                id="arrivalCity"
-                {...form.register("arrivalCity")}
-                placeholder="Buscar Llegada Aeropuerto *"
+              <AirportCombobox
+                label="Aeropuerto de llegada *"
+                value={form.watch("arrivalCity")}
+                onChange={(value) => form.setValue("arrivalCity", value || "")}
+                placeholder="Buscar Aeropuerto de llegada..."
               />
               {form.formState.errors.arrivalCity && (
                 <p className="text-sm text-destructive mt-1">
