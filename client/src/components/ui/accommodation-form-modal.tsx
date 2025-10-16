@@ -21,9 +21,9 @@ import { FileText } from "lucide-react";
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
   checkInDate: z.string().min(1, "La fecha de entrada es requerida"),
-  checkInTime: z.string().min(1, "La hora de entrada es requerida"),
+  checkInTime: z.string().optional(),
   checkOutDate: z.string().min(1, "La fecha de salida es requerida"),
-  checkOutTime: z.string().min(1, "La hora de salida es requerida"),
+  checkOutTime: z.string().optional(),
   roomCount: z.number().min(1, "Debe especificar al menos 1 habitación"),
 }).omit({
   checkIn: true,
@@ -62,9 +62,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       type: editingAccommodation?.type || "",
       location: editingAccommodation?.location || "",
       checkInDate: editingAccommodation?.checkIn ? format(new Date(editingAccommodation.checkIn), "yyyy-MM-dd") : "",
-      checkInTime: editingAccommodation?.checkIn ? format(new Date(editingAccommodation.checkIn), "HH:mm") : "07:00",
+      checkInTime: editingAccommodation?.checkIn ? format(new Date(editingAccommodation.checkIn), "HH:mm") : "",
       checkOutDate: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "yyyy-MM-dd") : "",
-      checkOutTime: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "HH:mm") : "07:00",
+      checkOutTime: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "HH:mm") : "",
       roomType: editingAccommodation?.roomType?.replace(/^\d+\s/, "") || "",
       roomCount: editingAccommodation?.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
       price: editingAccommodation?.price || "",
@@ -156,8 +156,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     const currentValues = form.getValues();
     
     // Combine date and time for check-in and check-out
-    const checkIn = new Date(`${currentValues.checkInDate}T${currentValues.checkInTime}:00`);
-    const checkOut = new Date(`${currentValues.checkOutDate}T${currentValues.checkOutTime}:00`);
+    // Use 00:00 if no time is specified
+    const checkInTime = currentValues.checkInTime || "00:00";
+    const checkOutTime = currentValues.checkOutTime || "00:00";
+    const checkIn = new Date(`${currentValues.checkInDate}T${checkInTime}:00`);
+    const checkOut = new Date(`${currentValues.checkOutDate}T${checkOutTime}:00`);
   
     // Create FormData
     const formData = new FormData();
@@ -301,9 +304,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         type: "",
         location: "",
         checkInDate: "",
-        checkInTime: "07:00",
+        checkInTime: "",
         checkOutDate: "",
-        checkOutTime: "07:00",
+        checkOutTime: "",
         roomType: "",
         roomCount: 1,
         price: "",
