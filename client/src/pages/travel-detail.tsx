@@ -884,6 +884,17 @@ export default function TravelDetail() {
     return `${day} ${month} ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
+  // Formatear hora de 24h (HH:mm) a 12h con AM/PM
+  const formatTime12h = (time24: string | null): string => {
+    if (!time24) return "N/A";
+    
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours % 12 || 12;
+    
+    return `${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
   // Handlers for editing
   const handleEditAccommodation = (accommodation: Accommodation) => {
     setEditingAccommodation(accommodation);
@@ -1305,10 +1316,10 @@ export default function TravelDetail() {
                                 <span className="font-medium">Proveedor:</span> {activity.provider || "N/A"}
                               </div>
                               <div>
-                                <span className="font-medium">Inicio:</span> {activity.startTime || "N/A"}
+                                <span className="font-medium">Inicio:</span> {formatTime12h(activity.startTime)}
                               </div>
                               <div>
-                                <span className="font-medium">Fin:</span> {activity.endTime || "N/A"}
+                                <span className="font-medium">Fin:</span> {formatTime12h(activity.endTime)}
                               </div>
                               <div>
                                 <span className="font-medium">Lugar de inicio:</span> {activity.placeStart || "N/A"}

@@ -120,6 +120,17 @@ export default function TravelPreview() {
     });
   };
 
+  // Formatear hora de 24h (HH:mm) a 12h con AM/PM
+  const formatTime12h = (time24: string | null): string => {
+    if (!time24) return "N/A";
+    
+    const [hours, minutes] = time24.split(':').map(Number);
+    const period = hours >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours % 12 || 12;
+    
+    return `${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString("es-ES", {
       year: "numeric",
@@ -449,8 +460,8 @@ export default function TravelPreview() {
                   HORARIO
                 </div>
                 <div className="text-gray-900">
-                  {event.data.startTime} -{" "}
-                  {event.data.endTime || "Sin hora fin"}
+                  {formatTime12h(event.data.startTime)} -{" "}
+                  {event.data.endTime ? formatTime12h(event.data.endTime) : "Sin hora fin"}
                 </div>
               </div>
               {event.data.provider && (
