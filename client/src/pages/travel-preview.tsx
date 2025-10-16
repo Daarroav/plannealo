@@ -95,10 +95,10 @@ export default function TravelPreview() {
   // Formatear fecha/hora de vuelo usando la zona horaria guardada o detectada
   const formatFlightDateTime = (dateTime: string | Date, cityString: string, savedTimezone?: string | null) => {
     const date = new Date(dateTime);
-    
+
     // Determinar la zona horaria a usar
     let timezone = 'America/Mexico_City'; // Fallback por defecto
-    
+
     if (savedTimezone) {
       // Usar la zona horaria guardada en la base de datos (mayor prioridad)
       timezone = savedTimezone;
@@ -107,7 +107,7 @@ export default function TravelPreview() {
       const iataCode = extractIataCode(cityString || '');
       timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
     }
-    
+
     // Formatear en la zona horaria correcta
     return date.toLocaleString("es-ES", {
       year: "numeric",
@@ -123,11 +123,11 @@ export default function TravelPreview() {
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
   const formatTime12h = (time24: string | null): string => {
     if (!time24) return "N/A";
-    
+
     const [hours, minutes] = time24.split(':').map(Number);
     const period = hours >= 12 ? 'p. m.' : 'a. m.';
     const hours12 = hours % 12 || 12;
-    
+
     return `${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
@@ -185,10 +185,10 @@ export default function TravelPreview() {
   // Obtener fecha en zona horaria específica para agrupación
   const getDateInTimezone = (dateTime: string | Date, cityString: string, savedTimezone?: string | null): Date => {
     const date = new Date(dateTime);
-    
+
     // Determinar la zona horaria a usar (misma lógica que formatFlightDateTime)
     let timezone = 'America/Mexico_City'; // Fallback por defecto
-    
+
     if (savedTimezone) {
       // Usar la zona horaria guardada en la base de datos (mayor prioridad)
       timezone = savedTimezone;
@@ -197,7 +197,7 @@ export default function TravelPreview() {
       const iataCode = extractIataCode(cityString || '');
       timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
     }
-    
+
     // Obtener componentes de fecha en la zona horaria específica
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
@@ -205,12 +205,12 @@ export default function TravelPreview() {
       month: '2-digit',
       day: '2-digit',
     });
-    
+
     const parts = formatter.formatToParts(date);
     const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
     const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
     const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
-    
+
     // Crear fecha local usando estos componentes
     return new Date(year, month, day);
   };
@@ -338,15 +338,15 @@ export default function TravelPreview() {
 
     events.forEach((event) => {
       const d = new Date(event.date); // Puede ser string o Date
-      
+
       let year: number, month: string, day: string;
 
       // Para vuelos, usar la zona horaria guardada o detectada para determinar el día local
       if (event.type === 'flight') {
         const flight = event.data;
         const localDate = getDateInTimezone(
-          event.date, 
-          flight.departureCity, 
+          event.date,
+          flight.departureCity,
           flight.departureTimezone
         );
         year = localDate.getFullYear();
@@ -561,8 +561,8 @@ export default function TravelPreview() {
               </div>
             )}
 
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de actividad"
             />
           </div>
@@ -646,8 +646,8 @@ export default function TravelPreview() {
               </div>
             </div>
 
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de vuelo"
             />
           </div>
@@ -727,8 +727,8 @@ export default function TravelPreview() {
                     CONTACTO
                   </div>
                   <div className="text-gray-900">
-                    {event.data.contactName 
-                      ? `${event.data.contactName}: ${event.data.contactNumber}` 
+                    {event.data.contactName
+                      ? `${event.data.contactName}: ${event.data.contactNumber}`
                       : event.data.contactNumber}
                   </div>
                 </div>
@@ -753,8 +753,8 @@ export default function TravelPreview() {
               </div>
             )}
 
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de transporte"
             />
           </div>
@@ -826,8 +826,8 @@ export default function TravelPreview() {
               </div>
             )}
 
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de crucero"
             />
           </div>
@@ -946,8 +946,8 @@ export default function TravelPreview() {
                 />
               </div>
             )}
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de alojamiento"
             />
           </div>
@@ -978,8 +978,8 @@ export default function TravelPreview() {
                 {event.data.content}
               </p>
             </div>
-            <AttachmentList 
-              attachments={event.data.attachments || []} 
+            <AttachmentList
+              attachments={event.data.attachments || []}
               fallbackPrefix="Documento de nota"
             />
           </div>
@@ -1209,8 +1209,8 @@ export default function TravelPreview() {
                         <strong>Notas:</strong> <br /> {insurance.notes}
                       </p>
                     )}
-                    <AttachmentList 
-                      attachments={insurance.attachments || []} 
+                    <AttachmentList
+                      attachments={insurance.attachments || []}
                       fallbackPrefix="Documento de seguro"
                     />
                   </CardContent>
@@ -1237,7 +1237,7 @@ export default function TravelPreview() {
                   Especialistas en experiencias únicas
                 </p>
                 <p className="text-sm text-muted-foreground font-semibold">
-                  Registro: RNT-54321
+                  Registro: RNT-04240280502
                 </p>
               </div>
             </div>
