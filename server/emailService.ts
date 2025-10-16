@@ -268,9 +268,6 @@ export class EmailService {
       <h1 style="margin:0 0 8px 0; font-size:28px; font-weight:700; color:#ffffff; mso-line-height-rule:exactly;">
         Bienvenido a tu próximo viaje con Plannealo.
       </h1>
-      <p style="margin:0; font-size:16px; color:#ffffff; opacity:0.9; mso-line-height-rule:exactly;">
-        ¡Estamos muy felices de tenerte como parte de nuestra comunidad de viajeros!
-      </p>
     </div>
     
     <div class="content">
