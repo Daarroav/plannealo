@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,6 +108,10 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   // Zonas horarias manuales (cuando no se usa búsqueda automática)
   const [manualDepartureTimezone, setManualDepartureTimezone] = useState<string>("");
   const [manualArrivalTimezone, setManualArrivalTimezone] = useState<string>("");
+  
+  // Zonas horarias sugeridas del aeropuerto seleccionado
+  const [departureAirportTimezones, setDepartureAirportTimezones] = useState<string[]>([]);
+  const [arrivalAirportTimezones, setArrivalAirportTimezones] = useState<string[]>([]);
 
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
@@ -204,6 +209,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     }
   }, [editingFlight, form, travelId]);
 
+  // Cargar aeropuertos para obtener zonas horarias
+  const { data: airports = [] } = useQuery<any[]>({
+    queryKey: ["/api/airports"],
+  });
+
   // Auto-completar zonas horarias cuando se detecta código IATA
   React.useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -221,6 +231,21 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               setManualDepartureTimezone(timezone);
             }
           }
+          
+          // Obtener zonas del aeropuerto seleccionado
+          const selectedAirport = airports.find((airport: any) => {
+            const airportValue = airport.iataCode 
+              ? `${airport.iataCode} - ${airport.airportName}`
+              : airport.airportName;
+            return airportValue === departureCity;
+          });
+          
+          if (selectedAirport && selectedAirport.timezones) {
+            const tzList = selectedAirport.timezones.map((tz: any) => tz.timezone);
+            setDepartureAirportTimezones(tzList);
+          } else {
+            setDepartureAirportTimezones([]);
+          }
         }
         
         // Auto-completar zona horaria de llegada
@@ -232,12 +257,27 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               setManualArrivalTimezone(timezone);
             }
           }
+          
+          // Obtener zonas del aeropuerto seleccionado
+          const selectedAirport = airports.find((airport: any) => {
+            const airportValue = airport.iataCode 
+              ? `${airport.iataCode} - ${airport.airportName}`
+              : airport.airportName;
+            return airportValue === arrivalCity;
+          });
+          
+          if (selectedAirport && selectedAirport.timezones) {
+            const tzList = selectedAirport.timezones.map((tz: any) => tz.timezone);
+            setArrivalAirportTimezones(tzList);
+          } else {
+            setArrivalAirportTimezones([]);
+          }
         }
       }
     });
     
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [form, airports]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -584,6 +624,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 value={manualDepartureTimezone}
                 onValueChange={setManualDepartureTimezone}
                 placeholder="Buscar zona horaria..."
+                suggestedTimezones={departureAirportTimezones}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {extractIataCode(form.watch("departureCity") || '') 
@@ -671,6 +712,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 value={manualArrivalTimezone}
                 onValueChange={setManualArrivalTimezone}
                 placeholder="Buscar zona horaria..."
+                suggestedTimezones={arrivalAirportTimezones}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 {extractIataCode(form.watch("arrivalCity") || '') 

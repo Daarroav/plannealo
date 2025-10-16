@@ -23,6 +23,7 @@ interface TimezoneComboboxProps {
   placeholder?: string;
   id?: string;
   testId?: string;
+  suggestedTimezones?: string[]; // Zonas horarias sugeridas del aeropuerto
 }
 
 export function TimezoneCombobox({
@@ -31,6 +32,7 @@ export function TimezoneCombobox({
   placeholder = "Buscar zona horaria...",
   id,
   testId,
+  suggestedTimezones = [],
 }: TimezoneComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -43,6 +45,23 @@ export function TimezoneCombobox({
     }
     return null;
   }, [value]);
+
+  // Crear lista de zonas sugeridas con sus labels
+  const suggestedTimezoneOptions = React.useMemo(() => {
+    if (!suggestedTimezones || suggestedTimezones.length === 0) return [];
+    
+    const options = [];
+    for (const tzValue of suggestedTimezones) {
+      for (const region of TIMEZONE_CATALOG) {
+        const tz = region.timezones.find((t) => t.value === tzValue);
+        if (tz) {
+          options.push(tz);
+          break;
+        }
+      }
+    }
+    return options;
+  }, [suggestedTimezones]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -64,6 +83,33 @@ export function TimezoneCombobox({
           <CommandInput placeholder="Buscar zona horaria..." />
           <CommandList>
             <CommandEmpty>No se encontró zona horaria.</CommandEmpty>
+            
+            {/* Mostrar zonas sugeridas del aeropuerto primero */}
+            {suggestedTimezoneOptions.length > 0 && (
+              <CommandGroup heading="🛫 Zonas del aeropuerto seleccionado" className="bg-blue-50/50">
+                {suggestedTimezoneOptions.map((tz) => (
+                  <CommandItem
+                    key={`suggested-${tz.value}`}
+                    value={tz.label}
+                    onSelect={() => {
+                      onValueChange(tz.value);
+                      setOpen(false);
+                    }}
+                    className="font-medium"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === tz.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {tz.label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            
+            {/* Mostrar todas las zonas horarias por región */}
             {TIMEZONE_CATALOG.map((region) => (
               <CommandGroup key={region.region} heading={region.region}>
                 {region.timezones.map((tz) => (
