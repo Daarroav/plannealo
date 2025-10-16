@@ -111,29 +111,31 @@ export default function HomePage() {
     return endDate < today;
   };
 
-  const filteredTravels = travels.filter(travel => {
-    const matchesSearch = travel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         travel.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const isPast = isPastTravel(travel);
-    
-    let matchesStatus = false;
-    if (statusFilter === "current") {
-      // Actuales: viajes vigentes (publicados o borradores)
-      matchesStatus = !isPast;
-    } else if (statusFilter === "published") {
-      // Publicados: solo publicados actuales
-      matchesStatus = !isPast && travel.status === "published";
-    } else if (statusFilter === "draft") {
-      // Borradores: solo borradores actuales
-      matchesStatus = !isPast && travel.status === "draft";
-    } else if (statusFilter === "past") {
-      // Pasados: todos los viajes pasados (cualquier estado)
-      matchesStatus = isPast;
-    }
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredTravels = travels
+    .filter(travel => {
+      const matchesSearch = travel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           travel.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const isPast = isPastTravel(travel);
+      
+      let matchesStatus = false;
+      if (statusFilter === "current") {
+        // Actuales: viajes vigentes (publicados o borradores)
+        matchesStatus = !isPast;
+      } else if (statusFilter === "published") {
+        // Publicados: solo publicados actuales
+        matchesStatus = !isPast && travel.status === "published";
+      } else if (statusFilter === "draft") {
+        // Borradores: solo borradores actuales
+        matchesStatus = !isPast && travel.status === "draft";
+      } else if (statusFilter === "past") {
+        // Pasados: todos los viajes pasados (cualquier estado)
+        matchesStatus = isPast;
+      }
+      
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
   console.log(filteredTravels);
 
