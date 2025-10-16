@@ -1194,7 +1194,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    accommodations.map((accommodation) => (
+                    [...accommodations].sort((a, b) => new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime()).map((accommodation) => (
                       <Card key={accommodation.id} className="p-4 border-l-4 border-l-blue-500">
                         <div className="flex justify-between items-start gap-4">
                           {/* Conditionally render the thumbnail container only if thumbnail exists */}
@@ -1287,7 +1287,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    activities.map((activity) => (
+                    [...activities].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map((activity) => (
                       <Card key={activity.id} className="p-4 border-l-4 border-l-green-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -1380,7 +1380,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    flights.map((flight) => (
+                    [...flights].sort((a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()).map((flight) => (
                       <Card key={flight.id} className="p-4 border-l-4 border-l-purple-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -1455,7 +1455,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    transports.map((transport) => (
+                    [...transports].sort((a, b) => new Date(a.pickupDate).getTime() - new Date(b.pickupDate).getTime()).map((transport) => (
                       <Card key={transport.id} className="p-4 border-l-4 border-l-orange-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -1534,7 +1534,7 @@ export default function TravelDetail() {
                       </CardContent>
                     </Card>
                   ) : (
-                    cruises.map((cruise) => (
+                    [...cruises].sort((a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime()).map((cruise) => (
                       <Card key={cruise.id} className="p-4 border-l-4 border-l-cyan-500">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
