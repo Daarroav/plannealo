@@ -1189,6 +1189,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // ==================== DELETE ENDPOINTS ====================
+      
+      // Delete accommodation
+      app.delete("/api/accommodations/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { accommodations } = await import("../shared/schema");
+          const [accommodation] = await db.select().from(accommodations).where(eq(accommodations.id, req.params.id));
+          
+          if (!accommodation) {
+            return res.status(404).json({ message: "Accommodation not found" });
+          }
+
+          const travel = await storage.getTravel(accommodation.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteAccommodation(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting accommodation:", error);
+          res.status(500).json({ message: "Error deleting accommodation" });
+        }
+      });
+
+      // Delete activity
+      app.delete("/api/activities/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { activities } = await import("../shared/schema");
+          const [activity] = await db.select().from(activities).where(eq(activities.id, req.params.id));
+          
+          if (!activity) {
+            return res.status(404).json({ message: "Activity not found" });
+          }
+
+          const travel = await storage.getTravel(activity.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteActivity(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting activity:", error);
+          res.status(500).json({ message: "Error deleting activity" });
+        }
+      });
+
+      // Delete flight
+      app.delete("/api/flights/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { flights } = await import("../shared/schema");
+          const [flight] = await db.select().from(flights).where(eq(flights.id, req.params.id));
+          
+          if (!flight) {
+            return res.status(404).json({ message: "Flight not found" });
+          }
+
+          const travel = await storage.getTravel(flight.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteFlight(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting flight:", error);
+          res.status(500).json({ message: "Error deleting flight" });
+        }
+      });
+
+      // Delete transport
+      app.delete("/api/transports/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { transports } = await import("../shared/schema");
+          const [transport] = await db.select().from(transports).where(eq(transports.id, req.params.id));
+          
+          if (!transport) {
+            return res.status(404).json({ message: "Transport not found" });
+          }
+
+          const travel = await storage.getTravel(transport.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteTransport(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting transport:", error);
+          res.status(500).json({ message: "Error deleting transport" });
+        }
+      });
+
+      // Delete cruise
+      app.delete("/api/cruises/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { cruises } = await import("../shared/schema");
+          const [cruise] = await db.select().from(cruises).where(eq(cruises.id, req.params.id));
+          
+          if (!cruise) {
+            return res.status(404).json({ message: "Cruise not found" });
+          }
+
+          const travel = await storage.getTravel(cruise.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteCruise(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting cruise:", error);
+          res.status(500).json({ message: "Error deleting cruise" });
+        }
+      });
+
+      // Delete insurance
+      app.delete("/api/insurances/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { insurances } = await import("../shared/schema");
+          const [insurance] = await db.select().from(insurances).where(eq(insurances.id, req.params.id));
+          
+          if (!insurance) {
+            return res.status(404).json({ message: "Insurance not found" });
+          }
+
+          const travel = await storage.getTravel(insurance.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteInsurance(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting insurance:", error);
+          res.status(500).json({ message: "Error deleting insurance" });
+        }
+      });
+
+      // Delete note
+      app.delete("/api/notes/:id", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.sendStatus(401);
+        }
+        try {
+          const { notes } = await import("../shared/schema");
+          const [note] = await db.select().from(notes).where(eq(notes.id, req.params.id));
+          
+          if (!note) {
+            return res.status(404).json({ message: "Note not found" });
+          }
+
+          const travel = await storage.getTravel(note.travelId);
+          if (!travel) {
+            return res.status(404).json({ message: "Travel not found" });
+          }
+
+          const user = (req as any).user;
+          if (travel.createdBy !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "Access denied" });
+          }
+
+          await storage.deleteNote(req.params.id);
+          res.json({ success: true });
+        } catch (error) {
+          console.error("Error deleting note:", error);
+          res.status(500).json({ message: "Error deleting note" });
+        }
+      });
+
       // ==================== LOCATION CATALOGS ENDPOINTS ====================
 
   // Obtener países
