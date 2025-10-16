@@ -24,7 +24,7 @@ interface Stats {
 export default function HomePage() {
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("current");
   const [activeTab, setActiveTab] = useState("list");
   const { toast } = useToast();
 
@@ -103,10 +103,35 @@ export default function HomePage() {
     },
   });
 
+  // Helper function to determine if a travel is past
+  const isPastTravel = (travel: Travel) => {
+    const endDate = new Date(travel.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return endDate < today;
+  };
+
   const filteredTravels = travels.filter(travel => {
     const matchesSearch = travel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          travel.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || travel.status === statusFilter;
+    
+    const isPast = isPastTravel(travel);
+    
+    let matchesStatus = false;
+    if (statusFilter === "current") {
+      // Actuales: viajes vigentes (publicados o borradores)
+      matchesStatus = !isPast;
+    } else if (statusFilter === "published") {
+      // Publicados: solo publicados actuales
+      matchesStatus = !isPast && travel.status === "published";
+    } else if (statusFilter === "draft") {
+      // Borradores: solo borradores actuales
+      matchesStatus = !isPast && travel.status === "draft";
+    } else if (statusFilter === "past") {
+      // Pasados: todos los viajes pasados (cualquier estado)
+      matchesStatus = isPast;
+    }
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -200,9 +225,10 @@ export default function HomePage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="current">Actuales</SelectItem>
                         <SelectItem value="published">Publicados</SelectItem>
                         <SelectItem value="draft">Borradores</SelectItem>
+                        <SelectItem value="past">Pasados</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -241,7 +267,7 @@ export default function HomePage() {
                     <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
                     <p className="text-muted-foreground mb-6">
-                      {searchTerm || statusFilter !== "all" 
+                      {searchTerm || statusFilter !== "current" 
                         ? "Prueba con diferentes filtros de búsqueda" 
                         : "Comienza creando tu primer itinerario de viaje"}
                     </p>
