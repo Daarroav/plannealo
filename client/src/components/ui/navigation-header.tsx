@@ -32,10 +32,9 @@ export function NavigationHeader() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <img src={logoPng} alt="PLANNEALO Logo" className="h-10 w-auto" />
+              <img src={logoPng} alt="Logo" className="h-10 w-auto" />
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-foreground">PLANNEALO</h1>
-                <p className="text-xs text-muted-foreground">Gestión de Viajes</p>
+                <p className="text-sm text-muted-foreground">Gestión de Viajes</p>
               </div>
             </div>
           </div>
