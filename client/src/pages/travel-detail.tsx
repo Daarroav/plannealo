@@ -819,14 +819,15 @@ export default function TravelDetail() {
       const timeParts = new Intl.DateTimeFormat("es-MX", {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
+        hour12: true,
         timeZone: forceUTC ? "UTC" : undefined,
       }).formatToParts(d);
 
       const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
       const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+      const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
 
-      result += `, ${hour}:${minute}`;
+      result += `, ${hour}:${minute} ${dayPeriod}`;
     }
 
     return result;
@@ -872,14 +873,15 @@ export default function TravelDetail() {
     const timeParts = new Intl.DateTimeFormat("es-MX", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false,
+      hour12: true,
       timeZone: timezone,
     }).formatToParts(d);
 
     const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
     const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+    const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
 
-    return `${day} ${month} ${year}, ${hour}:${minute}`;
+    return `${day} ${month} ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
   // Handlers for editing
