@@ -14,13 +14,14 @@ import { CruiseFormModal } from "@/components/ui/cruise-form-modal";
 import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
+import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 // components
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
 // icons
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera, Trash2 } from "lucide-react";
 // utils
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -78,6 +79,14 @@ export default function TravelDetail() {
   const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
+  
+  // Estado para el modal de confirmación de eliminación
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: 'accommodation' | 'activity' | 'flight' | 'transport' | 'cruise' | 'insurance' | 'note';
+    id: string;
+    name?: string;
+  } | null>(null);
 
   const travelId = params?.id;
 
@@ -932,6 +941,168 @@ export default function TravelDetail() {
     setShowNoteModal(true);
   };
 
+  // Mutaciones de eliminación
+  const deleteAccommodationMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/accommodations/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Alojamiento eliminado", description: "El alojamiento ha sido eliminado correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el alojamiento", variant: "destructive" });
+    },
+  });
+
+  const deleteActivityMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/activities/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Actividad eliminada", description: "La actividad ha sido eliminada correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar la actividad", variant: "destructive" });
+    },
+  });
+
+  const deleteFlightMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/flights/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Vuelo eliminado", description: "El vuelo ha sido eliminado correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el vuelo", variant: "destructive" });
+    },
+  });
+
+  const deleteTransportMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/transports/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Transporte eliminado", description: "El transporte ha sido eliminado correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el transporte", variant: "destructive" });
+    },
+  });
+
+  const deleteCruiseMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/cruises/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Crucero eliminado", description: "El crucero ha sido eliminado correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el crucero", variant: "destructive" });
+    },
+  });
+
+  const deleteInsuranceMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/insurances/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Seguro eliminado", description: "El seguro ha sido eliminado correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar el seguro", variant: "destructive" });
+    },
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/notes/${id}`),
+    onSuccess: () => {
+      invalidateTravelQueries(travelId!);
+      toast({ title: "Nota eliminada", description: "La nota ha sido eliminada correctamente" });
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "Error", description: "No se pudo eliminar la nota", variant: "destructive" });
+    },
+  });
+
+  // Handlers para abrir el diálogo de eliminación
+  const handleDeleteClick = (
+    type: 'accommodation' | 'activity' | 'flight' | 'transport' | 'cruise' | 'insurance' | 'note',
+    id: string,
+    name?: string
+  ) => {
+    setItemToDelete({ type, id, name });
+    setDeleteDialogOpen(true);
+  };
+
+  // Handler para confirmar la eliminación
+  const handleConfirmDelete = () => {
+    if (!itemToDelete) return;
+
+    switch (itemToDelete.type) {
+      case 'accommodation':
+        deleteAccommodationMutation.mutate(itemToDelete.id);
+        break;
+      case 'activity':
+        deleteActivityMutation.mutate(itemToDelete.id);
+        break;
+      case 'flight':
+        deleteFlightMutation.mutate(itemToDelete.id);
+        break;
+      case 'transport':
+        deleteTransportMutation.mutate(itemToDelete.id);
+        break;
+      case 'cruise':
+        deleteCruiseMutation.mutate(itemToDelete.id);
+        break;
+      case 'insurance':
+        deleteInsuranceMutation.mutate(itemToDelete.id);
+        break;
+      case 'note':
+        deleteNoteMutation.mutate(itemToDelete.id);
+        break;
+    }
+  };
+
+  // Función para obtener el mensaje del diálogo según el tipo
+  const getDeleteDialogMessage = () => {
+    if (!itemToDelete) return { title: '', description: '' };
+
+    const typeNames = {
+      accommodation: 'Alojamiento',
+      activity: 'Actividad',
+      flight: 'Vuelo',
+      transport: 'Transporte',
+      cruise: 'Crucero',
+      insurance: 'Seguro',
+      note: 'Nota',
+    };
+
+    const typeName = typeNames[itemToDelete.type];
+    return {
+      title: `Eliminar ${typeName}`,
+      description: `¿Estás seguro que quieres eliminar est${itemToDelete.type === 'activity' || itemToDelete.type === 'note' ? 'a' : 'e'} ${typeName}? Esta acción no se puede deshacer.`,
+    };
+  };
+
+  // Verificar si está eliminando
+  const isDeleting = 
+    deleteAccommodationMutation.isPending ||
+    deleteActivityMutation.isPending ||
+    deleteFlightMutation.isPending ||
+    deleteTransportMutation.isPending ||
+    deleteCruiseMutation.isPending ||
+    deleteInsuranceMutation.isPending ||
+    deleteNoteMutation.isPending;
+
   const handleAddNote = () => {
     setEditingNote(null);
     setShowNoteModal(true);
@@ -1248,13 +1419,25 @@ export default function TravelDetail() {
                               <p className="text-sm text-muted-foreground mt-2 italic">{accommodation.notes}</p>
                             )}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditAccommodation(accommodation)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditAccommodation(accommodation)}
+                              data-testid={`button-edit-accommodation-${accommodation.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('accommodation', accommodation.id, accommodation.name)}
+                              data-testid={`button-delete-accommodation-${accommodation.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1341,13 +1524,25 @@ export default function TravelDetail() {
                               <p className="text-sm text-muted-foreground mt-2 italic">{cleanNotesFromStructuredData(activity.notes)}</p>
                             )}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditActivity(activity)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditActivity(activity)}
+                              data-testid={`button-edit-activity-${activity.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('activity', activity.id, activity.name)}
+                              data-testid={`button-delete-activity-${activity.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1416,13 +1611,25 @@ export default function TravelDetail() {
                               </div>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditFlight(flight)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditFlight(flight)}
+                              data-testid={`button-edit-flight-${flight.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('flight', flight.id)}
+                              data-testid={`button-delete-flight-${flight.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1494,13 +1701,25 @@ export default function TravelDetail() {
                               <p className="text-sm text-muted-foreground mt-2 italic">{transport.notes}</p>
                             )}
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditTransport(transport)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditTransport(transport)}
+                              data-testid={`button-edit-transport-${transport.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('transport', transport.id)}
+                              data-testid={`button-delete-transport-${transport.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1570,13 +1789,25 @@ export default function TravelDetail() {
                               </div>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditCruise(cruise)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditCruise(cruise)}
+                              data-testid={`button-edit-cruise-${cruise.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('cruise', cruise.id)}
+                              data-testid={`button-delete-cruise-${cruise.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1643,13 +1874,25 @@ export default function TravelDetail() {
                               </div>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditInsurance(insurance)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditInsurance(insurance)}
+                              data-testid={`button-edit-insurance-${insurance.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('insurance', insurance.id)}
+                              data-testid={`button-delete-insurance-${insurance.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1705,13 +1948,25 @@ export default function TravelDetail() {
                             </p>
                             <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditNote(note)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditNote(note)}
+                              data-testid={`button-edit-note-${note.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteClick('note', note.id)}
+                              data-testid={`button-delete-note-${note.id}`}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </Card>
                     ))
@@ -1826,6 +2081,16 @@ export default function TravelDetail() {
         onClose={() => setIsNewTravelModalOpen(false)}
         onSubmit={(data) => updateTravelMutation.mutate(data)}
         isLoading={updateTravelMutation.isPending}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={getDeleteDialogMessage().title}
+        description={getDeleteDialogMessage().description}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
       />
     </div>
   );

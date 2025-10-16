@@ -15,7 +15,7 @@ export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
 
-  const navItems = [
+  const navItems: Array<{ path: string; label: string; icon?: any }> = [
     { path: "/", label: "Viajes" },
     { path: "/clients", label: "Clientes" },
     { path: "/airports", label: "Aeropuertos" },

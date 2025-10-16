@@ -42,7 +42,10 @@ export function DeleteConfirmationDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>
+          <AlertDialogCancel 
+            disabled={isDeleting}
+            data-testid="button-cancel-delete"
+          >
             Cancelar
           </AlertDialogCancel>
           <AlertDialogAction
@@ -52,6 +55,7 @@ export function DeleteConfirmationDialog({
             }}
             disabled={isDeleting}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            data-testid="button-confirm-delete"
           >
             {isDeleting ? "Eliminando..." : "Confirmar eliminación"}
           </AlertDialogAction>
