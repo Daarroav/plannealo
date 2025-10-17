@@ -45,7 +45,7 @@ export function NoteFormModal({
     defaultValues: {
       title: "",
       noteDate: "",
-      noteTime: "",
+      noteTime: "06:00",
       content: "",
       visibleToTravelers: true,
       attachments: [],
@@ -76,7 +76,7 @@ export function NoteFormModal({
       form.reset({
         title: "",
         noteDate: "",
-        noteTime: "",
+        noteTime: "06:00",
         content: "",
         visibleToTravelers: true,
         attachments: [],
@@ -167,7 +167,14 @@ export function NoteFormModal({
   };
 
   const handleClose = () => {
-    form.reset();
+    form.reset({
+      title: "",
+      noteDate: "",
+      noteTime: "06:00",
+      content: "",
+      visibleToTravelers: true,
+      attachments: [],
+    });
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
     
