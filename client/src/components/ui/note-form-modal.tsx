@@ -60,7 +60,7 @@ export function NoteFormModal({
       // Extraer la hora UTC del timestamp (sin conversión a hora local)
       const noteTime = noteDateTime ? 
         `${String(noteDateTime.getUTCHours()).padStart(2, '0')}:${String(noteDateTime.getUTCMinutes()).padStart(2, '0')}` : "";
-      
+
       form.reset({
         title: editingNote.title || "",
         noteDate,
@@ -90,7 +90,7 @@ export function NoteFormModal({
       const files = Array.from(e.target.files || []);
       setAttachedFiles(prev => [...prev, ...files]);
     };
-  
+
 
     const removeFile = (index: number) => {
       setAttachedFiles(prev => prev.filter((_, i) => i !== index));
@@ -115,13 +115,13 @@ export function NoteFormModal({
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add form fields
     if (editingNote) {
       formData.append('id', editingNote.id);
     }
     formData.append('title', currentValues.title);
-    
+
     // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada como UTC)
     if (currentValues.noteTime) {
       // Si hay hora, combinarla con la fecha usando UTC directamente
@@ -135,10 +135,10 @@ export function NoteFormModal({
       const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
       formData.append('noteDate', utcDate.toISOString());
     }
-    
+
     formData.append('content', currentValues.content);
     formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
-    
+
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -177,7 +177,7 @@ export function NoteFormModal({
     });
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
-    
+
     // Force a small delay to ensure any pending mutations complete
     setTimeout(() => {
       onOpenChange(false);
@@ -195,7 +195,7 @@ export function NoteFormModal({
             {editingNote ? "Modifica los detalles de la nota" : "Agrega una nueva nota al itinerario"}
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Título */}
           <div className="space-y-2">
@@ -262,7 +262,7 @@ export function NoteFormModal({
                   onCheckedChange={(checked) => form.setValue("visibleToTravelers", checked)}
                 />
               </div>
-              
+
               {/* Indicador visual del estado */}
               <div className="mt-3 flex items-center space-x-2">
                 <div className={`w-3 h-3 rounded-full ${visibleToTravelers ? 'bg-green-500' : 'bg-gray-400'}`} />
@@ -270,7 +270,7 @@ export function NoteFormModal({
                   {visibleToTravelers ? "Visible para viajeros" : "Solo visible para agentes"}
                 </span>
               </div>
-              
+
               <p className="text-xs text-muted-foreground mt-2">
                 {visibleToTravelers 
                   ? "Los viajeros podrán ver esta nota en su itinerario"
@@ -283,7 +283,7 @@ export function NoteFormModal({
           {/* Documentos Adjuntos */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Documentos</h3>
-            
+
             <div className="border-2 border-dashed border-border rounded-lg p-6">
               <div className="text-center">
                 <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -311,7 +311,7 @@ export function NoteFormModal({
               {(attachedFiles.length > 0 || (editingNote?.attachments && editingNote.attachments.length > 0)) && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Documentos Adjuntos:</h4>
-                  
+
                   {/* Show existing attachments */}
                   {editingNote?.attachments
                     ?.filter((_: string, index: number) => !removedExistingAttachments.includes(index))
@@ -338,7 +338,7 @@ export function NoteFormModal({
                         </div>
                       );
                     })}
-                  
+
                   {/* Show new attachments */}
                   {attachedFiles.map((fileName, index) => (
                     <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
