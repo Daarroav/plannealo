@@ -1954,7 +1954,15 @@ export default function TravelDetail() {
                               <h4 className="font-semibold text-foreground">{note.title}</h4>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              Fecha: {formatDateTime(note.noteDate, true, true)}
+                              Fecha: {new Date(note.noteDate).toLocaleString('es-MX', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'America/Mexico_City'
+                              })}
                             </p>
                             <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                           </div>
