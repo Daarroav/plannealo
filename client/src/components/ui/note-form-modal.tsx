@@ -112,6 +112,7 @@ export function NoteFormModal({
     // Get the most current form values
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
+    console.log("Time value:", currentValues.noteTime);
 
     // Create FormData
     const formData = new FormData();
@@ -123,16 +124,20 @@ export function NoteFormModal({
     formData.append('title', currentValues.title);
 
     // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada como UTC)
-    if (currentValues.noteTime) {
+    const [year, month, day] = currentValues.noteDate.split('-').map(Number);
+    
+    if (currentValues.noteTime && currentValues.noteTime.trim() !== '') {
       // Si hay hora, combinarla con la fecha usando UTC directamente
-      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
-      const [hours, minutes] = currentValues.noteTime.split(':').map(Number);
+      const timeParts = currentValues.noteTime.split(':');
+      const hours = parseInt(timeParts[0], 10);
+      const minutes = parseInt(timeParts[1], 10);
+      console.log("Parsed time - Hours:", hours, "Minutes:", minutes);
       const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
+      console.log("Created UTC date:", utcDate.toISOString());
       formData.append('noteDate', utcDate.toISOString());
     } else {
-      // Si no hay hora, usar medianoche UTC
-      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
-      const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+      // Si no hay hora, usar las 6 AM UTC como predeterminado
+      const utcDate = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
       formData.append('noteDate', utcDate.toISOString());
     }
 
