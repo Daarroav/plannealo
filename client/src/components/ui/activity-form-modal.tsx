@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertActivitySchema } from "@shared/schema";
 import { FileText } from "lucide-react";
+import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
@@ -279,11 +280,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
             </div>
 
             <div>
-              <Label htmlFor="provider">Proveedor/Empresa</Label>
-              <Input
-                id="provider"
-                {...form.register("provider")}
-                placeholder="Ej: Xcaret Expeditions"
+              <ServiceProviderCombobox
+                label="Proveedor/Empresa"
+                value={form.watch("provider") || ""}
+                onChange={(value) => form.setValue("provider", value || "")}
+                placeholder="Seleccionar o crear proveedor..."
               />
             </div>
           </div>
