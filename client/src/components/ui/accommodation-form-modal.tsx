@@ -25,6 +25,10 @@ const accommodationFormSchema = insertAccommodationSchema.extend({
   checkOutDate: z.string().min(1, "La fecha de salida es requerida"),
   checkOutTime: z.string().optional(),
   roomCount: z.number().min(1, "Debe especificar al menos 1 habitación"),
+  name: z.string().min(1, "El nombre del alojamiento es requerido"),
+  type: z.string().min(1, "El tipo de alojamiento es requerido"),
+  location: z.string().min(1, "La ubicación es requerida"),
+  roomType: z.string().min(1, "El tipo de habitación es requerido"),
 }).omit({
   checkIn: true,
   checkOut: true,
@@ -374,6 +378,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 id="name"
                 {...form.register("name")}
                 placeholder="Ej: Hotel Xcaret México"
+                required
               />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive mt-1">
@@ -422,6 +427,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 id="location"
                 {...form.register("location")}
                 placeholder="Ej: Playa del Carmen, Quintana Roo"
+                required
               />
               {form.formState.errors.location && (
                 <p className="text-sm text-destructive mt-1">
@@ -517,6 +523,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 type="number"
                 min="1"
                 {...form.register("roomCount", { valueAsNumber: true })}
+                required
               />
               {form.formState.errors.roomCount && (
                 <p className="text-sm text-destructive mt-1">
@@ -531,6 +538,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 id="roomType"
                 {...form.register("roomType")}
                 placeholder="Ej: Habitación Doble"
+                required
               />
               {form.formState.errors.roomType && (
                 <p className="text-sm text-destructive mt-1">
