@@ -17,6 +17,7 @@ import ReportsPage from "@/pages/reports-page";
 import BackupsPage from "@/pages/backups-page";
 // Importar AirportsPage (assuming it exists)
 import AirportsPage from "@/pages/airports-page";
+import ServiceProvidersPage from "@/pages/service-providers-page";
 
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
       <ProtectedRoute path="/travel/:id" component={TravelDetail} />
       <ProtectedRoute path="/clients" component={ClientsPage} />
       <ProtectedRoute path="/airports" component={AirportsPage} />
+      <ProtectedRoute path="/service-providers" component={ServiceProvidersPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/backups" component={BackupsPage} adminOnly={true} />
       <Route path="/travel/:id/preview" component={TravelPreview} />

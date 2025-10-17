@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { User, Menu, Database } from "lucide-react";
@@ -25,6 +24,9 @@ export function NavigationHeader() {
   if (user?.role === "admin") {
     navItems.push({ path: "/backups", label: "Respaldos", icon: Database });
   }
+
+  // Add service providers to navItems
+  navItems.push({ path: "/service-providers", label: "Proveedores" });
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">

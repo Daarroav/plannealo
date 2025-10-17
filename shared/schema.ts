@@ -180,6 +180,15 @@ export const airports = pgTable("airports", {
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const serviceProviders = pgTable("service_providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // Nombre del proveedor
+  active: boolean("active").notNull().default(true), // Estado activo/inactivo
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -299,6 +308,12 @@ export const insertAirportSchema = createInsertSchema(airports).omit({
   })).min(1, "Debe tener al menos una zona horaria"),
 });
 
+export const insertServiceProviderSchema = createInsertSchema(serviceProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -323,3 +338,5 @@ export type Airport = typeof airports.$inferSelect;
 export type Country = typeof countries.$inferSelect;
 export type State = typeof states.$inferSelect;
 export type City = typeof cities.$inferSelect;
+export type InsertServiceProvider = z.infer<typeof insertServiceProviderSchema>;
+export type ServiceProvider = typeof serviceProviders.$inferSelect;

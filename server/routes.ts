@@ -1538,6 +1538,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== SERVICE PROVIDERS ENDPOINTS ====================
+
+  // Obtener todos los proveedores
+  app.get("/api/service-providers", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { serviceProviders } = await import("../shared/schema");
+      
+      const allProviders = await db
+        .select()
+        .from(serviceProviders)
+        .orderBy(serviceProviders.name);
+        
+      return res.json(allProviders);
+    } catch (error: any) {
+      console.error("Error fetching service providers:", error);
+      return res.status(500).send("Error fetching service providers");
+    }
+  });
+
+  // Crear proveedor
+  app.post("/api/service-providers", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { serviceProviders, insertServiceProviderSchema } = await import("../shared/schema");
+      
+      const validatedData = insertServiceProviderSchema.parse({
+        ...req.body,
+        createdBy: req.user.id,
+      });
+
+      const [newProvider] = await db
+        .insert(serviceProviders)
+        .values(validatedData)
+        .returning();
+
+      return res.json(newProvider);
+    } catch (error: any) {
+      console.error("Error creating service provider:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Actualizar proveedor
+  app.patch("/api/service-providers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { serviceProviders, insertServiceProviderSchema } = await import("../shared/schema");
+      const { id } = req.params;
+      const validatedData = insertServiceProviderSchema.partial().parse(req.body);
+
+      const [updatedProvider] = await db
+        .update(serviceProviders)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(eq(serviceProviders.id, id))
+        .returning();
+
+      if (!updatedProvider) {
+        return res.status(404).send("Service provider not found");
+      }
+
+      return res.json(updatedProvider);
+    } catch (error: any) {
+      console.error("Error updating service provider:", error);
+      return res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Eliminar proveedor (solo si no está asociado)
+  app.delete("/api/service-providers/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { serviceProviders } = await import("../shared/schema");
+      const { id } = req.params;
+
+      // TODO: Verificar si el proveedor está asociado a algún servicio
+      // Por ahora permitimos la eliminación
+      
+      const [deletedProvider] = await db
+        .delete(serviceProviders)
+        .where(eq(serviceProviders.id, id))
+        .returning();
+
+      if (!deletedProvider) {
+        return res.status(404).send("Service provider not found");
+      }
+
+      return res.json({ message: "Service provider deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting service provider:", error);
+      return res.status(500).send("Error deleting service provider");
+    }
+  });
+
   // ==================== AIRPORTS ENDPOINTS ====================
 
   // Obtener todos los aeropuertos
