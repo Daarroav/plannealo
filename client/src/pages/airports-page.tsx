@@ -76,7 +76,13 @@ export default function AirportsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/airports"] });
       setShowModal(false);
       setEditingAirport(null);
-      form.reset();
+      form.reset({
+        airportName: "",
+        iataCode: "",
+        icaoCode: "",
+        latitude: "",
+        longitude: "",
+      });
       setTimezones([{ timezone: "" }]);
       setSelectedCountryId(undefined);
       setSelectedStateId(undefined);
@@ -196,7 +202,13 @@ export default function AirportsPage() {
           </div>
           <Button onClick={() => {
             setEditingAirport(null);
-            form.reset();
+            form.reset({
+              airportName: "",
+              iataCode: "",
+              icaoCode: "",
+              latitude: "",
+              longitude: "",
+            });
             setTimezones([{ timezone: "" }]);
             setSelectedCountryId(undefined);
             setSelectedStateId(undefined);
