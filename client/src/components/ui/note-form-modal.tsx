@@ -57,9 +57,9 @@ export function NoteFormModal({
     if (editingNote) {
       const noteDateTime = editingNote.noteDate ? new Date(editingNote.noteDate) : null;
       const noteDate = noteDateTime ? noteDateTime.toISOString().split('T')[0] : "";
-      // Extraer la hora UTC del timestamp (sin conversión a hora local)
+      // Extraer la hora UTC del timestamp y convertirla a formato de 24 horas para el input
       const noteTime = noteDateTime ? 
-        `${String(noteDateTime.getUTCHours()).padStart(2, '0')}:${String(noteDateTime.getUTCMinutes()).padStart(2, '0')}` : "";
+        noteDateTime.toISOString().split('T')[1].substring(0, 5) : "06:00";
 
       form.reset({
         title: editingNote.title || "",
