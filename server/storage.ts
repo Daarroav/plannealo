@@ -464,14 +464,14 @@ export class DatabaseStorage implements IStorage {
   async createNote(insertNote: InsertNote): Promise<Note> {
     const id = randomUUID();
 
-    const normalized = {
-      ...insertNote,
-      noteDate: DatabaseStorage.normalizeNoteDate(insertNote.noteDate),
-    };
+    // Convertir a Date si es string, pero NO normalizar para preservar la hora exacta
+    const noteDate = insertNote.noteDate instanceof Date 
+      ? insertNote.noteDate 
+      : new Date(insertNote.noteDate);
 
     const [note] = await db
       .insert(notes)
-      .values({ ...normalized, id })
+      .values({ ...insertNote, id, noteDate })
       .returning();
 
     return note;
@@ -485,8 +485,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateNote(id: string, updates: Partial<Note>): Promise<Note> {
+    // Convertir a Date si es string, pero NO normalizar para preservar la hora exacta
     if (updates.noteDate) {
-      updates.noteDate = DatabaseStorage.normalizeNoteDate(updates.noteDate) as any;
+      updates.noteDate = updates.noteDate instanceof Date 
+        ? updates.noteDate 
+        : new Date(updates.noteDate) as any;
     }
 
     const [note] = await db
