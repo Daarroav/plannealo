@@ -181,7 +181,7 @@ export function ShareTravelModal({
                 <h4 className="font-medium text-sm text-blue-800 dark:text-blue-200">📧 Información del envío</h4>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
                   El cliente recibirá un correo con un enlace seguro para ver el itinerario. 
-                  El enlace será válido por 90 días aprox y no requiere crear una cuenta.
+                  El enlace será válido por 90 días aprox. y no requiere crear una cuenta.
                 </p>
               </div>
             </div>
