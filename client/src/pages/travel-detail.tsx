@@ -79,7 +79,7 @@ export default function TravelDetail() {
   const [showShareModal, setShowShareModal] = useState(false);
   const { toast } = useToast();
   const [isNewTravelModalOpen, setIsNewTravelModalOpen] = useState(false);
-  
+
   // Estado para el modal de confirmación de eliminación
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
@@ -851,10 +851,10 @@ export default function TravelDetail() {
     if (!date) return "";
 
     const d = new Date(date);
-    
+
     // Determinar la zona horaria a usar
     let timezone = 'America/Mexico_City'; // Fallback por defecto
-    
+
     if (savedTimezone) {
       // Usar la zona horaria guardada en la base de datos (mayor prioridad)
       timezone = savedTimezone;
@@ -863,7 +863,7 @@ export default function TravelDetail() {
       const iataCode = extractIataCode(cityString || '');
       timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
     }
-    
+
     // Formatear fecha y hora en la zona horaria correcta
     const dateFmt = new Intl.DateTimeFormat("es-MX", {
       day: "2-digit",
@@ -896,11 +896,11 @@ export default function TravelDetail() {
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
   const formatTime12h = (time24: string | null): string => {
     if (!time24) return "N/A";
-    
+
     const [hours, minutes] = time24.split(':').map(Number);
     const period = hours >= 12 ? 'p. m.' : 'a. m.';
     const hours12 = hours % 12 || 12;
-    
+
     return `${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
@@ -1487,7 +1487,7 @@ export default function TravelDetail() {
                       const dateA = new Date(a.date).getTime();
                       const dateB = new Date(b.date).getTime();
                       if (dateA !== dateB) return dateA - dateB;
-                      
+
                       // Si las fechas son iguales, ordenar por hora de inicio
                       if (a.startTime && b.startTime) {
                         return a.startTime.localeCompare(b.startTime);
@@ -1954,7 +1954,7 @@ export default function TravelDetail() {
                               <h4 className="font-semibold text-foreground">{note.title}</h4>
                             </div>
                             <p className="text-sm text-muted-foreground mb-2">
-                              Fecha: {formatDateTime(note.noteDate, false, true)}
+                              Fecha: {formatDateTime(note.noteDate, true, true)}
                             </p>
                             <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                           </div>

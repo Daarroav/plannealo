@@ -1096,10 +1096,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
+          // Parse the ISO string to Date object, preserving the UTC timestamp
+          const parsedDate = new Date(noteDate);
+          console.log("Received noteDate:", noteDate);
+          console.log("Parsed to Date object:", parsedDate.toISOString());
+
           const noteData = {
             travelId: req.params.id,
             title: title,
-            noteDate: new Date(noteDate), // Convert to Date object
+            noteDate: parsedDate, // Use the parsed Date object
             content: content,
             visibleToTravelers: visibleToTravelers === 'true',
             attachments: attachments,
@@ -1108,8 +1113,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Note data before validation:", noteData);
 
           const validated = insertNoteSchema.parse(noteData);
+          
+          console.log("Validated note data (after schema):", {
+            ...validated,
+            noteDate: validated.noteDate.toISOString()
+          });
 
           const note = await storage.createNote(validated);
+          console.log("Note created with timestamp:", note.noteDate);
+          
           res.status(201).json(note);
         } catch (error: any) {
           console.error("Error creating note:", error);
@@ -1165,9 +1177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           delete updateData.existingAttachments;
           delete updateData.removedExistingAttachments;
 
-          // Convert date if provided
+          // Convert date if provided - preserve the exact UTC timestamp
           if (updateData.noteDate) {
-            updateData.noteDate = new Date(updateData.noteDate);
+            const parsedDate = new Date(updateData.noteDate);
+            console.log("Updating note with date - received:", updateData.noteDate, "parsed:", parsedDate.toISOString());
+            updateData.noteDate = parsedDate;
           }
 
           // Remove undefined values to avoid "No values to set" error
@@ -1181,7 +1195,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(400).json({ message: "No data provided for update" });
           }
 
+          console.log("Updating note with data:", {
+            ...updateData,
+            noteDate: updateData.noteDate?.toISOString?.() || updateData.noteDate
+          });
+
           const note = await storage.updateNote(req.params.noteId, updateData);
+          console.log("Updated note timestamp:", note.noteDate);
+          
           res.json(note);
         } catch (error) {
           console.error("Error updating note:", error);
