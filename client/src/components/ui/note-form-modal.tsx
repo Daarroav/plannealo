@@ -123,20 +123,19 @@ export function NoteFormModal({
     }
     formData.append('title', currentValues.title);
 
-    // Combinar fecha y hora en un solo timestamp (manteniendo la hora exacta ingresada como UTC)
-    const [year, month, day] = currentValues.noteDate.split('-').map(Number);
-    
+    // Combinar fecha y hora en un solo timestamp
     if (currentValues.noteTime && currentValues.noteTime.trim() !== '') {
-      // Si hay hora, combinarla con la fecha usando UTC directamente
-      const timeParts = currentValues.noteTime.split(':');
-      const hours = parseInt(timeParts[0], 10);
-      const minutes = parseInt(timeParts[1], 10);
-      console.log("Parsed time - Hours:", hours, "Minutes:", minutes);
-      const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0));
-      console.log("Created UTC date:", utcDate.toISOString());
-      formData.append('noteDate', utcDate.toISOString());
+      // Crear el timestamp combinando fecha y hora directamente
+      const dateTimeString = `${currentValues.noteDate}T${currentValues.noteTime}:00`;
+      const localDate = new Date(dateTimeString);
+      
+      console.log("DateTime string:", dateTimeString);
+      console.log("Local date:", localDate.toISOString());
+      
+      formData.append('noteDate', localDate.toISOString());
     } else {
       // Si no hay hora, usar las 6 AM UTC como predeterminado
+      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
       const utcDate = new Date(Date.UTC(year, month - 1, day, 6, 0, 0));
       formData.append('noteDate', utcDate.toISOString());
     }
