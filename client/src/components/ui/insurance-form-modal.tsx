@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { insertInsuranceSchema } from "@shared/schema";
+import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 
 
 // Form validation schema - extends the base schema with date string handling
@@ -210,11 +211,11 @@ export function InsuranceFormModal({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Proveedor */}
               <div className="space-y-2">
-                <Label htmlFor="provider">Proveedor *</Label>
-                <Input
-                  {...form.register("provider")}
-                  placeholder="Ej: AXA, Mapfre, Allianz"
-                  className={form.formState.errors.provider ? "border-red-500" : ""}
+                <ServiceProviderCombobox
+                  label="Proveedor *"
+                  value={form.watch("provider") || ""}
+                  onChange={(value) => form.setValue("provider", value || "")}
+                  placeholder="Seleccionar o crear proveedor..."
                 />
                 {form.formState.errors.provider && (
                   <p className="text-sm text-red-500">{form.formState.errors.provider.message}</p>

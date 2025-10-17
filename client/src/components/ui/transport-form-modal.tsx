@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertTransportSchema } from "@shared/schema";
+import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
@@ -275,11 +276,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
           {/* Provider and Confirmation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="provider">Proveedor</Label>
-              <Input
-                id="provider"
-                {...form.register("provider")}
-                placeholder="Empresa o nombre del proveedor"
+              <ServiceProviderCombobox
+                label="Proveedor"
+                value={form.watch("provider") || ""}
+                onChange={(value) => form.setValue("provider", value || "")}
+                placeholder="Seleccionar o crear proveedor..."
               />
             </div>
 
