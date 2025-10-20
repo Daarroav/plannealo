@@ -22,6 +22,7 @@ export function NavigationHeader() {
 
   const navItems: Array<{ path: string; label: string; icon?: any }> = [
     { path: "/", label: "Viajes", icon: Plane },
+    { path: "/reports", label: "Reportes" },
   ];
 
   if (user?.role === "admin") {
