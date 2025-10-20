@@ -216,12 +216,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
 
-      app.post("/api/travels", async (req, res) => {
+      app.post("/api/travels", upload.single('coverImage'), async (req, res) => {
         if (!req.isAuthenticated()) {
           return res.sendStatus(401);
         }
 
         console.log("Request body:", req.body);
+        console.log("Cover image file:", req.file);
         try {
           const { clientEmail, ...travelData } = req.body;
 
@@ -256,6 +257,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
 
           const travel = await storage.createTravel(validated);
+          
+          // Handle cover image upload if provided
+          if (req.file) {
+            try {
+              const objectStorageService = new ObjectStorageService();
+              const uploadURL = await objectStorageService.uploadObjectFromBuffer(
+                req.file.buffer,
+                `uploads/${req.file.originalname}`,
+                req.file.mimetype
+              );
+
+              // Set ACL policy for public access
+              const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+                uploadURL,
+                {
+                  owner: "system",
+                  visibility: "public",
+                }
+              );
+
+              // Update travel with cover image path
+              await storage.updateTravel(travel.id, { ...travel, coverImage: objectPath });
+              travel.coverImage = objectPath;
+            } catch (error) {
+              console.error("Error uploading cover image:", error);
+              // Don't fail the whole operation if image upload fails
+            }
+          }
+          
           res.status(201).json(travel);
         } catch (error) {
           console.error("Error creating travel:", error);
