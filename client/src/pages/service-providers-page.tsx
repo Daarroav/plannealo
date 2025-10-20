@@ -24,6 +24,8 @@ export default function ServiceProvidersPage() {
   const form = useForm({
     defaultValues: {
       name: "",
+      contactName: "",
+      contactPhone: "",
       active: true,
     },
   });
@@ -104,6 +106,8 @@ export default function ServiceProvidersPage() {
     setEditingProvider(provider);
     form.reset({
       name: provider.name,
+      contactName: provider.contactName || "",
+      contactPhone: provider.contactPhone || "",
       active: provider.active,
     });
     setShowModal(true);
@@ -133,7 +137,7 @@ export default function ServiceProvidersPage() {
           </div>
           <Button onClick={() => {
             setEditingProvider(null);
-            form.reset({ name: "", active: true });
+            form.reset({ name: "", contactName: "", contactPhone: "", active: true });
             setShowModal(true);
           }}>
             <Plus className="w-4 h-4 mr-2" />
@@ -178,6 +182,16 @@ export default function ServiceProvidersPage() {
                         {provider.active ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
+                    {provider.contactName && (
+                      <div className="text-muted-foreground">
+                        <span className="font-medium">Contacto:</span> {provider.contactName}
+                      </div>
+                    )}
+                    {provider.contactPhone && (
+                      <div className="text-muted-foreground">
+                        <span className="font-medium">Teléfono:</span> {provider.contactPhone}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
@@ -216,6 +230,24 @@ export default function ServiceProvidersPage() {
                   id="name"
                   {...form.register("name", { required: true })}
                   placeholder="Ej: Viajes Internacionales SA"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="contactName">Nombre del Contacto</Label>
+                <Input
+                  id="contactName"
+                  {...form.register("contactName")}
+                  placeholder="Ej: Juan Pérez"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="contactPhone">Número de Contacto</Label>
+                <Input
+                  id="contactPhone"
+                  {...form.register("contactPhone")}
+                  placeholder="Ej: +52 984 123 4567"
                 />
               </div>
               

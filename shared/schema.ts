@@ -183,6 +183,8 @@ export const airports = pgTable("airports", {
 export const serviceProviders = pgTable("service_providers", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(), // Nombre del proveedor
+  contactName: text("contact_name"), // Nombre del contacto (opcional)
+  contactPhone: text("contact_phone"), // Número de contacto (opcional)
   active: boolean("active").notNull().default(true), // Estado activo/inactivo
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
