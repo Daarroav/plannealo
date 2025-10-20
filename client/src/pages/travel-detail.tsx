@@ -1514,7 +1514,7 @@ export default function TravelDetail() {
                               <span className="font-medium">Contacto:</span> {activity.contactName || "N/A"}
                              </div>
                              <div>
-                              <span className="font-medium">Teléfono contacto:</span> {activity.contactPhone ? formatPhoneNumber(activity.contactPhone) : "N/A"}
+                              <span className="font-medium">Teléfono contacto:</span> {activity.contactPhone || "N/A"}
                              </div>
                             </div>
 

@@ -498,7 +498,7 @@ export default function TravelPreview() {
                     Teléfono contacto
                   </div>
                   <div className="text-gray-900">
-                    {formatPhoneNumber(event.data.contactPhone)}
+                    {event.data.contactPhone}
                   </div>
                 </div>
               )}
