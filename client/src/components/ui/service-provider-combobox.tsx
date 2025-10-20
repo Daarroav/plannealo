@@ -27,7 +27,7 @@ interface ServiceProvider {
 
 interface ServiceProviderComboboxProps {
   value?: string; // Nombre del proveedor seleccionado
-  onChange: (value: string | undefined) => void;
+  onChange: (value: string | undefined, provider?: ServiceProvider) => void;
   placeholder?: string;
   disabled?: boolean;
   label?: string;
@@ -63,7 +63,7 @@ export function ServiceProviderCombobox({
     },
     onSuccess: (newProvider) => {
       queryClient.invalidateQueries({ queryKey: ["/api/service-providers"] });
-      onChange(newProvider.name);
+      onChange(newProvider.name, newProvider);
       setSearchValue("");
       setOpen(false);
     },
@@ -82,7 +82,8 @@ export function ServiceProviderCombobox({
     );
 
   const handleSelect = (providerName: string) => {
-    onChange(providerName === value ? undefined : providerName);
+    const selectedProvider = providers.find(p => p.name === providerName);
+    onChange(providerName === value ? undefined : providerName, selectedProvider);
     setOpen(false);
     setSearchValue("");
   };

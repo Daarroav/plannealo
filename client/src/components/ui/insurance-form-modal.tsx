@@ -139,6 +139,29 @@ export function InsuranceFormModal({
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
 
+    // Actualizar proveedor solo si emergencyNumber está lleno y ambos campos del proveedor están vacíos
+    if (currentValues.provider && currentValues.emergencyNumber) {
+      try {
+        const providersResponse = await fetch('/api/service-providers', { credentials: 'include' });
+        const providers = await providersResponse.json();
+        const selectedProvider = providers.find((p: any) => p.name === currentValues.provider);
+        
+        // Solo actualizar si ambos campos del proveedor están vacíos
+        if (selectedProvider && !selectedProvider.contactName && !selectedProvider.contactPhone) {
+          await fetch(`/api/service-providers/${selectedProvider.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              contactPhone: currentValues.emergencyNumber,
+            }),
+          });
+        }
+      } catch (error) {
+        console.error('Error updating provider contact:', error);
+      }
+    }
+
     // Combine date and time for effective date
     const effectiveDateTime = currentValues.effectiveTime 
       ? new Date(`${currentValues.effectiveDate}T${currentValues.effectiveTime}`)
@@ -214,7 +237,13 @@ export function InsuranceFormModal({
                 <ServiceProviderCombobox
                   label="Proveedor *"
                   value={form.watch("provider") || ""}
-                  onChange={(value) => form.setValue("provider", value || "")}
+                  onChange={(value, provider) => {
+                    form.setValue("provider", value || "");
+                    // Auto-llenar número de emergencia (contactPhone del proveedor)
+                    if (provider?.contactPhone) {
+                      form.setValue("emergencyNumber", provider.contactPhone);
+                    }
+                  }}
                   placeholder="Seleccionar o crear proveedor..."
                 />
                 {form.formState.errors.provider && (

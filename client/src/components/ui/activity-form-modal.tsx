@@ -148,6 +148,30 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
 
     console.info("Form values:", currentValues);
     
+    // Actualizar proveedor solo si ambos campos están vacíos
+    if (currentValues.provider && currentValues.contactName && currentValues.contactPhone) {
+      try {
+        const providersResponse = await fetch('/api/service-providers', { credentials: 'include' });
+        const providers = await providersResponse.json();
+        const selectedProvider = providers.find((p: any) => p.name === currentValues.provider);
+        
+        // Solo actualizar si ambos campos del proveedor están vacíos
+        if (selectedProvider && !selectedProvider.contactName && !selectedProvider.contactPhone) {
+          await fetch(`/api/service-providers/${selectedProvider.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              contactName: currentValues.contactName,
+              contactPhone: currentValues.contactPhone,
+            }),
+          });
+        }
+      } catch (error) {
+        console.error('Error updating provider contact:', error);
+      }
+    }
+    
     // Combine date and time for the activity
     const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
 
@@ -283,7 +307,18 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
               <ServiceProviderCombobox
                 label="Proveedor/Empresa"
                 value={form.watch("provider") || ""}
-                onChange={(value) => form.setValue("provider", value || "")}
+                onChange={(value, provider) => {
+                  form.setValue("provider", value || "");
+                  // Auto-llenar contacto solo si el proveedor tiene datos
+                  if (provider?.contactName || provider?.contactPhone) {
+                    if (provider.contactName) {
+                      form.setValue("contactName", provider.contactName);
+                    }
+                    if (provider.contactPhone) {
+                      form.setValue("contactPhone", provider.contactPhone);
+                    }
+                  }
+                }}
                 placeholder="Seleccionar o crear proveedor..."
               />
             </div>
