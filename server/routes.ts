@@ -261,21 +261,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Handle cover image upload if provided
           if (req.file) {
             try {
-              const objectStorageService = new ObjectStorageService();
-              const uploadURL = await objectStorageService.uploadObjectFromBuffer(
-                req.file.buffer,
-                `uploads/${req.file.originalname}`,
-                req.file.mimetype
-              );
-
+              // Upload file to object storage
+              const objectPath = await uploadFileToObjectStorage(req.file, 'covers');
+              
               // Set ACL policy for public access
-              const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-                uploadURL,
-                {
-                  owner: "system",
+              const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+              await objectFile.setMetadata({
+                metadata: {
                   visibility: "public",
+                  owner: "system",
                 }
-              );
+              });
 
               // Update travel with cover image path
               await storage.updateTravel(travel.id, { ...travel, coverImage: objectPath });

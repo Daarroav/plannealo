@@ -41,38 +41,33 @@ export default function HomePage() {
   const createTravelMutation = useMutation({
     mutationFn: async (data: any) => {
       const { _selectedImage, ...travelData } = data;
-      const response = await apiRequest("POST", "/api/travels", travelData);
-      const travel = await response.json();
-
-      // If there's a selected image, upload it
+      
+      // Create FormData to include the image
+      const formData = new FormData();
+      
+      // Add all travel data fields
+      Object.keys(travelData).forEach(key => {
+        formData.append(key, travelData[key]);
+      });
+      
+      // Add cover image if provided
       if (_selectedImage) {
-        try {
-          // Get upload URL
-          const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
-          const { uploadURL } = await uploadResponse.json();
-
-          // Upload the image to object storage
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: _selectedImage,
-            headers: {
-              'Content-Type': _selectedImage.type,
-            },
-          });
-
-          if (uploadResult.ok) {
-            // Update travel with cover image
-            await apiRequest("PUT", `/api/travels/${travel.id}/cover-image`, {
-              coverImageURL: uploadURL,
-            });
-          }
-        } catch (error) {
-          console.error("Error uploading cover image:", error);
-          // Don't fail the whole operation if image upload fails
-        }
+        formData.append('coverImage', _selectedImage);
       }
 
-      return travel;
+      // Send with fetch since we're using FormData
+      const response = await fetch("/api/travels", {
+        method: "POST",
+        body: formData,
+        credentials: "include", // Important for session cookies
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error creating travel");
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
