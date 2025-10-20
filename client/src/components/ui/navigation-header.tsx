@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { User, Menu, Database, ChevronDown } from "lucide-react";
+import { User, Menu, Database, ChevronDown, Plane, Users, PlaneTakeoff, Handshake } from "lucide-react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
 import {
@@ -15,13 +15,13 @@ export function NavigationHeader() {
   const [location] = useLocation();
 
   const catalogItems = [
-    { path: "/clients", label: "Clientes" },
-    { path: "/airports", label: "Aeropuertos" },
-    { path: "/service-providers", label: "Proveedores" },
+    { path: "/clients", label: "Clientes", icon: Users },
+    { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
+    { path: "/service-providers", label: "Proveedores", icon: Handshake },
   ];
 
   const navItems: Array<{ path: string; label: string; icon?: any }> = [
-    { path: "/", label: "Viajes" },
+    { path: "/", label: "Viajes", icon: Plane },
   ];
 
   if (user?.role === "admin") {
@@ -73,10 +73,11 @@ export function NavigationHeader() {
                   <DropdownMenuItem key={item.path} asChild>
                     <Link
                       to={item.path}
-                      className={`cursor-pointer ${
+                      className={`cursor-pointer flex items-center gap-2 ${
                         location === item.path ? "bg-accent text-accent-foreground" : ""
                       }`}
                     >
+                      {item.icon && <item.icon className="h-4 w-4" />}
                       {item.label}
                     </Link>
                   </DropdownMenuItem>
@@ -114,10 +115,11 @@ export function NavigationHeader() {
                   <DropdownMenuItem key={item.path} asChild>
                     <Link
                       to={item.path}
-                      className={`cursor-pointer pl-6 ${
+                      className={`cursor-pointer pl-6 flex items-center gap-2 ${
                         location === item.path ? "bg-accent text-accent-foreground" : ""
                       }`}
                     >
+                      {item.icon && <item.icon className="h-4 w-4" />}
                       {item.label}
                     </Link>
                   </DropdownMenuItem>
