@@ -40,23 +40,12 @@ export default function HomePage() {
 
   const createTravelMutation = useMutation({
     mutationFn: async (data: any) => {
-      const startDate = new Date(data.startDate);
-      const endDate = new Date(data.endDate);
-      const selectedImage = data._selectedImage;
-
-      // First create the travel
-      const response = await apiRequest("POST", "/api/travels", {
-        name: data.name,
-        clientName: data.clientName,
-        clientEmail: data.clientEmail,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        travelers: data.travelers,
-      });
+      const { _selectedImage, ...travelData } = data;
+      const response = await apiRequest("POST", "/api/travels", travelData);
       const travel = await response.json();
 
       // If there's a selected image, upload it
-      if (selectedImage) {
+      if (_selectedImage) {
         try {
           // Get upload URL
           const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
@@ -65,9 +54,9 @@ export default function HomePage() {
           // Upload the image to object storage
           const uploadResult = await fetch(uploadURL, {
             method: 'PUT',
-            body: selectedImage,
+            body: _selectedImage,
             headers: {
-              'Content-Type': selectedImage.type,
+              'Content-Type': _selectedImage.type,
             },
           });
 
@@ -115,9 +104,9 @@ export default function HomePage() {
     .filter(travel => {
       const matchesSearch = travel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            travel.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const isPast = isPastTravel(travel);
-      
+
       let matchesStatus = false;
       if (statusFilter === "current") {
         // Actuales: viajes vigentes (publicados o borradores)
@@ -132,7 +121,7 @@ export default function HomePage() {
         // Pasados: todos los viajes pasados (cualquier estado)
         matchesStatus = isPast;
       }
-      
+
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
