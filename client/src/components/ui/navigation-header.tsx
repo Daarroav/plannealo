@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { User, Menu, Database } from "lucide-react";
+import { User, Menu, Database, ChevronDown } from "lucide-react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
 import {
@@ -14,19 +14,19 @@ export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
 
-  const navItems: Array<{ path: string; label: string; icon?: any }> = [
-    { path: "/", label: "Viajes" },
+  const catalogItems = [
     { path: "/clients", label: "Clientes" },
     { path: "/airports", label: "Aeropuertos" },
-    { path: "/reports", label: "Reportes" },
+    { path: "/service-providers", label: "Proveedores" },
+  ];
+
+  const navItems: Array<{ path: string; label: string; icon?: any }> = [
+    { path: "/", label: "Viajes" },
   ];
 
   if (user?.role === "admin") {
     navItems.push({ path: "/backups", label: "Respaldos", icon: Database });
   }
-
-  // Add service providers to navItems
-  navItems.push({ path: "/service-providers", label: "Proveedores" });
 
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
@@ -55,6 +55,34 @@ export function NavigationHeader() {
                 {item.label}
               </Link>
             ))}
+            
+            {/* Menú de Catálogos */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium flex items-center gap-2 ${
+                    catalogItems.some(item => location === item.path) ? "border-b-2 border-accent" : ""
+                  }`}
+                >
+                  Catálogos
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {catalogItems.map((item) => (
+                  <DropdownMenuItem key={item.path} asChild>
+                    <Link
+                      to={item.path}
+                      className={`cursor-pointer ${
+                        location === item.path ? "bg-accent text-accent-foreground" : ""
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           {/* Menú dropdown para pantallas medianas y pequeñas */}
@@ -75,6 +103,21 @@ export function NavigationHeader() {
                       }`}
                     >
                       {item.icon && <item.icon className="h-4 w-4" />}
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground">
+                  Catálogos
+                </DropdownMenuItem>
+                {catalogItems.map((item) => (
+                  <DropdownMenuItem key={item.path} asChild>
+                    <Link
+                      to={item.path}
+                      className={`cursor-pointer pl-6 ${
+                        location === item.path ? "bg-accent text-accent-foreground" : ""
+                      }`}
+                    >
                       {item.label}
                     </Link>
                   </DropdownMenuItem>
