@@ -59,20 +59,20 @@ export function NoteFormModal({
       
       // Convertir a hora de México para mostrar en el input
       if (noteDateTime) {
-        // Obtener fecha y hora en zona horaria de México
-        const mexicoDateStr = noteDateTime.toLocaleString('en-CA', {
-          timeZone: 'America/Mexico_City',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }).split(', ')[0]; // Formato: YYYY-MM-DD
+        // La fecha viene en UTC, necesitamos restar 6 horas para obtener hora de México
+        const mexicoTime = new Date(noteDateTime.getTime() - (6 * 60 * 60 * 1000));
         
-        const mexicoTimeStr = noteDateTime.toLocaleString('en-US', {
-          timeZone: 'America/Mexico_City',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        }); // Formato: HH:MM
+        const year = mexicoTime.getUTCFullYear();
+        const month = String(mexicoTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(mexicoTime.getUTCDate()).padStart(2, '0');
+        const hours = String(mexicoTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(mexicoTime.getUTCMinutes()).padStart(2, '0');
+        
+        const mexicoDateStr = `${year}-${month}-${day}`;
+        const mexicoTimeStr = `${hours}:${minutes}`;
+
+        console.log("UTC guardado:", noteDateTime.toISOString());
+        console.log("Convertido a México:", mexicoDateStr, mexicoTimeStr);
 
         form.reset({
           title: editingNote.title || "",
@@ -149,23 +149,14 @@ export function NoteFormModal({
     // Combinar fecha y hora en un solo timestamp (convertir de hora de México a UTC)
     if (currentValues.noteTime && currentValues.noteTime.trim() !== '') {
       // Parsear fecha y hora ingresadas (asumimos que están en hora de México)
-      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
       const [hours, minutes] = currentValues.noteTime.split(':').map(Number);
+      const [year, month, day] = currentValues.noteDate.split('-').map(Number);
       
-      // Crear fecha en zona horaria de México
-      const mexicoDateString = `${currentValues.noteDate}T${currentValues.noteTime}:00`;
+      // Crear la fecha en UTC directamente sumando 6 horas (México es UTC-6)
+      // Si el usuario ingresa 9:00 AM hora de México, en UTC son las 15:00 (3:00 PM)
+      const utcDate = new Date(Date.UTC(year, month - 1, day, hours + 6, minutes, 0));
       
-      // Convertir a UTC: crear la fecha interpretándola como hora de México
-      const mexicoDate = new Date(mexicoDateString);
-      
-      // Obtener el offset de México en minutos
-      const mexicoOffset = 6 * 60; // UTC-6 para hora estándar de México
-      
-      // Ajustar a UTC sumando el offset
-      const utcTimestamp = mexicoDate.getTime() + (mexicoOffset * 60 * 1000);
-      const utcDate = new Date(utcTimestamp);
-      
-      console.log("Fecha/hora México ingresada:", mexicoDateString);
+      console.log("Fecha/hora México ingresada:", `${currentValues.noteDate} ${currentValues.noteTime}`);
       console.log("Convertida a UTC:", utcDate.toISOString());
       
       formData.append('noteDate', utcDate.toISOString());
