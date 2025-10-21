@@ -221,30 +221,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.sendStatus(401);
         }
 
+        console.log("=== INICIO CREAR VIAJE ===");
         console.log("Request body:", req.body);
         console.log("Cover image file:", req.file);
+        
         try {
           const { clientEmail, ...travelData } = req.body;
 
+          // Convertir travelers a número
+          if (travelData.travelers && typeof travelData.travelers === 'string') {
+            travelData.travelers = parseInt(travelData.travelers, 10);
+            console.log("Travelers convertido a número:", travelData.travelers);
+          }
+
           // Verificar si el cliente ya existe
           let client = await storage.getUserByUsername(clientEmail);
-          console.log("Client:", client);
+          console.log("Cliente encontrado/creado:", client?.id);
 
           // Si no existe, crear un nuevo usuario cliente
           if (!client) {
-            // Generar una contraseña temporal segura
             const tempPassword = Math.random().toString(36).slice(-8);
-
-
             client = await storage.createUser({
               username: clientEmail,
-              password: tempPassword, // La contraseña se hasheará en el storage
+              password: tempPassword,
               name: req.body.clientName,
               role: 'client',
             });
-
-            // Aquí podrías enviar un correo al cliente con sus credenciales
-            // await emailService.sendWelcomeEmail(clientEmail, tempPassword);
+            console.log("Nuevo cliente creado con ID:", client.id);
           }
 
           const validated = insertTravelSchema.parse({
@@ -256,15 +259,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             endDate: new Date(travelData.endDate),
           });
 
+          console.log("Datos validados, creando viaje...");
           const travel = await storage.createTravel(validated);
+          console.log("Viaje creado con ID:", travel.id);
           
           // Handle cover image upload if provided
           if (req.file) {
+            console.log("=== PROCESANDO IMAGEN DE PORTADA ===");
+            console.log("Nombre del archivo:", req.file.originalname);
+            console.log("Tamaño:", req.file.size, "bytes");
+            console.log("Tipo MIME:", req.file.mimetype);
+            
             try {
               // Upload file to object storage
+              console.log("Subiendo archivo a Object Storage...");
               const objectPath = await uploadFileToObjectStorage(req.file, 'covers');
+              console.log("Archivo subido exitosamente. Object Path:", objectPath);
               
               // Set ACL policy for public access
+              console.log("Configurando permisos públicos...");
               const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
               await objectFile.setMetadata({
                 metadata: {
@@ -272,19 +285,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   owner: "system",
                 }
               });
+              console.log("Permisos configurados correctamente");
 
               // Update travel with cover image path
+              console.log("Actualizando viaje con coverImage:", objectPath);
               await storage.updateTravel(travel.id, { ...travel, coverImage: objectPath });
               travel.coverImage = objectPath;
+              console.log("Viaje actualizado exitosamente con coverImage");
             } catch (error) {
-              console.error("Error uploading cover image:", error);
+              console.error("❌ ERROR al procesar imagen de portada:", error);
+              console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack available');
               // Don't fail the whole operation if image upload fails
             }
+          } else {
+            console.log("⚠️ No se recibió archivo de imagen de portada");
           }
+          
+          console.log("=== VIAJE CREADO EXITOSAMENTE ===");
+          console.log("ID:", travel.id);
+          console.log("Cover Image:", travel.coverImage || "Sin imagen");
           
           res.status(201).json(travel);
         } catch (error) {
-          console.error("Error creating travel:", error);
+          console.error("❌ ERROR CREANDO VIAJE:", error);
+          console.error("Error details:", error instanceof Error ? error.message : 'Unknown error');
           res.status(400).json({
             message: "Error creating travel",
             error: error instanceof Error ? error.message : 'Unknown error'

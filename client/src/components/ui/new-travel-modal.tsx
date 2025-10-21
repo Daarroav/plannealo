@@ -223,7 +223,11 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
                 <Label htmlFor="travelers">Número de Viajeros *</Label>
                 <Select
                   value={travelers.toString()}
-                  onValueChange={(value) => form.setValue("travelers", parseInt(value))}
+                  onValueChange={(value) => {
+                    const numValue = parseInt(value, 10);
+                    console.log("Setting travelers to:", numValue);
+                    form.setValue("travelers", numValue);
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar..." />
