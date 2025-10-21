@@ -316,13 +316,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      app.put("/api/travels/:id", async (req, res) => {
+      app.put("/api/travels/:id", upload.single('coverImage'), async (req, res) => {
         // check if the user is authenticated
         if (!req.isAuthenticated()) {
           return res.sendStatus(401);
         }
 
-
+        console.log("=== INICIO EDITAR VIAJE ===");
+        console.log("Request body:", req.body);
+        console.log("Cover image file:", req.file);
 
         try {
           const travel = await storage.getTravel(req.params.id); // Get travel by id
@@ -347,10 +349,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
               username: req.body.clientEmail,
             });
           }
+
+          // Handle cover image upload if provided
+          if (req.file) {
+            console.log("=== PROCESANDO IMAGEN DE PORTADA (EDICIÓN) ===");
+            console.log("Nombre del archivo:", req.file.originalname);
+            console.log("Tamaño:", req.file.size, "bytes");
+            console.log("Tipo MIME:", req.file.mimetype);
+            
+            try {
+              // Upload file to object storage
+              console.log("Subiendo archivo a Object Storage...");
+              const objectPath = await uploadFileToObjectStorage(req.file, 'covers');
+              console.log("Archivo subido exitosamente. Object Path:", objectPath);
+              
+              // Set ACL policy for public access
+              console.log("Configurando permisos públicos...");
+              const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+              await objectFile.setMetadata({
+                metadata: {
+                  visibility: "public",
+                  owner: "system",
+                }
+              });
+              console.log("Permisos configurados correctamente");
+
+              // Update travel with cover image path
+              console.log("Actualizando viaje con coverImage:", objectPath);
+              await storage.updateTravel(req.params.id, { ...updated, coverImage: objectPath });
+              updated.coverImage = objectPath;
+              console.log("Viaje actualizado exitosamente con coverImage");
+            } catch (error) {
+              console.error("❌ ERROR al procesar imagen de portada:", error);
+              console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack available');
+              // Don't fail the whole operation if image upload fails
+            }
+          }
+
+          console.log("=== VIAJE EDITADO EXITOSAMENTE ===");
+          console.log("ID:", updated.id);
+          console.log("Cover Image:", updated.coverImage || "Sin cambios en imagen");
+
           res.json(updated);
         } catch (error) {
-          console.error("Error updating travel:", error);
-          res.status(500).json({ message: "Error updating travel" });
+          console.error("❌ ERROR EDITANDO VIAJE:", error);
+          console.error("Error details:", error instanceof Error ? error.message : 'Unknown error');
+          res.status(500).json({ 
+            message: "Error updating travel",
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
         }
       });
 

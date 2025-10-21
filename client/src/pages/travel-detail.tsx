@@ -99,42 +99,41 @@ export default function TravelDetail() {
   const updateTravelMutation = useMutation({
     mutationFn: async (data: any) => {
       const { _selectedImage, ...travelData } = data;
-      const response = await apiRequest("PUT", `/api/travels/${travelId}`, travelData);
-      const travel = await response.json();
-
-      // If there's a selected image, upload it
-      if (_selectedImage) {
-        try {
-          // Get upload URL
-          const uploadResponse = await apiRequest("POST", "/api/objects/upload", {});
-          const { uploadURL } = await uploadResponse.json();
-
-          // Upload the image to object storage
-          const uploadResult = await fetch(uploadURL, {
-            method: 'PUT',
-            body: _selectedImage,
-            headers: {
-              'Content-Type': _selectedImage.type,
-            },
-          });
-
-          if (uploadResult.ok) {
-            // Update travel with cover image
-            await apiRequest("PUT", `/api/travels/${travelId}/cover-image`, {
-              coverImageURL: uploadURL,
-            });
-          }
-        } catch (error) {
-          console.error("Error uploading cover image:", error);
-          // Don't fail the whole operation if image upload fails
+      
+      // Create FormData to send both data and image
+      const formData = new FormData();
+      
+      // Add all travel data fields
+      Object.keys(travelData).forEach(key => {
+        if (travelData[key] !== undefined && travelData[key] !== null) {
+          formData.append(key, travelData[key]);
         }
+      });
+      
+      // Add cover image if provided
+      if (_selectedImage) {
+        console.log("Agregando imagen al FormData:", _selectedImage.name);
+        formData.append('coverImage', _selectedImage);
       }
-
-      return travel;
+      
+      // Send the request
+      const response = await fetch(`/api/travels/${travelId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error updating travel');
+      }
+      
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "full"] });
       setIsNewTravelModalOpen(false);
       toast({
         title: "Viaje actualizado",
