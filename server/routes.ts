@@ -429,22 +429,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get complete travel data with all related entities
       app.get("/api/travels/:id/full", async (req, res) => {
-        if (!req.isAuthenticated()) {
-          return res.sendStatus(401);
-        }
-
         try {
           const travel = await storage.getTravel(req.params.id);
           if (!travel) {
             return res.status(404).json({ message: "Travel not found" });
           }
 
-          // Condiciones para el acceso al viaje
-          const isOwner = travel.createdBy === req.user!.id;
-          const isAdmin = req.user!.role === "admin";
+          // Verificar si hay un token público en los query params
+          const publicToken = req.query.token as string | undefined;
+          
+          // Caso 1: Acceso con token público válido (sin necesidad de login)
+          if (publicToken) {
+            // Verificar que el token coincida y no haya expirado
+            if (!travel.publicToken || travel.publicToken !== publicToken) {
+              return res.status(403).json({ message: "Invalid or expired token" });
+            }
 
-          if (!isOwner && !isAdmin) {
-            return res.status(403).json({ message: "Access denied" });
+            if (travel.publicTokenExpiry && new Date(travel.publicTokenExpiry) < new Date()) {
+              return res.status(403).json({ message: "Token has expired" });
+            }
+
+            // Token válido - permitir acceso sin autenticación
+            console.log(`Public token access granted for travel ${req.params.id}`);
+          } else {
+            // Caso 2: Acceso con autenticación (usuario logueado)
+            if (!req.isAuthenticated()) {
+              return res.sendStatus(401);
+            }
+
+            // Verificar permisos del usuario autenticado
+            const isOwner = travel.createdBy === req.user!.id;
+            const isAdmin = req.user!.role === "admin";
+
+            if (!isOwner && !isAdmin) {
+              return res.status(403).json({ message: "Access denied" });
+            }
           }
 
           // Fetch all related data in parallel
