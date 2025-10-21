@@ -11,7 +11,7 @@ import { Plus, Pencil, Trash2, Search, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { ServiceProvider } from "@/../../shared/schema";
-import { Switch } from "@/components/ui/switch";
+
 
 export default function ServiceProvidersPage() {
   const [showModal, setShowModal] = useState(false);
@@ -26,7 +26,6 @@ export default function ServiceProvidersPage() {
       name: "",
       contactName: "",
       contactPhone: "",
-      active: true,
     },
   });
 
@@ -99,7 +98,7 @@ export default function ServiceProvidersPage() {
   });
 
   const handleSubmit = form.handleSubmit((data) => {
-    saveMutation.mutate(data);
+    saveMutation.mutate({ ...data, active: true });
   });
 
   const handleEdit = (provider: ServiceProvider) => {
@@ -108,7 +107,6 @@ export default function ServiceProvidersPage() {
       name: provider.name,
       contactName: provider.contactName || "",
       contactPhone: provider.contactPhone || "",
-      active: provider.active,
     });
     setShowModal(true);
   };
@@ -137,7 +135,7 @@ export default function ServiceProvidersPage() {
           </div>
           <Button onClick={() => {
             setEditingProvider(null);
-            form.reset({ name: "", contactName: "", contactPhone: "", active: true });
+            form.reset({ name: "", contactName: "", contactPhone: "" });
             setShowModal(true);
           }}>
             <Plus className="w-4 h-4 mr-2" />
@@ -173,15 +171,6 @@ export default function ServiceProvidersPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        provider.active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {provider.active ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
                     {provider.contactName && (
                       <div className="text-muted-foreground">
                         <span className="font-medium">Contacto:</span> {provider.contactName}
@@ -249,15 +238,6 @@ export default function ServiceProvidersPage() {
                   {...form.register("contactPhone")}
                   placeholder="Ej: +52 984 123 4567"
                 />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="active"
-                  checked={form.watch("active")}
-                  onCheckedChange={(checked) => form.setValue("active", checked)}
-                />
-                <Label htmlFor="active">Activo</Label>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
