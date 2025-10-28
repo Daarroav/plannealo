@@ -80,44 +80,49 @@ export default function TravelPreview() {
       .replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
   };
 
+  // Formatear fecha/hora SIN conversión de zona horaria
+  // Extrae los componentes directamente del ISO string para mostrar la hora exacta configurada
   const formatDateTime = (dateTime: string | Date) => {
-    const date = new Date(dateTime);
-    return date.toLocaleString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true, // 👈 Esto forza el formato AM/PM
-    });
+    const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
+    
+    // Extraer componentes de la fecha ISO (YYYY-MM-DDTHH:mm:ss.sssZ)
+    const [datePart, timePart] = isoString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    
+    // Convertir a formato 12 horas
+    const period = hours >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours % 12 || 12;
+    
+    // Nombres de meses en español
+    const monthNames = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    return `${day} de ${monthNames[month - 1]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
-  // Formatear fecha/hora de vuelo usando la zona horaria guardada o detectada
+  // Formatear fecha/hora de vuelo SIN conversión de zona horaria
   const formatFlightDateTime = (dateTime: string | Date, cityString: string, savedTimezone?: string | null) => {
-    const date = new Date(dateTime);
-
-    // Determinar la zona horaria a usar
-    let timezone = 'America/Mexico_City'; // Fallback por defecto
-
-    if (savedTimezone) {
-      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
-      timezone = savedTimezone;
-    } else {
-      // Si no hay zona horaria guardada, extraer código IATA y buscar
-      const iataCode = extractIataCode(cityString || '');
-      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
-    }
-
-    // Formatear en la zona horaria correcta
-    return date.toLocaleString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: timezone,
-    });
+    const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
+    
+    // Extraer componentes de la fecha ISO
+    const [datePart, timePart] = isoString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    
+    // Convertir a formato 12 horas
+    const period = hours >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours % 12 || 12;
+    
+    // Nombres de meses en español
+    const monthNames = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    return `${day} de ${monthNames[month - 1]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
@@ -132,11 +137,19 @@ export default function TravelPreview() {
   };
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const isoString = typeof date === 'string' ? date : date.toISOString();
+    
+    // Extraer componentes de la fecha ISO
+    const [datePart] = isoString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    
+    // Nombres de meses en español
+    const monthNames = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    
+    return `${day} de ${monthNames[month - 1]} de ${year}`;
   };
 
   const handlePrint = () => {
@@ -181,39 +194,6 @@ export default function TravelPreview() {
     insurances,
     notes,
   } = data;
-
-  // Obtener fecha en zona horaria específica para agrupación
-  const getDateInTimezone = (dateTime: string | Date, cityString: string, savedTimezone?: string | null): Date => {
-    const date = new Date(dateTime);
-
-    // Determinar la zona horaria a usar (misma lógica que formatFlightDateTime)
-    let timezone = 'America/Mexico_City'; // Fallback por defecto
-
-    if (savedTimezone) {
-      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
-      timezone = savedTimezone;
-    } else {
-      // Si no hay zona horaria guardada, extraer código IATA y buscar
-      const iataCode = extractIataCode(cityString || '');
-      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
-    }
-
-    // Obtener componentes de fecha en la zona horaria específica
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-
-    const parts = formatter.formatToParts(date);
-    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
-
-    // Crear fecha local usando estos componentes
-    return new Date(year, month, day);
-  };
 
   // Combinar y ordenar todos los eventos cronológicamente
   const getAllEvents = () => {
@@ -337,29 +317,11 @@ export default function TravelPreview() {
     const groups: { [key: string]: any[] } = {};
 
     events.forEach((event) => {
-      const d = new Date(event.date); // Puede ser string o Date
-
-      let year: number, month: string, day: string;
-
-      // Para vuelos, usar la zona horaria guardada o detectada para determinar el día local
-      if (event.type === 'flight') {
-        const flight = event.data;
-        const localDate = getDateInTimezone(
-          event.date,
-          flight.departureCity,
-          flight.departureTimezone
-        );
-        year = localDate.getFullYear();
-        month = String(localDate.getMonth() + 1).padStart(2, "0");
-        day = String(localDate.getDate()).padStart(2, "0");
-      } else {
-        // Para otros eventos, usar la fecha local del navegador
-        year = d.getFullYear();
-        month = String(d.getMonth() + 1).padStart(2, "0");
-        day = String(d.getDate()).padStart(2, "0");
-      }
-
-      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD local
+      const isoString = typeof event.date === 'string' ? event.date : event.date.toISOString();
+      
+      // Extraer fecha directamente del ISO string sin conversión
+      const [datePart] = isoString.split('T');
+      const dayKey = datePart; // YYYY-MM-DD
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -370,13 +332,15 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // 👇 medianoche local (NO UTC)
+        // Crear fecha local sin conversión
         const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día por su hora UTC real
-        groups[dateKey].sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-        );
+        // Ordenar eventos dentro del día por hora (comparando ISO strings)
+        groups[dateKey].sort((a, b) => {
+          const timeA = typeof a.date === 'string' ? a.date : a.date.toISOString();
+          const timeB = typeof b.date === 'string' ? b.date : b.date.toISOString();
+          return timeA.localeCompare(timeB);
+        });
 
         return {
           date: groupDate,
