@@ -83,12 +83,17 @@ export default function TravelPreview() {
   // Formatear fecha/hora SIN conversión de zona horaria
   // Extrae los componentes directamente del ISO string para mostrar la hora exacta configurada
   const formatDateTime = (dateTime: string | Date) => {
+    if (!dateTime) return "N/A";
+    
     const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
     
-    // Extraer componentes de la fecha ISO (YYYY-MM-DDTHH:mm:ss.sssZ)
+    // Extraer componentes de la fecha ISO (YYYY-MM-DDTHH:mm:ss.sssZ o YYYY-MM-DDTHH:mm:ss)
     const [datePart, timePart] = isoString.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
+    
+    // Extraer horas y minutos, manejando tanto con 'Z' como sin ella
+    const timeOnly = timePart.split('.')[0]; // Remover milisegundos si existen
+    const [hours, minutes] = timeOnly.split(':').map(Number);
     
     // Convertir a formato 12 horas
     const period = hours >= 12 ? 'p. m.' : 'a. m.';
