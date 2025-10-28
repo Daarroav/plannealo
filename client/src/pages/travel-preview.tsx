@@ -80,32 +80,38 @@ export default function TravelPreview() {
       .replace(/^(\d{3})(\d{3})(\d{4})$/, "$1-$2-$3");
   };
 
-  // Formatear fecha/hora SIN conversión de zona horaria
-  // Extrae los componentes directamente del ISO string para mostrar la hora exacta configurada
+  // Formatear fecha/hora con conversión a zona horaria de México
   const formatDateTime = (dateTime: string | Date) => {
     if (!dateTime) return "N/A";
     
-    const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
+    const d = new Date(dateTime);
     
-    // Extraer componentes de la fecha ISO (YYYY-MM-DDTHH:mm:ss.sssZ o YYYY-MM-DDTHH:mm:ss)
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    
-    // Extraer horas y minutos, manejando tanto con 'Z' como sin ella
-    const timeOnly = timePart.split('.')[0].split('Z')[0]; // Remover milisegundos y 'Z' si existen
-    const [hours, minutes] = timeOnly.split(':').map(Number);
-    
-    // Convertir a formato 12 horas
-    const hours12 = hours % 12 || 12;
-    const period = hours < 12 ? 'a. m.' : 'p. m.';
-    
-    // Nombres de meses en español
-    const monthNames = [
-      "enero", "febrero", "marzo", "abril", "mayo", "junio",
-      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-    ];
-    
-    return `${day} de ${monthNames[month - 1]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+    // Formatear fecha en zona horaria de México
+    const dateFmt = new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "America/Mexico_City",
+    });
+
+    const parts = dateFmt.formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    const month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
+
+    // Formatear hora en zona horaria de México
+    const timeParts = new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Mexico_City",
+    }).formatToParts(d);
+
+    const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
+    const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+    const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
+
+    return `${day} de ${month} de ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
   // Formatear fecha/hora de vuelo SIN conversión de zona horaria
