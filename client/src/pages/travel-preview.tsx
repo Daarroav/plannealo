@@ -81,32 +81,19 @@ export default function TravelPreview() {
   };
 
   // Formatear fecha/hora SIN conversión de zona horaria
-  // Trata la fecha como hora local de México sin importar la zona del navegador
+  // Extrae los componentes directamente del ISO string para mostrar la hora exacta configurada
   const formatDateTime = (dateTime: string | Date) => {
     if (!dateTime) return "N/A";
     
     const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
     
-    // Si termina en Z, es UTC - necesitamos convertir a hora de México (UTC-6)
-    // Crear Date y obtener componentes locales que representan la hora de México
-    const date = new Date(isoString);
+    // Extraer componentes de la fecha ISO (YYYY-MM-DDTHH:mm:ss.sssZ o YYYY-MM-DDTHH:mm:ss)
+    const [datePart, timePart] = isoString.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
     
-    // Usar getUTCHours + 6 para obtener hora de México desde UTC
-    // O simplemente usar una interpretación local forzada
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    let hours = date.getUTCHours() + 6; // Convertir de UTC a México (GMT-6)
-    const minutes = date.getUTCMinutes();
-    
-    // Ajustar si las horas pasan de 24
-    let dayAdjust = 0;
-    if (hours >= 24) {
-      hours -= 24;
-      dayAdjust = 1;
-    }
-    
-    const adjustedDay = day + dayAdjust;
+    // Extraer horas y minutos, manejando tanto con 'Z' como sin ella
+    const timeOnly = timePart.split('.')[0]; // Remover milisegundos si existen
+    const [hours, minutes] = timeOnly.split(':').map(Number);
     
     // Convertir a formato 12 horas
     const period = hours >= 12 ? 'p. m.' : 'a. m.';
@@ -118,7 +105,7 @@ export default function TravelPreview() {
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
     
-    return `${adjustedDay} de ${monthNames[month]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return `${day} de ${monthNames[month - 1]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   // Formatear fecha/hora de vuelo SIN conversión de zona horaria
