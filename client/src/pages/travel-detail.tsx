@@ -840,34 +840,27 @@ export default function TravelDetail() {
 
     const d = new Date(date);
 
-    // Formatear fecha sin conversiones de zona horaria
-    const dateFmt = new Intl.DateTimeFormat("es-MX", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      timeZone: "UTC",
-    });
+    // Extraer componentes de fecha directamente del objeto Date
+    // sin aplicar conversiones de zona horaria
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+    const day = d.getUTCDate();
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
 
-    const parts = dateFmt.formatToParts(d);
-    const day = parts.find((p) => p.type === "day")?.value ?? "";
-    let month = parts.find((p) => p.type === "month")?.value ?? "";
-    const year = parts.find((p) => p.type === "year")?.value ?? "";
+    // Formatear fecha
+    const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", 
+                        "jul", "ago", "sep", "oct", "nov", "dic"];
+    const monthStr = monthNames[month];
+    const dayStr = day.toString().padStart(2, '0');
 
-    month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
+    // Formatear hora en formato 12 horas
+    const period = hours >= 12 ? 'p. m.' : 'a. m.';
+    const hours12 = hours % 12 || 12;
+    const hoursStr = hours12.toString().padStart(2, '0');
+    const minutesStr = minutes.toString().padStart(2, '0');
 
-    // Formatear hora sin conversiones de zona horaria
-    const timeParts = new Intl.DateTimeFormat("es-MX", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-      timeZone: "UTC",
-    }).formatToParts(d);
-
-    const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
-    const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
-    const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
-
-    return `${day} ${month} ${year}, ${hour}:${minute} ${dayPeriod}`;
+    return `${dayStr} ${monthStr} ${year}, ${hoursStr}:${minutesStr} ${period}`;
   };
 
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
