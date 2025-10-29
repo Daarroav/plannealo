@@ -1592,10 +1592,10 @@ export default function TravelDetail() {
                                 <span className="font-medium">Destino:</span> {flight.arrivalCity}
                               </div>
                               <div>
-                                <span className="font-medium">Salida:</span> {formatDateTime(flight.departureDate)} a las {formatTime12h(flight.departureTime)}
+                                <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate, flight.departureCity, flight.departureTimezone)}
                               </div>
                               <div>
-                                <span className="font-medium">Llegada:</span> {formatDateTime(flight.arrivalDate)} a las {formatTime12h(flight.arrivalTime)}
+                                <span className="font-medium">Llegada:</span> {formatFlightDateTime(flight.arrivalDate, flight.arrivalCity, flight.arrivalTimezone)}
                               </div>
                             </div>
                           </div>
