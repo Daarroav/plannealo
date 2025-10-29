@@ -830,7 +830,7 @@ export default function TravelDetail() {
     return result;
   };
 
-  // Formatear fecha/hora de vuelo mostrando la hora exacta como fue guardada
+  // Formatear fecha/hora de vuelo mostrando la hora exacta en zona horaria de México
   const formatFlightDateTime = (
     date: Date | string | null,
     cityString: string | null,
@@ -838,27 +838,37 @@ export default function TravelDetail() {
   ): string => {
     if (!date) return "";
 
-    // Convertir a string ISO si es Date
-    const isoString = typeof date === 'string' ? date : date.toISOString();
+    const d = new Date(date);
 
-    // Extraer componentes directamente del string ISO (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
+    // Formatear fecha en zona horaria de México
+    const dateFmt = new Intl.DateTimeFormat("es-MX", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "America/Mexico_City",
+    });
 
-    // Formatear fecha
-    const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", 
-                        "jul", "ago", "sep", "oct", "nov", "dic"];
-    const monthStr = monthNames[month - 1]; // month es 1-12, array es 0-11
-    const dayStr = day.toString().padStart(2, '0');
+    const parts = dateFmt.formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    let month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
 
-    // Formatear hora en formato 12 horas
-    const period = hours >= 12 ? 'p. m.' : 'a. m.';
-    const hours12 = hours % 12 || 12;
-    const hoursStr = hours12.toString().padStart(2, '0');
-    const minutesStr = minutes.toString().padStart(2, '0');
+    // Normalizar abreviatura de mes
+    month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
 
-    return `${dayStr} ${monthStr} ${year}, ${hoursStr}:${minutesStr} ${period}`;
+    // Formatear hora en zona horaria de México
+    const timeParts = new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Mexico_City",
+    }).formatToParts(d);
+
+    const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
+    const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+    const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
+
+    return `${day} ${month} ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
