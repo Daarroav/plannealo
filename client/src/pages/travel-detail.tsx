@@ -99,35 +99,35 @@ export default function TravelDetail() {
   const updateTravelMutation = useMutation({
     mutationFn: async (data: any) => {
       const { _selectedImage, ...travelData } = data;
-      
+
       // Create FormData to send both data and image
       const formData = new FormData();
-      
+
       // Add all travel data fields
       Object.keys(travelData).forEach(key => {
         if (travelData[key] !== undefined && travelData[key] !== null) {
           formData.append(key, travelData[key]);
         }
       });
-      
+
       // Add cover image if provided
       if (_selectedImage) {
         console.log("Agregando imagen al FormData:", _selectedImage.name);
         formData.append('coverImage', _selectedImage);
       }
-      
+
       // Send the request
       const response = await fetch(`/api/travels/${travelId}`, {
         method: 'PUT',
         credentials: 'include',
         body: formData,
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Error updating travel');
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {

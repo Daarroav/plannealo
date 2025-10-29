@@ -154,15 +154,19 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         arrTz = arrivalIata ? getTimezoneForAirport(arrivalIata, 'America/Mexico_City') : 'America/Mexico_City';
       }
       
-      // Usar formatInTimeZone para mostrar la hora en la zona horaria correcta
-      const depDateStr = formatInTimeZone(new Date(editingFlight.departureDate), depTz, "yyyy-MM-dd");
-      const depTimeStr = formatInTimeZone(new Date(editingFlight.departureDate), depTz, "HH:mm");
-      const arrDateStr = formatInTimeZone(new Date(editingFlight.arrivalDate), arrTz, "yyyy-MM-dd");
-      const arrTimeStr = formatInTimeZone(new Date(editingFlight.arrivalDate), arrTz, "HH:mm");
+      // Extraer fecha y hora sin aplicar conversiones de zona horaria
+      // La hora se muestra exactamente como fue guardada
+      const depDate = new Date(editingFlight.departureDate);
+      const arrDate = new Date(editingFlight.arrivalDate);
       
-      // Crear objetos Date para los calendarios usando la fecha/hora en la zona horaria correcta
-      const depDateTime = toDate(`${depDateStr} ${depTimeStr}:00`, { timeZone: depTz });
-      const arrDateTime = toDate(`${arrDateStr} ${arrTimeStr}:00`, { timeZone: arrTz });
+      const depDateStr = format(depDate, "yyyy-MM-dd");
+      const depTimeStr = format(depDate, "HH:mm");
+      const arrDateStr = format(arrDate, "yyyy-MM-dd");
+      const arrTimeStr = format(arrDate, "HH:mm");
+      
+      // Crear objetos Date para los calendarios sin conversiones
+      const depDateTime = new Date(`${depDateStr}T${depTimeStr}:00`);
+      const arrDateTime = new Date(`${arrDateStr}T${arrTimeStr}:00`);
       
       setDepartureDate(depDateTime);
       setArrivalDate(arrDateTime);
@@ -429,25 +433,26 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     }
     
     // Combinar fecha y hora como string en formato local
-    const departureDateTimeStr = `${currentValues.departureDateField} ${currentValues.departureTimeField}:00`;
-    const arrivalDateTimeStr = `${currentValues.arrivalDateField} ${currentValues.arrivalTimeField}:00`;
+    const departureDateTimeStr = `${currentValues.departureDateField}T${currentValues.departureTimeField}:00`;
+    const arrivalDateTimeStr = `${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`;
     
-    // Convertir a UTC usando la zona horaria del aeropuerto correspondiente
-    const departureDateTime = toDate(departureDateTimeStr, { timeZone: departureTz });
-    const arrivalDateTime = toDate(arrivalDateTimeStr, { timeZone: arrivalTz });
+    // Crear objetos Date SIN conversión de zona horaria
+    // La hora se mantiene exactamente como fue ingresada
+    const departureDateTime = new Date(departureDateTimeStr);
+    const arrivalDateTime = new Date(arrivalDateTimeStr);
     
-    console.log('Timezone conversion:', {
+    console.log('Saving times without timezone conversion:', {
       departure: {
         iata: departureIata,
         timezone: departureTz,
-        localTime: departureDateTimeStr,
-        utc: departureDateTime.toISOString()
+        inputTime: departureDateTimeStr,
+        savedISO: departureDateTime.toISOString()
       },
       arrival: {
         iata: arrivalIata,
         timezone: arrivalTz,
-        localTime: arrivalDateTimeStr,
-        utc: arrivalDateTime.toISOString()
+        inputTime: arrivalDateTimeStr,
+        savedISO: arrivalDateTime.toISOString()
       }
     });
 
