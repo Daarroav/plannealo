@@ -161,6 +161,17 @@ export function FlightSearchModal({
     }
   };
 
+  const formatFlightDateTime = (dateTimeString: string) => {
+    if (!dateTimeString) return "N/A";
+    try {
+      const date = new Date(dateTimeString);
+      return format(date, "hh:mm a", { locale: es });
+    } catch (error) {
+      console.warn("Error formatting flight date/time:", dateTimeString);
+      return "N/A";
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
