@@ -136,9 +136,18 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingFlight) {
-      // Obtener las zonas horarias guardadas o usar fallback
-      const depTz = editingFlight.departureTimezone || 'America/Mexico_City';
-      const arrTz = editingFlight.arrivalTimezone || 'America/Mexico_City';
+      // Determinar zonas horarias: primero intentar usar la guardada, si no existe, detectar del código IATA
+      let depTz = editingFlight.departureTimezone;
+      if (!depTz) {
+        const departureIata = extractIataCode(editingFlight.departureCity || '');
+        depTz = departureIata ? getTimezoneForAirport(departureIata, 'America/Mexico_City') : 'America/Mexico_City';
+      }
+      
+      let arrTz = editingFlight.arrivalTimezone;
+      if (!arrTz) {
+        const arrivalIata = extractIataCode(editingFlight.arrivalCity || '');
+        arrTz = arrivalIata ? getTimezoneForAirport(arrivalIata, 'America/Mexico_City') : 'America/Mexico_City';
+      }
       
       // Usar formatInTimeZone para mostrar la hora en la zona horaria correcta
       const depDateStr = formatInTimeZone(new Date(editingFlight.departureDate), depTz, "yyyy-MM-dd");
@@ -165,22 +174,38 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         arrivalDateField: arrDateStr,
         arrivalTimeField: arrTimeStr,
         departureTerminal: editingFlight.departureTerminal || "",
-        arrivalTerminal: editingFlight.arrivalTerminal || "",
+        arrivalTerminal: editingFlight.arrivalTiminal || "",
         class: editingFlight.class || "",
         attachments: editingFlight.attachments || [],
       });
       
-      // Hidratar zonas horarias manuales si existen
-      if (editingFlight.departureTimezone) {
-        setManualDepartureTimezone(editingFlight.departureTimezone);
-      } else {
-        setManualDepartureTimezone("");
+      // Hidratar zonas horarias manuales con las zonas determinadas
+      setManualDepartureTimezone(depTz);
+      setManualArrivalTimezone(arrTz);
+      
+      // Obtener zonas del aeropuerto seleccionado para mostrar sugerencias
+      const depAirport = airports.find((airport: any) => {
+        const airportValue = airport.iataCode 
+          ? `${airport.iataCode} - ${airport.airportName}`
+          : airport.airportName;
+        return airportValue === editingFlight.departureCity;
+      });
+      
+      if (depAirport && depAirport.timezones) {
+        const tzList = depAirport.timezones.map((tz: any) => tz.timezone);
+        setDepartureAirportTimezones(tzList);
       }
       
-      if (editingFlight.arrivalTimezone) {
-        setManualArrivalTimezone(editingFlight.arrivalTimezone);
-      } else {
-        setManualArrivalTimezone("");
+      const arrAirport = airports.find((airport: any) => {
+        const airportValue = airport.iataCode 
+          ? `${airport.iataCode} - ${airport.airportName}`
+          : airport.airportName;
+        return airportValue === editingFlight.arrivalCity;
+      });
+      
+      if (arrAirport && arrAirport.timezones) {
+        const tzList = arrAirport.timezones.map((tz: any) => tz.timezone);
+        setArrivalAirportTimezones(tzList);
       }
       
       setAttachedFiles([]);
@@ -206,8 +231,12 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
+      setManualDepartureTimezone("");
+      setManualArrivalTimezone("");
+      setDepartureAirportTimezones([]);
+      setArrivalAirportTimezones([]);
     }
-  }, [editingFlight, form, travelId]);
+  }, [editingFlight, form, travelId, airports]);
 
   // Cargar aeropuertos para obtener zonas horarias
   const { data: airports = [] } = useQuery<any[]>({
