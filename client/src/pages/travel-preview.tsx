@@ -253,7 +253,7 @@ export default function TravelPreview() {
       });
     });
 
-    // Agregar vuelos - usar departureTimezone para calcular hora local correcta
+    // Agregar vuelos - calcular timestamp UTC real desde hora local y zona horaria
     flights.forEach((flight) => {
       const departureDate = new Date(flight.departureDate);
       const dateStr = departureDate.toISOString().split('T')[0];
@@ -263,16 +263,15 @@ export default function TravelPreview() {
       
       if (flight.departureTimezone) {
         try {
-          // Crear una fecha/hora en formato ISO para la zona horaria local
-          // Ejemplo: "2026-03-31T11:00" en zona horaria Asia/Tokyo
+          // Construir fecha/hora en formato local: "2026-03-31 11:00"
           const localDateTimeStr = `${dateStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
           
-          // Parsear esta fecha como si estuviera en la zona horaria especificada
-          // y convertirla a UTC para obtener el timestamp correcto
-          const dateInLocalTz = new Date(localDateTimeStr);
+          // Convertir hora local a UTC usando la zona horaria
+          // Creamos una fecha temporal y obtenemos su representación en la zona local
+          const tempDate = new Date(localDateTimeStr + 'Z'); // Asumimos UTC temporalmente
           
-          // Usar Intl.DateTimeFormat para obtener los componentes en la zona horaria de salida
-          const formatter = new Intl.DateTimeFormat('en-US', {
+          // Obtener la representación de esta fecha en la zona horaria de salida
+          const localString = tempDate.toLocaleString('en-US', {
             timeZone: flight.departureTimezone,
             year: 'numeric',
             month: '2-digit',
@@ -283,32 +282,33 @@ export default function TravelPreview() {
             hour12: false
           });
           
-          // Crear una fecha de referencia en UTC
-          const referenceDate = new Date(`${dateStr}T00:00:00Z`);
-          const parts = formatter.formatToParts(referenceDate);
+          // Calcular el offset entre UTC y la zona horaria local
+          // Parseamos la representación local para obtener los componentes
+          const [datePart, timePart] = localString.split(', ');
+          const [monthLocal, dayLocal, yearLocal] = datePart.split('/');
+          const [hourLocal, minuteLocal] = timePart.split(':');
           
-          // Extraer el offset comparando la hora UTC vs la hora en la zona horaria local
-          const utcHour = referenceDate.getUTCHours();
-          const localHourAtUtc = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
-          const offsetHours = localHourAtUtc - utcHour;
-          
-          // Aplicar el offset a las horas locales ingresadas para obtener UTC
-          const utcHours = hours - offsetHours;
-          
-          // Crear timestamp UTC correcto
-          sortTimestamp = new Date(Date.UTC(
-            departureDate.getUTCFullYear(),
-            departureDate.getUTCMonth(),
-            departureDate.getUTCDate(),
-            utcHours,
-            minutes
+          // Diferencia en milisegundos entre la hora UTC original y su representación local
+          const utcTime = tempDate.getTime();
+          const localAsUtc = new Date(Date.UTC(
+            parseInt(yearLocal),
+            parseInt(monthLocal) - 1,
+            parseInt(dayLocal),
+            parseInt(hourLocal),
+            parseInt(minuteLocal)
           )).getTime();
           
+          const offset = utcTime - localAsUtc;
+          
+          // Crear la fecha real UTC: hora local ingresada - offset
+          const realLocalTime = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`).getTime();
+          sortTimestamp = realLocalTime - offset;
+          
           console.log(`Flight ${flight.id}: ${flight.departureCity} at ${hours}:${minutes} (${flight.departureTimezone})`, {
-            localTime: `${hours}:${minutes}`,
+            localTimeInput: `${hours}:${minutes}`,
             timezone: flight.departureTimezone,
-            offsetHours,
             utcTime: new Date(sortTimestamp).toISOString(),
+            offsetMs: offset
           });
           
         } catch (e) {
