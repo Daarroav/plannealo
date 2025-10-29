@@ -830,7 +830,7 @@ export default function TravelDetail() {
     return result;
   };
 
-  // Formatear fecha/hora de vuelo usando la zona horaria guardada o detectada
+  // Formatear fecha/hora de vuelo mostrando la hora exacta como fue guardada
   const formatFlightDateTime = (
     date: Date | string | null,
     cityString: string | null,
@@ -840,24 +840,12 @@ export default function TravelDetail() {
 
     const d = new Date(date);
 
-    // Determinar la zona horaria a usar
-    let timezone = 'America/Mexico_City'; // Fallback por defecto
-
-    if (savedTimezone) {
-      // Usar la zona horaria guardada en la base de datos (mayor prioridad)
-      timezone = savedTimezone;
-    } else {
-      // Si no hay zona horaria guardada, extraer código IATA y buscar
-      const iataCode = extractIataCode(cityString || '');
-      timezone = getTimezoneForAirport(iataCode, 'America/Mexico_City');
-    }
-
-    // Formatear fecha y hora en la zona horaria correcta
+    // Formatear fecha sin conversiones de zona horaria
     const dateFmt = new Intl.DateTimeFormat("es-MX", {
       day: "2-digit",
       month: "short",
       year: "numeric",
-      timeZone: timezone,
+      timeZone: "UTC",
     });
 
     const parts = dateFmt.formatToParts(d);
@@ -867,11 +855,12 @@ export default function TravelDetail() {
 
     month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
 
+    // Formatear hora sin conversiones de zona horaria
     const timeParts = new Intl.DateTimeFormat("es-MX", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-      timeZone: timezone,
+      timeZone: "UTC",
     }).formatToParts(d);
 
     const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
