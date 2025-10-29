@@ -470,7 +470,9 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     formData.append('departureCity', currentValues.departureCity || '');
     formData.append('arrivalCity', currentValues.arrivalCity || '');
     formData.append('departureDate', departureDateTime.toISOString());
+    formData.append('departureTime', currentValues.departureTimeField);
     formData.append('arrivalDate', arrivalDateTime.toISOString());
+    formData.append('arrivalTime', currentValues.arrivalTimeField);
     formData.append('departureTerminal', currentValues.departureTerminal || '');
     formData.append('arrivalTerminal', currentValues.arrivalTerminal || '');
     formData.append('class', currentValues.class || '');

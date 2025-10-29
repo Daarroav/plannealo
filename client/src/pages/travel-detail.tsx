@@ -1595,24 +1595,20 @@ export default function TravelDetail() {
                                 <span className="font-medium">Salida:</span>
                                 {(() => {
                                   const isoString = typeof flight.departureDate === 'string' ? flight.departureDate : flight.departureDate.toISOString();
-                                  const [datePart, timePart] = isoString.split('T');
+                                  const [datePart] = isoString.split('T');
                                   const [year, month, day] = datePart.split('-').map(Number);
-                                  const [hours, minutes] = timePart.split(':').map(Number);
-                                  const period = hours >= 12 ? 'p. m.' : 'a. m.';
-                                  const hours12 = hours % 12 || 12;
-                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                  const timeStr = formatTime12h(flight.departureTime);
+                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${timeStr}`;
                                 })()}
                               </div>
                               <div>
                                 <span className="font-medium">Llegada:</span>
                                 {(() => {
                                   const isoString = typeof flight.arrivalDate === 'string' ? flight.arrivalDate : flight.arrivalDate.toISOString();
-                                  const [datePart, timePart] = isoString.split('T');
+                                  const [datePart] = isoString.split('T');
                                   const [year, month, day] = datePart.split('-').map(Number);
-                                  const [hours, minutes] = timePart.split(':').map(Number);
-                                  const period = hours >= 12 ? 'p. m.' : 'a. m.';
-                                  const hours12 = hours % 12 || 12;
-                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                  const timeStr = formatTime12h(flight.arrivalTime);
+                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${timeStr}`;
                                 })()}
                               </div>
                             </div>
