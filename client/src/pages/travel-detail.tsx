@@ -838,18 +838,20 @@ export default function TravelDetail() {
   ): string => {
     if (!date) return "";
 
-    // Convertir a string ISO si es Date
-    const isoString = typeof date === 'string' ? date : date.toISOString();
-    
-    // Extraer componentes directamente del string ISO (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
+    const d = new Date(date);
+
+    // Extraer componentes de fecha directamente del objeto Date
+    // sin aplicar conversiones de zona horaria
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+    const day = d.getUTCDate();
+    const hours = d.getUTCHours();
+    const minutes = d.getUTCMinutes();
 
     // Formatear fecha
     const monthNames = ["ene", "feb", "mar", "abr", "may", "jun", 
                         "jul", "ago", "sep", "oct", "nov", "dic"];
-    const monthStr = monthNames[month - 1]; // month es 1-12, array es 0-11
+    const monthStr = monthNames[month];
     const dayStr = day.toString().padStart(2, '0');
 
     // Formatear hora en formato 12 horas
