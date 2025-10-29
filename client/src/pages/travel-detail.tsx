@@ -21,7 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
 // icons
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera, Trash2 } from "lucide-react";
+import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, FileText, StickyNote, Eye, EyeOff, Plus, Edit, Share, Camera, Trash2, Clock } from "lucide-react";
 // utils
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -840,7 +840,7 @@ export default function TravelDetail() {
 
     // Convertir a string ISO si es Date
     const isoString = typeof date === 'string' ? date : date.toISOString();
-    
+
     // Extraer componentes directamente del string ISO (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
     const [datePart, timePart] = isoString.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
@@ -1582,10 +1582,28 @@ export default function TravelDetail() {
                                 <span className="font-medium">Destino:</span> {flight.arrivalCity}
                               </div>
                               <div>
-                                <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate, flight.departureCity, flight.departureTimezone)}
+                                <span className="font-medium">Salida:</span>
+                                {(() => {
+                                  const isoString = typeof flight.departureDate === 'string' ? flight.departureDate : flight.departureDate.toISOString();
+                                  const [datePart, timePart] = isoString.split('T');
+                                  const [year, month, day] = datePart.split('-').map(Number);
+                                  const [hours, minutes] = timePart.split(':').map(Number);
+                                  const period = hours >= 12 ? 'p. m.' : 'a. m.';
+                                  const hours12 = hours % 12 || 12;
+                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                })()}
                               </div>
                               <div>
-                                <span className="font-medium">Llegada:</span> {formatFlightDateTime(flight.arrivalDate, flight.arrivalCity, flight.arrivalTimezone)}
+                                <span className="font-medium">Llegada:</span>
+                                {(() => {
+                                  const isoString = typeof flight.arrivalDate === 'string' ? flight.arrivalDate : flight.arrivalDate.toISOString();
+                                  const [datePart, timePart] = isoString.split('T');
+                                  const [year, month, day] = datePart.split('-').map(Number);
+                                  const [hours, minutes] = timePart.split(':').map(Number);
+                                  const period = hours >= 12 ? 'p. m.' : 'a. m.';
+                                  const hours12 = hours % 12 || 12;
+                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+                                })()}
                               </div>
                             </div>
                           </div>
