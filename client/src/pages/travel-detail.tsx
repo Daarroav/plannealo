@@ -1592,24 +1592,10 @@ export default function TravelDetail() {
                                 <span className="font-medium">Destino:</span> {flight.arrivalCity}
                               </div>
                               <div>
-                                <span className="font-medium">Salida:</span>
-                                {(() => {
-                                  const isoString = typeof flight.departureDate === 'string' ? flight.departureDate : flight.departureDate.toISOString();
-                                  const [datePart] = isoString.split('T');
-                                  const [year, month, day] = datePart.split('-').map(Number);
-                                  const timeStr = formatTime12h(flight.departureTime);
-                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${timeStr}`;
-                                })()}
+                                <span className="font-medium">Salida:</span> {formatDateTime(flight.departureDate)} a las {formatTime12h(flight.departureTime)}
                               </div>
                               <div>
-                                <span className="font-medium">Llegada:</span>
-                                {(() => {
-                                  const isoString = typeof flight.arrivalDate === 'string' ? flight.arrivalDate : flight.arrivalDate.toISOString();
-                                  const [datePart] = isoString.split('T');
-                                  const [year, month, day] = datePart.split('-').map(Number);
-                                  const timeStr = formatTime12h(flight.arrivalTime);
-                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} a las ${timeStr}`;
-                                })()}
+                                <span className="font-medium">Llegada:</span> {formatDateTime(flight.arrivalDate)} a las {formatTime12h(flight.arrivalTime)}
                               </div>
                             </div>
                           </div>
