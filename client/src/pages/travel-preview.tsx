@@ -114,26 +114,45 @@ export default function TravelPreview() {
     return `${day} de ${month} de ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
-  // Formatear fecha/hora de vuelo SIN conversión de zona horaria
-  const formatFlightDateTime = (dateTime: string | Date, cityString: string, savedTimezone?: string | null) => {
-    const isoString = typeof dateTime === 'string' ? dateTime : dateTime.toISOString();
-    
-    // Extraer componentes de la fecha ISO
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
-    
-    // Convertir a formato 12 horas
-    const period = hours >= 12 ? 'p. m.' : 'a. m.';
-    const hours12 = hours % 12 || 12;
-    
-    // Nombres de meses en español
-    const monthNames = [
-      "enero", "febrero", "marzo", "abril", "mayo", "junio",
-      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-    ];
-    
-    return `${day} de ${monthNames[month - 1]} de ${year}, ${hours12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+  // Formatear fecha/hora de vuelo mostrando la hora exacta guardada sin conversión
+  const formatFlightDateTime = (
+    date: Date | string | null,
+    cityString: string | null,
+    savedTimezone?: string | null
+  ): string => {
+    if (!date) return "";
+
+    const d = new Date(date);
+
+    // Formatear fecha en zona horaria de México
+    const dateFmt = new Intl.DateTimeFormat("es-MX", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "America/Mexico_City",
+    });
+
+    const parts = dateFmt.formatToParts(d);
+    const day = parts.find((p) => p.type === "day")?.value ?? "";
+    let month = parts.find((p) => p.type === "month")?.value ?? "";
+    const year = parts.find((p) => p.type === "year")?.value ?? "";
+
+    // Normalizar abreviatura de mes
+    month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
+
+    // Formatear hora en zona horaria de México
+    const timeParts = new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "America/Mexico_City",
+    }).formatToParts(d);
+
+    const hour = timeParts.find((p) => p.type === "hour")?.value ?? "00";
+    const minute = timeParts.find((p) => p.type === "minute")?.value ?? "00";
+    const dayPeriod = timeParts.find((p) => p.type === "dayPeriod")?.value ?? "";
+
+    return `${day} ${month} ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
   // Formatear hora de 24h (HH:mm) a 12h con AM/PM
@@ -328,11 +347,22 @@ export default function TravelPreview() {
     const groups: { [key: string]: any[] } = {};
 
     events.forEach((event) => {
-      const isoString = typeof event.date === 'string' ? event.date : event.date.toISOString();
+      const d = new Date(event.date);
       
-      // Extraer fecha directamente del ISO string sin conversión
-      const [datePart] = isoString.split('T');
-      const dayKey = datePart; // YYYY-MM-DD
+      // Formatear en zona horaria de México para agrupar por día
+      const dateFmt = new Intl.DateTimeFormat("es-MX", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "America/Mexico_City",
+      });
+
+      const parts = dateFmt.formatToParts(d);
+      const year = parts.find((p) => p.type === "year")?.value ?? "";
+      const month = parts.find((p) => p.type === "month")?.value ?? "";
+      const day = parts.find((p) => p.type === "day")?.value ?? "";
+      
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -343,14 +373,12 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // Crear fecha local sin conversión
+        // Crear fecha local
         const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día por hora (comparando ISO strings)
+        // Ordenar eventos dentro del día por timestamp UTC
         groups[dateKey].sort((a, b) => {
-          const timeA = typeof a.date === 'string' ? a.date : a.date.toISOString();
-          const timeB = typeof b.date === 'string' ? b.date : b.date.toISOString();
-          return timeA.localeCompare(timeB);
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
         });
 
         return {
