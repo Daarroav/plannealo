@@ -113,6 +113,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [departureAirportTimezones, setDepartureAirportTimezones] = useState<string[]>([]);
   const [arrivalAirportTimezones, setArrivalAirportTimezones] = useState<string[]>([]);
 
+  // Cargar aeropuertos para obtener zonas horarias (ANTES de usarlo en useEffect)
+  const { data: airports = [] } = useQuery<any[]>({
+    queryKey: ["/api/airports"],
+  });
+
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
     defaultValues: {
@@ -237,11 +242,6 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       setArrivalAirportTimezones([]);
     }
   }, [editingFlight, form, travelId, airports]);
-
-  // Cargar aeropuertos para obtener zonas horarias
-  const { data: airports = [] } = useQuery<any[]>({
-    queryKey: ["/api/airports"],
-  });
 
   // Auto-completar zonas horarias cuando se detecta código IATA
   React.useEffect(() => {
