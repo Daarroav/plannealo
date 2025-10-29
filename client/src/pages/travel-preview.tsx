@@ -238,54 +238,104 @@ export default function TravelPreview() {
         | "note";
       date: Date;
       data: any;
+      sortTimestamp: number; // Timestamp ajustado para ordenamiento correcto
     }> = [];
 
     // Agregar actividades
     activities.forEach((activity) => {
+      const activityDate = new Date(activity.date);
       events.push({
         id: activity.id,
         type: "activity",
-        date: new Date(activity.date),
+        date: activityDate,
+        sortTimestamp: activityDate.getTime(),
         data: activity,
       });
     });
 
-    // Agregar vuelos - usar timestamp UTC para ordenamiento correcto
+    // Agregar vuelos - ajustar timestamp según zona horaria de salida
     flights.forEach((flight) => {
+      const departureDate = new Date(flight.departureDate);
+      
+      // Extraer la hora guardada (HH:mm)
+      const [hours, minutes] = (flight.departureTime || '00:00').split(':').map(Number);
+      
+      // Crear timestamp ajustado basado en la zona horaria de salida
+      // Esto asegura que el ordenamiento refleje el tiempo real de salida
+      let sortTimestamp = departureDate.getTime();
+      
+      if (flight.departureTimezone) {
+        try {
+          // Obtener el offset de la zona horaria de salida
+          const dateInTz = new Intl.DateTimeFormat('en-US', {
+            timeZone: flight.departureTimezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).formatToParts(departureDate);
+          
+          const tzYear = parseInt(dateInTz.find(p => p.type === 'year')?.value || '0');
+          const tzMonth = parseInt(dateInTz.find(p => p.type === 'month')?.value || '1') - 1;
+          const tzDay = parseInt(dateInTz.find(p => p.type === 'day')?.value || '1');
+          
+          // Crear fecha en la zona horaria local del vuelo con la hora guardada
+          const localDate = new Date(tzYear, tzMonth, tzDay, hours, minutes);
+          
+          // Calcular el offset entre UTC y la zona horaria del vuelo
+          const utcDate = new Date(departureDate.toISOString().split('T')[0] + 'T00:00:00Z');
+          const tzOffset = localDate.getTime() - utcDate.getTime();
+          
+          // Ajustar el timestamp para reflejar el tiempo real
+          sortTimestamp = departureDate.getTime() - tzOffset;
+        } catch (e) {
+          console.warn(`Could not adjust timezone for flight ${flight.id}:`, e);
+        }
+      }
+      
       events.push({
         id: flight.id,
         type: "flight",
-        date: new Date(flight.departureDate),
+        date: departureDate,
+        sortTimestamp: sortTimestamp,
         data: flight,
       });
     });
 
     // Agregar transportes
     transports.forEach((transport) => {
+      const pickupDate = new Date(transport.pickupDate);
       events.push({
         id: transport.id,
         type: "transport",
-        date: new Date(transport.pickupDate),
+        date: pickupDate,
+        sortTimestamp: pickupDate.getTime(),
         data: transport,
       });
     });
 
     // Agregar cruceros
     cruises.forEach((cruise) => {
+      const cruiseDate = new Date(cruise.departureDate);
       events.push({
         id: cruise.id,
         type: "cruise",
-        date: new Date(cruise.departureDate),
+        date: cruiseDate,
+        sortTimestamp: cruiseDate.getTime(),
         data: cruise,
       });
     });
 
     // Agregar alojamientos
     accommodations.forEach((accommodation) => {
+      const checkInDate = new Date(accommodation.checkIn);
       events.push({
         id: accommodation.id,
         type: "accommodation",
-        date: new Date(accommodation.checkIn),
+        date: checkInDate,
+        sortTimestamp: checkInDate.getTime(),
         data: accommodation,
       });
     });
@@ -294,19 +344,21 @@ export default function TravelPreview() {
     notes
       .filter((note) => note.visibleToTravelers)
       .forEach((note) => {
+        const noteDate = new Date(note.noteDate);
         events.push({
           id: note.id,
           type: "note",
-          date: new Date(note.noteDate),
+          date: noteDate,
+          sortTimestamp: noteDate.getTime(),
           data: note,
         });
       });
 
-    // Ordenar cronológicamente por timestamp UTC
-    // Esto asegura que eventos de diferentes zonas horarias se ordenen correctamente
-    // Ejemplo: vuelo de Tokio (GMT+9) 11:00 a.m. debe aparecer ANTES que vuelo de Houston (GMT-5) 9:00 a.m.
-    // porque aunque Houston aparezca más temprano en hora local, el vuelo de Tokio sale primero en tiempo real
-    return events.sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Ordenar cronológicamente por sortTimestamp ajustado
+    // Esto asegura que eventos de diferentes zonas horarias se ordenen según su tiempo real
+    // Ejemplo: vuelo de Tokio (GMT+9) 11:00 a.m. debe aparecer ANTES que vuelo de Houston (GMT-6) 9:00 a.m.
+    // porque en tiempo real el vuelo de Tokio sale primero
+    return events.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
   };
 
   const chronologicalEvents = getAllEvents();
