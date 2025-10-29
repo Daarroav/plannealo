@@ -250,7 +250,7 @@ export default function TravelPreview() {
       });
     });
 
-    // Agregar vuelos - usar fecha original para ordenar, zona horaria se usa solo para agrupar
+    // Agregar vuelos - usar timestamp UTC para ordenamiento correcto
     flights.forEach((flight) => {
       events.push({
         id: flight.id,
@@ -302,7 +302,10 @@ export default function TravelPreview() {
         });
       });
 
-    // Ordenar cronológicamente
+    // Ordenar cronológicamente por timestamp UTC
+    // Esto asegura que eventos de diferentes zonas horarias se ordenen correctamente
+    // Ejemplo: vuelo de Tokio (GMT+9) 11:00 a.m. debe aparecer ANTES que vuelo de Houston (GMT-5) 9:00 a.m.
+    // porque aunque Houston aparezca más temprano en hora local, el vuelo de Tokio sale primero en tiempo real
     return events.sort((a, b) => a.date.getTime() - b.date.getTime());
   };
 
@@ -376,9 +379,13 @@ export default function TravelPreview() {
         // Crear fecha local
         const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día por timestamp UTC
+        // IMPORTANTE: Ordenar eventos dentro del día por su timestamp UTC original
+        // Esto asegura que los vuelos aparezcan en el orden correcto según su hora real
+        // independientemente de la zona horaria donde se visualicen
         groups[dateKey].sort((a, b) => {
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
+          const timeA = new Date(a.date).getTime();
+          const timeB = new Date(b.date).getTime();
+          return timeA - timeB;
         });
 
         return {
