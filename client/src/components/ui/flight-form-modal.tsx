@@ -154,17 +154,18 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         arrTz = arrivalIata ? getTimezoneForAirport(arrivalIata, 'America/Mexico_City') : 'America/Mexico_City';
       }
       
-      // Extraer fecha y hora sin aplicar conversiones de zona horaria
-      // La hora se muestra exactamente como fue guardada
-      const depDate = new Date(editingFlight.departureDate);
-      const arrDate = new Date(editingFlight.arrivalDate);
+      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      // Esto evita que el navegador ajuste automáticamente a su zona horaria local
+      const depISOString = editingFlight.departureDate;
+      const arrISOString = editingFlight.arrivalDate;
       
-      const depDateStr = format(depDate, "yyyy-MM-dd");
-      const depTimeStr = format(depDate, "HH:mm");
-      const arrDateStr = format(arrDate, "yyyy-MM-dd");
-      const arrTimeStr = format(arrDate, "HH:mm");
+      // Extraer componentes del ISO string (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
+      const depDateStr = depISOString.substring(0, 10); // YYYY-MM-DD
+      const depTimeStr = depISOString.substring(11, 16); // HH:mm
+      const arrDateStr = arrISOString.substring(0, 10); // YYYY-MM-DD
+      const arrTimeStr = arrISOString.substring(11, 16); // HH:mm
       
-      // Crear objetos Date para los calendarios sin conversiones
+      // Crear objetos Date locales para los calendarios (sin "Z" para evitar conversión UTC)
       const depDateTime = new Date(`${depDateStr}T${depTimeStr}:00`);
       const arrDateTime = new Date(`${arrDateStr}T${arrTimeStr}:00`);
       
