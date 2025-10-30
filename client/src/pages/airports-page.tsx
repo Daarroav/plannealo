@@ -18,6 +18,8 @@ interface TimezoneEntry {
   timezone: string;
 }
 
+const LIMIT_AIRPORTS = 30;
+
 export default function AirportsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
@@ -201,6 +203,16 @@ export default function AirportsPage() {
             </p>
           </div>
           <Button onClick={() => {
+            // Validar límite de aeropuertos
+            if (airports.length >= LIMIT_AIRPORTS) {
+              toast({
+                variant: "destructive",
+                title: "⚠️ Límite alcanzado",
+                description: `El máximo de ${LIMIT_AIRPORTS} aeropuertos ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
+              });
+              return;
+            }
+            
             setEditingAirport(null);
             form.reset({
               airportName: "",
