@@ -239,6 +239,7 @@ export default function TravelPreview() {
       date: Date;
       data: any;
       sortTimestamp: number; // Timestamp ajustado para ordenamiento correcto
+      timezoneOffset?: number; // Offset UTC en minutos (solo para vuelos)
     }> = [];
 
     // Agregar actividades
@@ -260,18 +261,27 @@ export default function TravelPreview() {
       const [hours, minutes] = (flight.departureTime || '00:00').split(':').map(Number);
       
       let sortTimestamp = departureDate.getTime();
+      let timezoneOffset = 0; // Offset en minutos desde UTC
       
       if (flight.departureTimezone) {
         try {
-          // Construir fecha/hora en formato local: "2026-03-31 11:00"
-          const localDateTimeStr = `${dateStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+          // Obtener el offset UTC para esta zona horaria
+          timezoneOffset = getTimezoneForAirport(
+            extractIataCode(flight.departureCity),
+            flight.departureTimezone
+          ) === flight.departureTimezone 
+            ? Math.round((new Date().getTimezoneOffset() - new Date().toLocaleString('en-US', {
+                timeZone: flight.departureTimezone,
+                hour12: false
+              }).length) / 60) 
+            : 0;
           
-          // Convertir hora local a UTC usando la zona horaria
-          // Creamos una fecha temporal y obtenemos su representación en la zona local
-          const tempDate = new Date(localDateTimeStr + 'Z'); // Asumimos UTC temporalmente
+          // Método más preciso: calcular offset basado en la zona horaria
+          const refDate = new Date(`${dateStr}T12:00:00Z`);
+          const utcTime = refDate.getTime();
           
-          // Obtener la representación de esta fecha en la zona horaria de salida
-          const localString = tempDate.toLocaleString('en-US', {
+          // Formatear la fecha en la zona horaria específica
+          const formatter = new Intl.DateTimeFormat('en-US', {
             timeZone: flight.departureTimezone,
             year: 'numeric',
             month: '2-digit',
@@ -282,38 +292,34 @@ export default function TravelPreview() {
             hour12: false
           });
           
-          // Calcular el offset entre UTC y la zona horaria local
-          // Parseamos la representación local para obtener los componentes
-          const [datePart, timePart] = localString.split(', ');
-          const [monthLocal, dayLocal, yearLocal] = datePart.split('/');
-          const [hourLocal, minuteLocal] = timePart.split(':');
+          const parts = formatter.formatToParts(refDate);
+          const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+          const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
+          const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+          const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+          const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
           
-          // Diferencia en milisegundos entre la hora UTC original y su representación local
-          const utcTime = tempDate.getTime();
-          const localAsUtc = new Date(Date.UTC(
-            parseInt(yearLocal),
-            parseInt(monthLocal) - 1,
-            parseInt(dayLocal),
-            parseInt(hourLocal),
-            parseInt(minuteLocal)
-          )).getTime();
+          const localTime = new Date(year, month, day, hour, minute, 0).getTime();
+          timezoneOffset = Math.round((localTime - utcTime) / (1000 * 60));
           
-          const offset = utcTime - localAsUtc;
+          // Construir timestamp de salida en UTC
+          const localDepartureStr = `${dateStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+          const localDepartureDate = new Date(localDepartureStr);
           
-          // Crear la fecha real UTC: hora local ingresada - offset
-          const realLocalTime = new Date(`${dateStr}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`).getTime();
-          sortTimestamp = realLocalTime - offset;
+          // Ajustar por el offset para obtener UTC real
+          sortTimestamp = localDepartureDate.getTime() - (timezoneOffset * 60 * 1000);
           
           console.log(`Flight ${flight.id}: ${flight.departureCity} at ${hours}:${minutes} (${flight.departureTimezone})`, {
             localTimeInput: `${hours}:${minutes}`,
             timezone: flight.departureTimezone,
-            utcTime: new Date(sortTimestamp).toISOString(),
-            offsetMs: offset
+            offsetMinutes: timezoneOffset,
+            utcTime: new Date(sortTimestamp).toISOString()
           });
           
         } catch (e) {
           console.warn(`Could not adjust timezone for flight ${flight.id}:`, e);
           sortTimestamp = departureDate.getTime();
+          timezoneOffset = 0;
         }
       }
       
@@ -322,6 +328,7 @@ export default function TravelPreview() {
         type: "flight",
         date: departureDate,
         sortTimestamp: sortTimestamp,
+        timezoneOffset: timezoneOffset,
         data: flight,
       });
     });
@@ -376,11 +383,28 @@ export default function TravelPreview() {
         });
       });
 
-    // Ordenar cronológicamente por sortTimestamp ajustado
-    // Esto asegura que eventos de diferentes zonas horarias se ordenen según su tiempo real
-    // Ejemplo: vuelo de Tokio (GMT+9) 11:00 a.m. debe aparecer ANTES que vuelo de Houston (GMT-6) 9:00 a.m.
-    // porque en tiempo real el vuelo de Tokio sale primero
-    return events.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
+    // Ordenar cronológicamente con prioridad especial para vuelos
+    // Los vuelos se ordenan primero por fecha UTC, luego por zona horaria (offset descendente)
+    // Esto asegura que vuelos de zonas horarias adelantadas (Tokio GMT+9) aparezcan antes
+    // que vuelos de zonas atrasadas (Houston GMT-6) en el mismo día
+    return events.sort((a, b) => {
+      // Si ambos son vuelos del mismo día (mismo timestamp base), ordenar por zona horaria
+      if (a.type === 'flight' && b.type === 'flight') {
+        const aDayStart = new Date(a.date).setHours(0, 0, 0, 0);
+        const bDayStart = new Date(b.date).setHours(0, 0, 0, 0);
+        
+        // Si son del mismo día, priorizar por offset de zona horaria (descendente)
+        // Zonas más adelantadas (+9) van antes que zonas atrasadas (-6)
+        if (aDayStart === bDayStart && a.timezoneOffset !== undefined && b.timezoneOffset !== undefined) {
+          if (a.timezoneOffset !== b.timezoneOffset) {
+            return b.timezoneOffset - a.timezoneOffset; // Descendente: +9 antes que -6
+          }
+        }
+      }
+      
+      // Para todos los demás casos (o si los offsets son iguales), ordenar por timestamp UTC
+      return a.sortTimestamp - b.sortTimestamp;
+    });
   };
 
   const chronologicalEvents = getAllEvents();
@@ -426,12 +450,17 @@ export default function TravelPreview() {
     events.forEach((event) => {
       const d = new Date(event.date);
       
-      // Formatear en zona horaria de México para agrupar por día
+      // Para vuelos, usar la zona horaria de salida; para otros, México
+      const timeZone = (event.type === 'flight' && event.data.departureTimezone) 
+        ? event.data.departureTimezone 
+        : "America/Mexico_City";
+      
+      // Formatear en la zona horaria correspondiente para agrupar por día
       const dateFmt = new Intl.DateTimeFormat("es-MX", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-        timeZone: "America/Mexico_City",
+        timeZone: timeZone,
       });
 
       const parts = dateFmt.formatToParts(d);
@@ -453,13 +482,20 @@ export default function TravelPreview() {
         // Crear fecha local
         const groupDate = new Date(y, m - 1, day);
 
-        // IMPORTANTE: Ordenar eventos dentro del día por su timestamp UTC original
-        // Esto asegura que los vuelos aparezcan en el orden correcto según su hora real
-        // independientemente de la zona horaria donde se visualicen
+        // IMPORTANTE: Ordenar eventos dentro del día con prioridad especial para vuelos
+        // Los vuelos se ordenan por zona horaria (offset descendente) primero, luego por hora
         groups[dateKey].sort((a, b) => {
-          const timeA = new Date(a.date).getTime();
-          const timeB = new Date(b.date).getTime();
-          return timeA - timeB;
+          // Si ambos son vuelos, priorizar por offset de zona horaria
+          if (a.type === 'flight' && b.type === 'flight') {
+            if (a.timezoneOffset !== undefined && b.timezoneOffset !== undefined) {
+              if (a.timezoneOffset !== b.timezoneOffset) {
+                return b.timezoneOffset - a.timezoneOffset; // Descendente
+              }
+            }
+          }
+          
+          // Para todos los demás casos, ordenar por timestamp
+          return a.sortTimestamp - b.sortTimestamp;
         });
 
         return {

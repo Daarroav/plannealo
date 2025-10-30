@@ -110,3 +110,49 @@ export function getTimezoneForAirport(iataCode: string | null, defaultTz = 'UTC'
   if (!iataCode) return defaultTz;
   return AIRPORT_TIMEZONES[iataCode.toUpperCase()] || defaultTz;
 }
+
+/**
+ * Obtiene el offset UTC en minutos para una zona horaria específica en una fecha dada
+ * Retorna un número positivo para zonas adelantadas (ej: +540 para GMT+9)
+ * y negativo para zonas atrasadas (ej: -300 para GMT-5)
+ */
+export function getTimezoneOffset(timezone: string, date: Date = new Date()): number {
+  try {
+    // Crear un formateador para la zona horaria específica
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZoneName: 'short'
+    });
+    
+    // Obtener la hora UTC
+    const utcDate = new Date(date.toISOString());
+    
+    // Obtener componentes de la fecha en la zona horaria especificada
+    const parts = formatter.formatToParts(date);
+    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+    const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
+    const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+    const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+    const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+    const second = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+    
+    // Crear fecha local en esa zona horaria
+    const localDate = new Date(year, month, day, hour, minute, second);
+    
+    // Calcular diferencia en minutos
+    // Offset positivo significa que la zona local está adelantada respecto a UTC
+    const offsetMinutes = Math.round((localDate.getTime() - utcDate.getTime()) / (1000 * 60));
+    
+    return offsetMinutes;
+  } catch (error) {
+    console.warn(`Could not determine offset for timezone ${timezone}:`, error);
+    return 0; // Default to UTC
+  }
+}
