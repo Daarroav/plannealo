@@ -448,27 +448,16 @@ export default function TravelPreview() {
     const groups: { [key: string]: any[] } = {};
 
     events.forEach((event) => {
-      const d = new Date(event.date);
+      // Para agrupar por día, usar el timestamp UTC ajustado del evento
+      // Esto asegura que los eventos se agrupen según su fecha/hora real UTC
+      const utcDate = new Date(event.sortTimestamp);
       
-      // Para vuelos, usar la zona horaria de salida; para otros, México
-      const timeZone = (event.type === 'flight' && event.data.departureTimezone) 
-        ? event.data.departureTimezone 
-        : "America/Mexico_City";
+      // Obtener la fecha en UTC (sin conversión de zona horaria)
+      const year = utcDate.getUTCFullYear();
+      const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getUTCDate()).padStart(2, '0');
       
-      // Formatear en la zona horaria correspondiente para agrupar por día
-      const dateFmt = new Intl.DateTimeFormat("es-MX", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: timeZone,
-      });
-
-      const parts = dateFmt.formatToParts(d);
-      const year = parts.find((p) => p.type === "year")?.value ?? "";
-      const month = parts.find((p) => p.type === "month")?.value ?? "";
-      const day = parts.find((p) => p.type === "day")?.value ?? "";
-      
-      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en UTC
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -479,22 +468,12 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // Crear fecha local
-        const groupDate = new Date(y, m - 1, day);
+        // Crear fecha UTC
+        const groupDate = new Date(Date.UTC(y, m - 1, day));
 
-        // IMPORTANTE: Ordenar eventos dentro del día con prioridad especial para vuelos
-        // Los vuelos se ordenan por zona horaria (offset descendente) primero, luego por hora
+        // IMPORTANTE: Ordenar eventos dentro del día por timestamp UTC
+        // Ya no necesitamos ordenar por offset porque el timestamp UTC ya refleja el orden correcto
         groups[dateKey].sort((a, b) => {
-          // Si ambos son vuelos, priorizar por offset de zona horaria
-          if (a.type === 'flight' && b.type === 'flight') {
-            if (a.timezoneOffset !== undefined && b.timezoneOffset !== undefined) {
-              if (a.timezoneOffset !== b.timezoneOffset) {
-                return b.timezoneOffset - a.timezoneOffset; // Descendente
-              }
-            }
-          }
-          
-          // Para todos los demás casos, ordenar por timestamp
           return a.sortTimestamp - b.sortTimestamp;
         });
 
@@ -531,10 +510,11 @@ export default function TravelPreview() {
       "diciembre",
     ];
 
-    const dayName = dayNames[date.getDay()];
-    const dayNumber = date.getDate();
-    const monthName = monthNames[date.getMonth()];
-    const year = date.getFullYear();
+    // Usar UTC para obtener los componentes de fecha
+    const dayName = dayNames[date.getUTCDay()];
+    const dayNumber = date.getUTCDate();
+    const monthName = monthNames[date.getUTCMonth()];
+    const year = date.getUTCFullYear();
 
     return `${capitalize(dayName)} ${dayNumber} de ${monthName} de ${year}`;
   };
