@@ -154,18 +154,29 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         arrTz = arrivalIata ? getTimezoneForAirport(arrivalIata, 'America/Mexico_City') : 'America/Mexico_City';
       }
       
-      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
-      // Esto evita que el navegador ajuste automáticamente a su zona horaria local
+      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
+      // Necesitamos convertir de UTC a la hora que sería en México
       const depISOString = editingFlight.departureDate;
       const arrISOString = editingFlight.arrivalDate;
       
-      // Extraer componentes del ISO string (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
-      const depDateStr = depISOString.substring(0, 10); // YYYY-MM-DD
-      const depTimeStr = depISOString.substring(11, 16); // HH:mm
-      const arrDateStr = arrISOString.substring(0, 10); // YYYY-MM-DD
-      const arrTimeStr = arrISOString.substring(11, 16); // HH:mm
+      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
+      const MEXICO_OFFSET_MINUTES = -360;
       
-      // Crear objetos Date locales para los calendarios (sin "Z" para evitar conversión UTC)
+      const depUTC = new Date(depISOString);
+      const arrUTC = new Date(arrISOString);
+      
+      // Ajustar por el offset de México para obtener la hora local de México
+      const depMexico = new Date(depUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      const arrMexico = new Date(arrUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      
+      // Extraer componentes en hora de México
+      const depDateStr = depMexico.toISOString().substring(0, 10);
+      const depTimeStr = depMexico.toISOString().substring(11, 16);
+      const arrDateStr = arrMexico.toISOString().substring(0, 10);
+      const arrTimeStr = arrMexico.toISOString().substring(11, 16);
+      
+      // Crear objetos Date para los calendarios en hora local del navegador
+      // pero que representen visualmente la hora de México
       const depDateTime = new Date(`${depDateStr}T${depTimeStr}:00`);
       const arrDateTime = new Date(`${arrDateStr}T${arrTimeStr}:00`);
       
@@ -433,27 +444,44 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       arrivalTz = editingFlight.arrivalTimezone;
     }
     
-    // Combinar fecha y hora como string en formato local
+    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
+    // Necesitamos convertir a UTC para guardar
+    const MEXICO_OFFSET_MINUTES = -360;
+    
+    // Crear fecha/hora como fue ingresada (interpretada como hora local del navegador)
     const departureDateTimeStr = `${currentValues.departureDateField}T${currentValues.departureTimeField}:00`;
     const arrivalDateTimeStr = `${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`;
     
-    // Crear objetos Date SIN conversión de zona horaria
-    // La hora se mantiene exactamente como fue ingresada
-    const departureDateTime = new Date(departureDateTimeStr);
-    const arrivalDateTime = new Date(arrivalDateTimeStr);
+    const departureLocal = new Date(departureDateTimeStr);
+    const arrivalLocal = new Date(arrivalDateTimeStr);
     
-    console.log('Saving times without timezone conversion:', {
+    // Convertir de hora local del navegador a UTC, asumiendo que el usuario ingresó hora de México
+    // Primero, obtenemos el offset del navegador
+    const browserOffsetMinutes = departureLocal.getTimezoneOffset();
+    
+    // Calculamos cuánto necesitamos ajustar para convertir de México a UTC
+    // El usuario ingresó hora de México (GMT-6 = -360 min)
+    // Pero el navegador interpretó como su zona local
+    // Necesitamos: UTC = hora_mexico - (-360)
+    const adjustmentMinutes = MEXICO_OFFSET_MINUTES;
+    
+    const departureDateTime = new Date(departureLocal.getTime() - adjustmentMinutes * 60 * 1000);
+    const arrivalDateTime = new Date(arrivalLocal.getTime() - adjustmentMinutes * 60 * 1000);
+    
+    console.log('Converting Mexico time to UTC:', {
       departure: {
         iata: departureIata,
         timezone: departureTz,
         inputTime: departureDateTimeStr,
-        savedISO: departureDateTime.toISOString()
+        mexicoOffset: MEXICO_OFFSET_MINUTES,
+        savedUTC: departureDateTime.toISOString()
       },
       arrival: {
         iata: arrivalIata,
         timezone: arrivalTz,
         inputTime: arrivalDateTimeStr,
-        savedISO: arrivalDateTime.toISOString()
+        mexicoOffset: MEXICO_OFFSET_MINUTES,
+        savedUTC: arrivalDateTime.toISOString()
       }
     });
 
