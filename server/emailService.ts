@@ -15,13 +15,7 @@ export class EmailService {
 
   constructor() {
     // Determine which provider to use (Mailgun by default)
-    if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
-      this.provider = 'mailgun';
-      this.mailgunApiKey = process.env.MAILGUN_API_KEY;
-      this.mailgunDomain = process.env.MAILGUN_DOMAIN;
-      this.fromEmail = process.env.MAILGUN_FROM_EMAIL || `PLANNEALO <noreply@${process.env.MAILGUN_DOMAIN}>`;
-      console.log('Email service initialized with Mailgun');
-    } else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
       this.provider = 'ses';
       this.sesClient = new SESClient({
         region: process.env.AWS_REGION,
@@ -32,6 +26,14 @@ export class EmailService {
       });
       this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@plannealo.com';
       console.log('Email service initialized with AWS SES');
+      
+    } else if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
+      this.provider = 'mailgun';
+      this.mailgunApiKey = process.env.MAILGUN_API_KEY;
+      this.mailgunDomain = process.env.MAILGUN_DOMAIN;
+      this.fromEmail = process.env.MAILGUN_FROM_EMAIL || `PLANNEALO <noreply@${process.env.MAILGUN_DOMAIN}>`;
+      console.log('Email service initialized with Mailgun');
+      
     } else {
       throw new Error(
         "Email service requires either Mailgun (MAILGUN_API_KEY, MAILGUN_DOMAIN) or AWS SES (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) credentials",
