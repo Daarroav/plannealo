@@ -72,10 +72,15 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingActivity) {
-      const activityDateTime = new Date(editingActivity.date);
-      const dateStr = format(activityDateTime, "yyyy-MM-dd");
-      const timeStr = format(activityDateTime, "HH:mm");
+      // Las fechas vienen en UTC pero representan la hora de México
+      // Extraemos los componentes directamente sin conversión
+      const activityISOString = editingActivity.date;
       
+      const dateStr = activityISOString.substring(0, 10);
+      const timeStr = activityISOString.substring(11, 16);
+      
+      // Crear objeto Date para el calendario sin conversión
+      const activityDateTime = new Date(`${dateStr}T${timeStr}:00`);
       setActivityDate(activityDateTime);
       setRemovedExistingAttachments([]);
       setAttachedFiles([]);
@@ -172,8 +177,9 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
       }
     }
     
-    // Combine date and time for the activity
-    const activityDateTime = new Date(`${currentValues.activityDate}T${currentValues.startTime}:00`);
+    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
+    const activityStr = `${currentValues.activityDate}T${currentValues.startTime}:00.000Z`;
+    const activityDateTime = new Date(activityStr);
 
     // Create FormData
     const formData = new FormData();
