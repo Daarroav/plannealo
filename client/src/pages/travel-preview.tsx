@@ -448,16 +448,18 @@ export default function TravelPreview() {
     const groups: { [key: string]: any[] } = {};
 
     events.forEach((event) => {
-      // Para agrupar por día, usar el timestamp UTC ajustado del evento
-      // Esto asegura que los eventos se agrupen según su fecha/hora real UTC
-      const utcDate = new Date(event.sortTimestamp);
+      // Convertir el timestamp del evento a zona horaria de México (GMT-6)
+      const MEXICO_OFFSET_MS = -6 * 60 * 60 * 1000; // -6 horas en milisegundos
       
-      // Obtener la fecha en UTC (sin conversión de zona horaria)
-      const year = utcDate.getUTCFullYear();
-      const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(utcDate.getUTCDate()).padStart(2, '0');
+      // Aplicar offset de México al timestamp para obtener la fecha local de México
+      const mexicoDate = new Date(event.sortTimestamp + MEXICO_OFFSET_MS);
       
-      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en UTC
+      // Obtener los componentes de fecha en la hora de México
+      const year = mexicoDate.getUTCFullYear();
+      const month = String(mexicoDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(mexicoDate.getUTCDate()).padStart(2, '0');
+      
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en hora de México
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -468,11 +470,10 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // Crear fecha UTC
+        // Crear fecha en UTC que represente la medianoche de ese día en México
         const groupDate = new Date(Date.UTC(y, m - 1, day));
 
-        // IMPORTANTE: Ordenar eventos dentro del día por timestamp UTC
-        // Ya no necesitamos ordenar por offset porque el timestamp UTC ya refleja el orden correcto
+        // Ordenar eventos dentro del día por timestamp UTC
         groups[dateKey].sort((a, b) => {
           return a.sortTimestamp - b.sortTimestamp;
         });
@@ -510,7 +511,8 @@ export default function TravelPreview() {
       "diciembre",
     ];
 
-    // Usar UTC para obtener los componentes de fecha
+    // La fecha ya está en formato UTC pero representa la fecha en México
+    // Usar UTC para obtener los componentes sin conversión adicional
     const dayName = dayNames[date.getUTCDay()];
     const dayNumber = date.getUTCDate();
     const monthName = monthNames[date.getUTCMonth()];
