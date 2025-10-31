@@ -1,44 +1,28 @@
-
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import crypto from "crypto";
-import FormData from "form-data";
-import fetch from "node-fetch";
-
-type EmailProvider = 'mailgun' | 'ses';
 
 export class EmailService {
-  private sesClient?: SESClient;
+  private sesClient: SESClient;
   private fromEmail: string;
-  private provider: EmailProvider;
-  private mailgunApiKey?: string;
-  private mailgunDomain?: string;
 
   constructor() {
-    // Determine which provider to use (Mailgun by default)
-    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_REGION) {
-      this.provider = 'ses';
-      this.sesClient = new SESClient({
-        region: process.env.AWS_REGION,
-        credentials: {
-          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        },
-      });
-      this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@plannealo.com';
-      console.log('Email service initialized with AWS SES');
-      
-    } else if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_DOMAIN) {
-      this.provider = 'mailgun';
-      this.mailgunApiKey = process.env.MAILGUN_API_KEY;
-      this.mailgunDomain = process.env.MAILGUN_DOMAIN;
-      this.fromEmail = process.env.MAILGUN_FROM_EMAIL || `PLANNEALO <noreply@${process.env.MAILGUN_DOMAIN}>`;
-      console.log('Email service initialized with Mailgun');
-      
-    } else {
+    // Validate AWS SES credentials
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
       throw new Error(
-        "Email service requires either Mailgun (MAILGUN_API_KEY, MAILGUN_DOMAIN) or AWS SES (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION) credentials",
+        "Email service requires AWS SES credentials: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION",
       );
     }
+
+    this.sesClient = new SESClient({
+      region: process.env.AWS_REGION,
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+
+    this.fromEmail = process.env.SES_FROM_EMAIL || 'noreply@plannealo.com';
+    console.log('Email service initialized with AWS SES');
   }
 
   async sendTravelShareEmail(
@@ -59,46 +43,11 @@ export class EmailService {
     const textContent = this.generatePlainTextEmail(travelData, itineraryUrl);
 
     try {
-      if (this.provider === 'mailgun') {
-        return await this.sendWithMailgun(recipientEmail, htmlContent, textContent);
-      } else {
-        return await this.sendWithSES(recipientEmail, htmlContent, textContent);
-      }
+      return await this.sendWithSES(recipientEmail, htmlContent, textContent);
     } catch (error) {
-      console.error(`Error sending email with ${this.provider}:`, error);
+      console.error('Error sending email with AWS SES:', error);
       throw error;
     }
-  }
-
-  private async sendWithMailgun(
-    recipientEmail: string,
-    htmlContent: string,
-    textContent: string,
-  ) {
-    const form = new FormData();
-    form.append('from', this.fromEmail);
-    form.append('to', recipientEmail);
-    form.append('subject', 'Tu itinerario de viaje con Plannealo');
-    form.append('text', textContent);
-    form.append('html', htmlContent);
-
-    const response = await fetch(
-      `https://api.mailgun.net/v3/${this.mailgunDomain}/messages`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`api:${this.mailgunApiKey}`).toString('base64')}`,
-        },
-        body: form,
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Mailgun API error: ${response.status} - ${errorText}`);
-    }
-
-    return await response.json();
   }
 
   private async sendWithSES(
@@ -106,10 +55,6 @@ export class EmailService {
     htmlContent: string,
     textContent: string,
   ) {
-    if (!this.sesClient) {
-      throw new Error('SES client not initialized');
-    }
-
     const params = {
       Source: this.fromEmail,
       Destination: {
@@ -271,7 +216,7 @@ export class EmailService {
         Bienvenido a tu próximo viaje con Plannealo.
       </h1>
     </div>
-    
+
     <div class="content">
       <div class="travel-info">
         <h3>${travel.name}</h3>
@@ -347,7 +292,7 @@ export class EmailService {
           <li>Descargar el documento y almacenarlo en tu dispositivo.</li>
           <li>Añadir tu itinerario a la pantalla de inicio del celular. A continuación te explicamos cómo hacerlo:</li>
         </ul>
-        
+
         <div style="margin-top: 20px;">
           <h4 style="margin: 16px 0 8px 0; color: #1f2937; font-size: 16px;">📱 En Android (Google Chrome)</h4>
           <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: #4b5563;">
@@ -359,7 +304,7 @@ export class EmailService {
           </ol>
           <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás un ícono en tu pantalla como si fuera una app.</p>
         </div>
-        
+
         <div style="margin-top: 20px;">
           <h4 style="margin: 16px 0 8px 0; color: #1f2937; font-size: 16px;">🍏 En iPhone (Safari)</h4>
           <ol style="margin: 0; padding-left: 20px; line-height: 1.6; color: #4b5563;">
@@ -371,7 +316,7 @@ export class EmailService {
           </ol>
           <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás el botón en tu pantalla principal que abre el itinerario directo.</p>
         </div>
-        
+
         <p style="margin: 20px 0 0 0; font-weight: 600; color: #dc2626; text-align: center;">¡Prepárate para vivir una gran experiencia con PLANNEALO!</p>
       </div>
     </div>
