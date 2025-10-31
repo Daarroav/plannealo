@@ -76,10 +76,21 @@ export function InsuranceFormModal({
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (initialData) {
-      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
+      // Necesitamos convertir de UTC a la hora que sería en México
       const effectiveISOString = initialData.effectiveDate;
-      const dateStr = effectiveISOString.substring(0, 10); // YYYY-MM-DD
-      const timeStr = effectiveISOString.substring(11, 16); // HH:mm
+      
+      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
+      const MEXICO_OFFSET_MINUTES = -360;
+      
+      const effectiveUTC = new Date(effectiveISOString);
+      
+      // Ajustar por el offset de México para obtener la hora local de México
+      const effectiveMexico = new Date(effectiveUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      
+      // Extraer componentes en hora de México
+      const dateStr = effectiveMexico.toISOString().substring(0, 10);
+      const timeStr = effectiveMexico.toISOString().substring(11, 16);
       
       form.reset({
         provider: initialData.provider || "",

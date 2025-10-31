@@ -259,17 +259,29 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   // Update form when editing accommodation changes
   React.useEffect(() => {
     if (editingAccommodation) {
-      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
+      // Necesitamos convertir de UTC a la hora que sería en México
       const checkInISOString = editingAccommodation.checkIn;
       const checkOutISOString = editingAccommodation.checkOut;
       
-      // Extraer componentes del ISO string (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
-      const checkInDateStr = checkInISOString.substring(0, 10); // YYYY-MM-DD
-      const checkInTimeStr = checkInISOString.substring(11, 16); // HH:mm
-      const checkOutDateStr = checkOutISOString.substring(0, 10); // YYYY-MM-DD
-      const checkOutTimeStr = checkOutISOString.substring(11, 16); // HH:mm
+      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
+      const MEXICO_OFFSET_MINUTES = -360;
       
-      // Crear objetos Date locales para los calendarios (sin "Z" para evitar conversión UTC)
+      const checkInUTC = new Date(checkInISOString);
+      const checkOutUTC = new Date(checkOutISOString);
+      
+      // Ajustar por el offset de México para obtener la hora local de México
+      const checkInMexico = new Date(checkInUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      const checkOutMexico = new Date(checkOutUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      
+      // Extraer componentes en hora de México
+      const checkInDateStr = checkInMexico.toISOString().substring(0, 10);
+      const checkInTimeStr = checkInMexico.toISOString().substring(11, 16);
+      const checkOutDateStr = checkOutMexico.toISOString().substring(0, 10);
+      const checkOutTimeStr = checkOutMexico.toISOString().substring(11, 16);
+      
+      // Crear objetos Date para los calendarios en hora local del navegador
+      // pero que representen visualmente la hora de México
       const checkInDateTime = new Date(`${checkInDateStr}T${checkInTimeStr}:00`);
       const checkOutDateTime = new Date(`${checkOutDateStr}T${checkOutTimeStr}:00`);
       

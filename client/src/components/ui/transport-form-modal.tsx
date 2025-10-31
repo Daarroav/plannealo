@@ -70,12 +70,24 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingTransport) {
-      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
+      // Necesitamos convertir de UTC a la hora que sería en México
       const pickupISOString = editingTransport.pickupDate;
-      const pickupDateStr = pickupISOString.substring(0, 10); // YYYY-MM-DD
-      const pickupTimeStr = pickupISOString.substring(11, 16); // HH:mm
       
-      // Crear objeto Date local para el calendario (sin "Z" para evitar conversión UTC)
+      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
+      const MEXICO_OFFSET_MINUTES = -360;
+      
+      const pickupUTC = new Date(pickupISOString);
+      
+      // Ajustar por el offset de México para obtener la hora local de México
+      const pickupMexico = new Date(pickupUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+      
+      // Extraer componentes en hora de México
+      const pickupDateStr = pickupMexico.toISOString().substring(0, 10);
+      const pickupTimeStr = pickupMexico.toISOString().substring(11, 16);
+      
+      // Crear objeto Date para el calendario en hora local del navegador
+      // pero que represente visualmente la hora de México
       const pickupDateTime = new Date(`${pickupDateStr}T${pickupTimeStr}:00`);
       setPickupDate(pickupDateTime);
       
@@ -85,8 +97,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       
       if (editingTransport.endDate) {
         const endISOString = editingTransport.endDate;
-        endDateStr = endISOString.substring(0, 10);
-        endTimeStr = endISOString.substring(11, 16);
+        const endUTC = new Date(endISOString);
+        const endMexico = new Date(endUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
+        
+        endDateStr = endMexico.toISOString().substring(0, 10);
+        endTimeStr = endMexico.toISOString().substring(11, 16);
         endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
       }
       
