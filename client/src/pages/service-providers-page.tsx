@@ -1,25 +1,29 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Search, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { ServiceProvider } from "@/../../shared/schema";
 
-
 const LIMIT_PROVIDERS = 30;
 
 export default function ServiceProvidersPage() {
   const [showModal, setShowModal] = useState(false);
-  const [editingProvider, setEditingProvider] = useState<ServiceProvider | null>(null);
+  const [editingProvider, setEditingProvider] =
+    useState<ServiceProvider | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -94,7 +98,8 @@ export default function ServiceProvidersPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo eliminar el proveedor. Puede estar asociado a servicios.",
+        description:
+          "No se pudo eliminar el proveedor. Puede estar asociado a servicios.",
       });
     },
   });
@@ -120,7 +125,7 @@ export default function ServiceProvidersPage() {
   };
 
   const filteredProviders = providers.filter((provider: ServiceProvider) =>
-    provider.name.toLowerCase().includes(searchTerm.toLowerCase())
+    provider.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -130,26 +135,30 @@ export default function ServiceProvidersPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Proveedores de Servicios</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Proveedores de Servicios
+            </h1>
             <p className="text-muted-foreground mt-2">
               Gestiona el catálogo de proveedores de servicios
             </p>
           </div>
-          <Button onClick={() => {
-            // Validar límite de proveedores
-            if (providers.length >= LIMIT_PROVIDERS) {
-              toast({
-                variant: "destructive",
-                title: "⚠️ Límite alcanzado",
-                description: `El máximo de ${LIMIT_PROVIDERS} proveedores ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
-              });
-              return;
-            }
-            
-            setEditingProvider(null);
-            form.reset({ name: "", contactName: "", contactPhone: "" });
-            setShowModal(true);
-          }}>
+          <Button
+            onClick={() => {
+              // Validar límite de proveedores
+              if (providers.length >= LIMIT_PROVIDERS) {
+                toast({
+                  variant: "destructive",
+                  title: "⚠️ Límite alcanzado",
+                  description: `El máximo de ${LIMIT_PROVIDERS} proveedores ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
+                });
+                return;
+              }
+
+              setEditingProvider(null);
+              form.reset({ name: "", contactName: "", contactPhone: "" });
+              setShowModal(true);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Proveedor
           </Button>
@@ -185,12 +194,14 @@ export default function ServiceProvidersPage() {
                   <div className="space-y-2 text-sm">
                     {provider.contactName && (
                       <div className="text-muted-foreground">
-                        <span className="font-medium">Contacto:</span> {provider.contactName}
+                        <span className="font-medium">Contacto:</span>{" "}
+                        {provider.contactName}
                       </div>
                     )}
                     {provider.contactPhone && (
                       <div className="text-muted-foreground">
-                        <span className="font-medium">Teléfono:</span> {provider.contactPhone}
+                        <span className="font-medium">Teléfono:</span>{" "}
+                        {provider.contactPhone}
                       </div>
                     )}
                   </div>
@@ -233,7 +244,7 @@ export default function ServiceProvidersPage() {
                   placeholder="Ej: Viajes Internacionales SA"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="contactName">Nombre del Contacto</Label>
                 <Input

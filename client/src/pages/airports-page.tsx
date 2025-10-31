@@ -1,11 +1,15 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Search, Plane, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -25,13 +29,15 @@ export default function AirportsPage() {
   const [editingAirport, setEditingAirport] = useState<Airport | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [timezones, setTimezones] = useState<TimezoneEntry[]>([
-    { timezone: "" }
+    { timezone: "" },
   ]);
   // Estados para los catálogos de ubicación (IDs)
-  const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>();
+  const [selectedCountryId, setSelectedCountryId] = useState<
+    string | undefined
+  >();
   const [selectedStateId, setSelectedStateId] = useState<string | undefined>();
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>();
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -61,12 +67,12 @@ export default function AirportsPage() {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           ...data,
           countryId: selectedCountryId,
           stateId: selectedStateId,
           cityId: selectedCityId,
-          timezones 
+          timezones,
         }),
         credentials: "include",
       });
@@ -132,14 +138,15 @@ export default function AirportsPage() {
       });
       return;
     }
-    
+
     // Validar que todas las zonas horarias tengan un timezone seleccionado
-    const invalidTimezone = timezones.find(tz => !tz.timezone);
+    const invalidTimezone = timezones.find((tz) => !tz.timezone);
     if (invalidTimezone) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Todas las zonas horarias deben tener una zona seleccionada",
+        description:
+          "Todas las zonas horarias deben tener una zona seleccionada",
       });
       return;
     }
@@ -158,7 +165,7 @@ export default function AirportsPage() {
     setSelectedCountryId(airport.countryId || undefined);
     setSelectedStateId(airport.stateId || undefined);
     setSelectedCityId(airport.cityId || undefined);
-    setTimezones(airport.timezones as TimezoneEntry[] || [{ timezone: "" }]);
+    setTimezones((airport.timezones as TimezoneEntry[]) || [{ timezone: "" }]);
     setShowModal(true);
   };
 
@@ -178,16 +185,29 @@ export default function AirportsPage() {
     }
   };
 
-  const updateTimezone = (index: number, field: keyof TimezoneEntry, value: string) => {
+  const updateTimezone = (
+    index: number,
+    field: keyof TimezoneEntry,
+    value: string,
+  ) => {
     const updated = [...timezones];
     updated[index] = { ...updated[index], [field]: value };
     setTimezones(updated);
   };
 
   const filteredAirports = airports.filter((airport: Airport) =>
-    [airport.country, airport.city, airport.airportName, airport.iataCode, airport.icaoCode]
+    [
+      airport.country,
+      airport.city,
+      airport.airportName,
+      airport.iataCode,
+      airport.icaoCode,
+    ]
       .filter(Boolean)
-      .some((field) => field && field.toLowerCase().includes(searchTerm.toLowerCase()))
+      .some(
+        (field) =>
+          field && field.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
   );
 
   return (
@@ -197,36 +217,40 @@ export default function AirportsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Catálogo de Aeropuertos</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Catálogo de Aeropuertos
+            </h1>
             <p className="text-muted-foreground mt-2">
               Gestiona la información de aeropuertos y sus zonas horarias
             </p>
           </div>
-          <Button onClick={() => {
-            // Validar límite de aeropuertos
-            if (airports.length >= LIMIT_AIRPORTS) {
-              toast({
-                variant: "destructive",
-                title: "⚠️ Límite alcanzado",
-                description: `El máximo de ${LIMIT_AIRPORTS} aeropuertos ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
+          <Button
+            onClick={() => {
+              // Validar límite de aeropuertos
+              if (airports.length >= LIMIT_AIRPORTS) {
+                toast({
+                  variant: "destructive",
+                  title: "⚠️ Límite alcanzado",
+                  description: `El máximo de ${LIMIT_AIRPORTS} aeropuertos ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
+                });
+                return;
+              }
+
+              setEditingAirport(null);
+              form.reset({
+                airportName: "",
+                iataCode: "",
+                icaoCode: "",
+                latitude: "",
+                longitude: "",
               });
-              return;
-            }
-            
-            setEditingAirport(null);
-            form.reset({
-              airportName: "",
-              iataCode: "",
-              icaoCode: "",
-              latitude: "",
-              longitude: "",
-            });
-            setTimezones([{ timezone: "" }]);
-            setSelectedCountryId(undefined);
-            setSelectedStateId(undefined);
-            setSelectedCityId(undefined);
-            setShowModal(true);
-          }}>
+              setTimezones([{ timezone: "" }]);
+              setSelectedCountryId(undefined);
+              setSelectedStateId(undefined);
+              setSelectedCityId(undefined);
+              setShowModal(true);
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Aeropuerto
           </Button>
@@ -260,9 +284,17 @@ export default function AirportsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 text-sm">
-                    <p><strong>País:</strong> {airport.country}</p>
-                    <p><strong>Ciudad:</strong> {airport.city}</p>
-                    {airport.state && <p><strong>Estado:</strong> {airport.state}</p>}
+                    <p>
+                      <strong>País:</strong> {airport.country}
+                    </p>
+                    <p>
+                      <strong>Ciudad:</strong> {airport.city}
+                    </p>
+                    {airport.state && (
+                      <p>
+                        <strong>Estado:</strong> {airport.state}
+                      </p>
+                    )}
                     <div className="flex gap-2 pt-2">
                       {airport.iataCode && (
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
@@ -275,16 +307,25 @@ export default function AirportsPage() {
                         </span>
                       )}
                     </div>
-                    {airport.timezones && Array.isArray(airport.timezones) && airport.timezones.length > 0 && (
-                      <div className="pt-2 border-t">
-                        <p className="font-semibold text-xs mb-1">Zonas horarias:</p>
-                        {(airport.timezones as TimezoneEntry[]).map((tz, idx) => (
-                          <p key={idx} className="text-xs text-muted-foreground">
-                            • {tz.timezone}
+                    {airport.timezones &&
+                      Array.isArray(airport.timezones) &&
+                      airport.timezones.length > 0 && (
+                        <div className="pt-2 border-t">
+                          <p className="font-semibold text-xs mb-1">
+                            Zonas horarias:
                           </p>
-                        ))}
-                      </div>
-                    )}
+                          {(airport.timezones as TimezoneEntry[]).map(
+                            (tz, idx) => (
+                              <p
+                                key={idx}
+                                className="text-xs text-muted-foreground"
+                              >
+                                • {tz.timezone}
+                              </p>
+                            ),
+                          )}
+                        </div>
+                      )}
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
@@ -402,7 +443,12 @@ export default function AirportsPage() {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <Label className="text-base">Zonas Horarias *</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addTimezone}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addTimezone}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Agregar Zona Horaria
                   </Button>
@@ -414,7 +460,9 @@ export default function AirportsPage() {
                       <div className="flex-1">
                         <TimezoneCombobox
                           value={tz.timezone}
-                          onValueChange={(value) => updateTimezone(index, "timezone", value)}
+                          onValueChange={(value) =>
+                            updateTimezone(index, "timezone", value)
+                          }
                           placeholder="Seleccionar zona horaria..."
                         />
                       </div>
