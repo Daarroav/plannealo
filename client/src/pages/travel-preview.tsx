@@ -418,8 +418,17 @@ export default function TravelPreview() {
         // Crear fecha que represente ese día en México
         const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día por hora de México
+        // Ordenar eventos dentro del día
         groups[dateKey].sort((a, b) => {
+          // Para vuelos, ordenar por su tiempo UTC real
+          if (a.type === 'flight' && b.type === 'flight') {
+            // Usar la fecha original (UTC) directamente
+            const aUtcTime = new Date(a.date).getTime();
+            const bUtcTime = new Date(b.date).getTime();
+            return aUtcTime - bUtcTime;
+          }
+          
+          // Para otros eventos o vuelo vs otro tipo, ordenar por hora de México
           const aDate = a.mexicoDate;
           const bDate = b.mexicoDate;
           
