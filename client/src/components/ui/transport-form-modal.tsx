@@ -16,6 +16,7 @@ import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertTransportSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
+import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
@@ -70,25 +71,18 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingTransport) {
-      // Extraer componentes directamente sin conversión de zona horaria
-      const pickupISOString = editingTransport.pickupDate;
+      // Convertir UTC a componentes de México
+      const pickupComponents = utcToMexicoComponents(editingTransport.pickupDate);
       
-      const pickupDateStr = pickupISOString.substring(0, 10);
-      const pickupTimeStr = pickupISOString.substring(11, 16);
-      
-      const pickupDateTime = new Date(`${pickupDateStr}T${pickupTimeStr}:00`);
+      const pickupDateTime = new Date(`${pickupComponents.dateStr}T${pickupComponents.timeStr}:00`);
       setPickupDate(pickupDateTime);
       
       let endDateTime = undefined;
-      let endDateStr = "";
-      let endTimeStr = "06:00";
+      let endComponents = { dateStr: "", timeStr: "06:00" };
       
       if (editingTransport.endDate) {
-        const endISOString = editingTransport.endDate;
-        
-        endDateStr = endISOString.substring(0, 10);
-        endTimeStr = endISOString.substring(11, 16);
-        endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
+        endComponents = utcToMexicoComponents(editingTransport.endDate);
+        endDateTime = new Date(`${endComponents.dateStr}T${endComponents.timeStr}:00`);
       }
       
       setEndDate(endDateTime);
@@ -100,11 +94,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         provider: editingTransport.provider || "",
         contactName: editingTransport.contactName || "",
         contactNumber: editingTransport.contactNumber || "",
-        pickupDateField: pickupDateStr,
-        pickupTimeField: pickupTimeStr,
+        pickupDateField: pickupComponents.dateStr,
+        pickupTimeField: pickupComponents.timeStr,
         pickupLocation: editingTransport.pickupLocation || "",
-        endDateField: endDateStr,
-        endTimeField: endTimeStr,
+        endDateField: endComponents.dateStr,
+        endTimeField: endComponents.timeStr,
         dropoffLocation: editingTransport.dropoffLocation || "",
         confirmationNumber: editingTransport.confirmationNumber || "",
         notes: editingTransport.notes || "",
@@ -187,14 +181,12 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       }
     }
     
-    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
-    const pickupStr = `${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00.000Z`;
-    const pickupDateTime = new Date(pickupStr);
+    // Convertir de componentes México a UTC
+    const pickupUTC = mexicoComponentsToUTC(currentValues.pickupDateField, currentValues.pickupTimeField);
     
-    let endDateTime = null;
+    let endUTC = null;
     if (currentValues.endDateField && currentValues.endTimeField) {
-      const endStr = `${currentValues.endDateField}T${currentValues.endTimeField}:00.000Z`;
-      endDateTime = new Date(endStr);
+      endUTC = mexicoComponentsToUTC(currentValues.endDateField, currentValues.endTimeField);
     }
 
     // Create FormData
@@ -210,10 +202,10 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     formData.append('provider', currentValues.provider || '');
     formData.append('contactName', currentValues.contactName || '');
     formData.append('contactNumber', currentValues.contactNumber || '');
-    formData.append('pickupDate', pickupDateTime.toISOString());
+    formData.append('pickupDate', pickupUTC);
     formData.append('pickupLocation', currentValues.pickupLocation);
-    if (endDateTime) {
-      formData.append('endDate', endDateTime.toISOString());
+    if (endUTC) {
+      formData.append('endDate', endUTC);
     }
     formData.append('dropoffLocation', currentValues.dropoffLocation || '');
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');

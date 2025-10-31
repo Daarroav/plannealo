@@ -1,3 +1,6 @@
+// Zona horaria fija para toda la aplicación
+export const MEXICO_TIMEZONE = 'America/Mexico_City';
+
 // Mapeo de códigos IATA de aeropuertos a zonas horarias IANA
 // Basado en los aeropuertos más comunes del mundo
 export const AIRPORT_TIMEZONES: Record<string, string> = {
@@ -155,4 +158,91 @@ export function getTimezoneOffset(timezone: string, date: Date = new Date()): nu
     console.warn(`Could not determine offset for timezone ${timezone}:`, error);
     return 0; // Default to UTC
   }
+}
+
+/**
+ * Convierte una fecha UTC a componentes de fecha/hora en zona México
+ * Retorna { dateStr: 'YYYY-MM-DD', timeStr: 'HH:mm' }
+ */
+export function utcToMexicoComponents(utcDateString: string): { dateStr: string; timeStr: string } {
+  const date = new Date(utcDateString);
+  
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: MEXICO_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(date);
+  const year = parts.find(p => p.type === 'year')?.value || '2025';
+  const month = parts.find(p => p.type === 'month')?.value || '01';
+  const day = parts.find(p => p.type === 'day')?.value || '01';
+  const hour = parts.find(p => p.type === 'hour')?.value || '00';
+  const minute = parts.find(p => p.type === 'minute')?.value || '00';
+  
+  return {
+    dateStr: `${year}-${month}-${day}`,
+    timeStr: `${hour}:${minute}`
+  };
+}
+
+/**
+ * Convierte componentes de fecha/hora de México a UTC ISO string
+ * Input: dateStr 'YYYY-MM-DD', timeStr 'HH:mm'
+ * Output: ISO string en UTC
+ */
+export function mexicoComponentsToUTC(dateStr: string, timeStr: string = '00:00'): string {
+  // Crear string de fecha en formato que se interpretará en la zona de México
+  const dateTimeStr = `${dateStr}T${timeStr}:00`;
+  
+  // Parsear como si estuviera en zona de México
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: MEXICO_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  // Crear fecha temporal en zona local del navegador
+  const tempDate = new Date(dateTimeStr);
+  
+  // Obtener componentes en zona de México
+  const parts = formatter.formatToParts(tempDate);
+  const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+  const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
+  const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  
+  // Crear Date en UTC que represente esa hora en México
+  // México está típicamente en GMT-6 (o GMT-5 en horario de verano)
+  // Necesitamos agregar esas horas para convertir a UTC
+  const mexicoDate = new Date(Date.UTC(year, month, day, hours, minutes, 0));
+  
+  // Obtener el offset de México para esa fecha específica
+  const mexicoFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: MEXICO_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const mexicoParts = mexicoFormatter.formatToParts(mexicoDate);
+  const mexicoHour = parseInt(mexicoParts.find(p => p.type === 'hour')?.value || '0');
+  
+  // Calcular la diferencia y ajustar
+  const hourDiff = hours - mexicoHour;
+  mexicoDate.setUTCHours(mexicoDate.getUTCHours() + hourDiff);
+  
+  return mexicoDate.toISOString();
 }

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 import { useRef } from "react";
 import { FileText } from "lucide-react";
+import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -163,12 +164,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     const checkInTime = currentValues.checkInTime || "00:00";
     const checkOutTime = currentValues.checkOutTime || "00:00";
     
-    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
-    const checkInStr = `${currentValues.checkInDate}T${checkInTime}:00.000Z`;
-    const checkOutStr = `${currentValues.checkOutDate}T${checkOutTime}:00.000Z`;
-    
-    const checkIn = new Date(checkInStr);
-    const checkOut = new Date(checkOutStr);
+    // Convertir de componentes México a UTC
+    const checkInUTC = mexicoComponentsToUTC(currentValues.checkInDate, checkInTime);
+    const checkOutUTC = mexicoComponentsToUTC(currentValues.checkOutDate, checkOutTime);
   
     // Create FormData
     const formData = new FormData();
@@ -177,8 +175,8 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('name', currentValues.name);
     formData.append('type', currentValues.type);
     formData.append('location', currentValues.location);
-    formData.append('checkIn', checkIn.toISOString());
-    formData.append('checkOut', checkOut.toISOString());
+    formData.append('checkIn', checkInUTC);
+    formData.append('checkOut', checkOutUTC);
     formData.append('roomType', `${currentValues.roomCount} ${currentValues.roomType}`);
     formData.append('price', currentValues.price || '');
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
@@ -254,20 +252,13 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   // Update form when editing accommodation changes
   React.useEffect(() => {
     if (editingAccommodation) {
-      // Las fechas vienen en UTC pero representan la hora de México
-      // Simplemente extraemos los componentes directamente sin conversión
-      const checkInISOString = editingAccommodation.checkIn;
-      const checkOutISOString = editingAccommodation.checkOut;
+      // Convertir UTC a componentes de México
+      const checkInComponents = utcToMexicoComponents(editingAccommodation.checkIn);
+      const checkOutComponents = utcToMexicoComponents(editingAccommodation.checkOut);
       
-      // Extraer componentes directamente del ISO string
-      const checkInDateStr = checkInISOString.substring(0, 10);
-      const checkInTimeStr = checkInISOString.substring(11, 16);
-      const checkOutDateStr = checkOutISOString.substring(0, 10);
-      const checkOutTimeStr = checkOutISOString.substring(11, 16);
-      
-      // Crear objetos Date para los calendarios sin conversión
-      const checkInDateTime = new Date(`${checkInDateStr}T${checkInTimeStr}:00`);
-      const checkOutDateTime = new Date(`${checkOutDateStr}T${checkOutTimeStr}:00`);
+      // Crear objetos Date para los calendarios
+      const checkInDateTime = new Date(`${checkInComponents.dateStr}T${checkInComponents.timeStr}:00`);
+      const checkOutDateTime = new Date(`${checkOutComponents.dateStr}T${checkOutComponents.timeStr}:00`);
       
       setCheckInDate(checkInDateTime);
       setCheckOutDate(checkOutDateTime);
@@ -281,10 +272,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         name: editingAccommodation.name,
         type: editingAccommodation.type,
         location: editingAccommodation.location,
-        checkInDate: checkInDateStr,
-        checkInTime: checkInTimeStr,
-        checkOutDate: checkOutDateStr,
-        checkOutTime: checkOutTimeStr,
+        checkInDate: checkInComponents.dateStr,
+        checkInTime: checkInComponents.timeStr,
+        checkOutDate: checkOutComponents.dateStr,
+        checkOutTime: checkOutComponents.timeStr,
         roomType: editingAccommodation.roomType?.replace(/^\d+\s/, "") || "",
         roomCount: editingAccommodation.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
         price: editingAccommodation.price || "",

@@ -13,6 +13,7 @@ import { Upload, FileText, X } from "lucide-react";
 import { format } from "date-fns";
 import { insertInsuranceSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
+import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 
 
 // Form validation schema - extends the base schema with date string handling
@@ -76,19 +77,16 @@ export function InsuranceFormModal({
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (initialData) {
-      // Extraer componentes directamente sin conversión de zona horaria
-      const effectiveISOString = initialData.effectiveDate;
-      
-      const dateStr = effectiveISOString.substring(0, 10);
-      const timeStr = effectiveISOString.substring(11, 16);
+      // Convertir UTC a componentes de México
+      const components = utcToMexicoComponents(initialData.effectiveDate);
       
       form.reset({
         provider: initialData.provider || "",
         policyNumber: initialData.policyNumber || "",
         policyType: initialData.policyType || "",
         emergencyNumber: initialData.emergencyNumber || "",
-        effectiveDate: dateStr,
-        effectiveTime: timeStr,
+        effectiveDate: components.dateStr,
+        effectiveTime: components.timeStr,
         importantInfo: initialData.importantInfo || "",
         policyDescription: initialData.policyDescription || "",
         notes: initialData.notes || "",
@@ -142,10 +140,9 @@ export function InsuranceFormModal({
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
 
-    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
+    // Convertir de componentes México a UTC
     const effectiveTime = currentValues.effectiveTime || "00:00";
-    const effectiveStr = `${currentValues.effectiveDate}T${effectiveTime}:00.000Z`;
-    const effectiveDateTime = new Date(effectiveStr);
+    const effectiveUTC = mexicoComponentsToUTC(currentValues.effectiveDate, effectiveTime);
 
     // Create FormData
     const formData = new FormData();
@@ -158,7 +155,7 @@ export function InsuranceFormModal({
     formData.append('policyNumber', currentValues.policyNumber);
     formData.append('policyType', currentValues.policyType);
     formData.append('emergencyNumber', currentValues.emergencyNumber || '');
-    formData.append('effectiveDate', effectiveDateTime.toISOString());
+    formData.append('effectiveDate', effectiveUTC);
     formData.append('importantInfo', currentValues.importantInfo || '');
     formData.append('policyDescription', currentValues.policyDescription || '');
     formData.append('notes', currentValues.notes || '');

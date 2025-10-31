@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { insertCruiseSchema } from "@shared/schema";
 import { Upload, FileText, X } from "lucide-react";
 import React from "react";
+import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 
 // Form validation schema - extends the base schema with date string handling
 const cruiseFormSchema = insertCruiseSchema.extend({
@@ -61,25 +62,18 @@ export function CruiseFormModal({
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
       if (editingCruise) {
-        const depDateTime = new Date(editingCruise.departureDate);
-        const arrDateTime = new Date(editingCruise.arrivalDate);
-        
-        // Extract date in YYYY-MM-DD format for date inputs
-        const depDateStr = depDateTime.toISOString().split('T')[0];
-        const arrDateStr = arrDateTime.toISOString().split('T')[0];
-        
-        // Extract time in HH:MM format for time inputs
-        const depTimeStr = depDateTime.toTimeString().slice(0, 5);
-        const arrTimeStr = arrDateTime.toTimeString().slice(0, 5);
+        // Convertir UTC a componentes de México
+        const depComponents = utcToMexicoComponents(editingCruise.departureDate);
+        const arrComponents = utcToMexicoComponents(editingCruise.arrivalDate);
         
         form.reset({
           cruiseLine: editingCruise.cruiseLine || "",
           confirmationNumber: editingCruise.confirmationNumber || "",
-          departureDate: depDateStr,
-          departureTime: depTimeStr,
+          departureDate: depComponents.dateStr,
+          departureTime: depComponents.timeStr,
           departurePort: editingCruise.departurePort || "",
-          arrivalDate: arrDateStr,
-          arrivalTime: arrTimeStr,
+          arrivalDate: arrComponents.dateStr,
+          arrivalTime: arrComponents.timeStr,
           arrivalPort: editingCruise.arrivalPort || "",
           notes: editingCruise.notes || "",
           attachments: editingCruise.attachments || [],
@@ -134,15 +128,15 @@ export function CruiseFormModal({
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
 
-    // Combine date and time for departure
-    const departureDateTime = currentValues.departureTime 
-      ? new Date(`${currentValues.departureDate}T${currentValues.departureTime}:00`)
-      : new Date(`${currentValues.departureDate}T09:00:00`);
-
-    // Combine date and time for arrival
-    const arrivalDateTime = currentValues.arrivalTime 
-      ? new Date(`${currentValues.arrivalDate}T${currentValues.arrivalTime}:00`)
-      : new Date(`${currentValues.arrivalDate}T18:00:00`);
+    // Convertir de componentes México a UTC
+    const departureUTC = mexicoComponentsToUTC(
+      currentValues.departureDate,
+      currentValues.departureTime || '09:00'
+    );
+    const arrivalUTC = mexicoComponentsToUTC(
+      currentValues.arrivalDate,
+      currentValues.arrivalTime || '18:00'
+    );
 
     // Create FormData
     const formData = new FormData();
@@ -150,9 +144,9 @@ export function CruiseFormModal({
     // Add form fields (no editing support yet, so no id)
     formData.append('cruiseLine', currentValues.cruiseLine);
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
-    formData.append('departureDate', departureDateTime.toISOString());
+    formData.append('departureDate', departureUTC);
     formData.append('departurePort', currentValues.departurePort);
-    formData.append('arrivalDate', arrivalDateTime.toISOString());
+    formData.append('arrivalDate', arrivalUTC);
     formData.append('arrivalPort', currentValues.arrivalPort);
     formData.append('notes', currentValues.notes || '');
     
