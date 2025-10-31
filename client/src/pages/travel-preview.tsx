@@ -420,12 +420,42 @@ export default function TravelPreview() {
 
         // Ordenar eventos dentro del día
         groups[dateKey].sort((a, b) => {
-          // Para vuelos, ordenar por su tiempo UTC real
+          // Para vuelos, ordenar por offset UTC de su timezone (mayor offset primero)
           if (a.type === 'flight' && b.type === 'flight') {
-            // Usar la fecha original (UTC) directamente
-            const aUtcTime = new Date(a.date).getTime();
-            const bUtcTime = new Date(b.date).getTime();
-            return aUtcTime - bUtcTime;
+            // Función para obtener el offset UTC en horas de un timezone
+            const getUtcOffsetInHours = (timezone: string | null): number => {
+              if (!timezone) return 0;
+              try {
+                // Crear una fecha en ese timezone y obtener su offset
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                  timeZone: timezone,
+                  timeZoneName: 'longOffset'
+                });
+                
+                const parts = formatter.formatToParts(new Date());
+                const offsetPart = parts.find(p => p.type === 'timeZoneName');
+                
+                if (offsetPart && offsetPart.value) {
+                  // Parsear formato "GMT+9" o "GMT-6"
+                  const match = offsetPart.value.match(/GMT([+-])(\d+)(?::(\d+))?/);
+                  if (match) {
+                    const sign = match[1] === '+' ? 1 : -1;
+                    const hours = parseInt(match[2]);
+                    const minutes = match[3] ? parseInt(match[3]) : 0;
+                    return sign * (hours + minutes / 60);
+                  }
+                }
+                return 0;
+              } catch (e) {
+                return 0;
+              }
+            };
+            
+            const offsetA = getUtcOffsetInHours(a.data.departureTimezone);
+            const offsetB = getUtcOffsetInHours(b.data.departureTimezone);
+            
+            // Ordenar de mayor a menor offset (vuelos en zonas más adelantadas primero)
+            return offsetB - offsetA;
           }
           
           // Para otros eventos o vuelo vs otro tipo, ordenar por hora de México
