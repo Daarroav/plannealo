@@ -70,10 +70,26 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingTransport) {
-      const pickupDateTime = new Date(editingTransport.pickupDate);
-      const endDateTime = editingTransport.endDate ? new Date(editingTransport.endDate) : undefined;
+      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      const pickupISOString = editingTransport.pickupDate;
+      const pickupDateStr = pickupISOString.substring(0, 10); // YYYY-MM-DD
+      const pickupTimeStr = pickupISOString.substring(11, 16); // HH:mm
       
+      // Crear objeto Date local para el calendario (sin "Z" para evitar conversión UTC)
+      const pickupDateTime = new Date(`${pickupDateStr}T${pickupTimeStr}:00`);
       setPickupDate(pickupDateTime);
+      
+      let endDateTime = undefined;
+      let endDateStr = "";
+      let endTimeStr = "06:00";
+      
+      if (editingTransport.endDate) {
+        const endISOString = editingTransport.endDate;
+        endDateStr = endISOString.substring(0, 10);
+        endTimeStr = endISOString.substring(11, 16);
+        endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
+      }
+      
       setEndDate(endDateTime);
       
       form.reset({
@@ -83,11 +99,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         provider: editingTransport.provider || "",
         contactName: editingTransport.contactName || "",
         contactNumber: editingTransport.contactNumber || "",
-        pickupDateField: format(pickupDateTime, "yyyy-MM-dd"),
-        pickupTimeField: format(pickupDateTime, "HH:mm"),
+        pickupDateField: pickupDateStr,
+        pickupTimeField: pickupTimeStr,
         pickupLocation: editingTransport.pickupLocation || "",
-        endDateField: endDateTime ? format(endDateTime, "yyyy-MM-dd") : "",
-        endTimeField: endDateTime ? format(endDateTime, "HH:mm") : "06:00",
+        endDateField: endDateStr,
+        endTimeField: endTimeStr,
         dropoffLocation: editingTransport.dropoffLocation || "",
         confirmationNumber: editingTransport.confirmationNumber || "",
         notes: editingTransport.notes || "",
@@ -170,12 +186,19 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       }
     }
     
-    // Combine date and time for pickup
-    const pickupDateTime = new Date(`${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00`);
+    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
+    // Necesitamos convertir a UTC para guardar
+    const MEXICO_OFFSET_MINUTES = -360;
+    
+    // Crear fecha/hora de recogida como fue ingresada
+    const pickupLocal = new Date(`${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00`);
+    // Convertir a UTC
+    const pickupDateTime = new Date(pickupLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
     
     let endDateTime = null;
     if (currentValues.endDateField && currentValues.endTimeField) {
-      endDateTime = new Date(`${currentValues.endDateField}T${currentValues.endTimeField}:00`);
+      const endLocal = new Date(`${currentValues.endDateField}T${currentValues.endTimeField}:00`);
+      endDateTime = new Date(endLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
     }
 
     // Create FormData

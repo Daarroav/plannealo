@@ -159,12 +159,21 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     // Get the most current form values
     const currentValues = form.getValues();
     
-    // Combine date and time for check-in and check-out
-    // Use 00:00 if no time is specified
+    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
+    // Necesitamos convertir a UTC para guardar
+    const MEXICO_OFFSET_MINUTES = -360;
+    
+    // Usar 00:00 si no se especifica hora
     const checkInTime = currentValues.checkInTime || "00:00";
     const checkOutTime = currentValues.checkOutTime || "00:00";
-    const checkIn = new Date(`${currentValues.checkInDate}T${checkInTime}:00`);
-    const checkOut = new Date(`${currentValues.checkOutDate}T${checkOutTime}:00`);
+    
+    // Crear fecha/hora como fue ingresada (interpretada como hora local del navegador)
+    const checkInLocal = new Date(`${currentValues.checkInDate}T${checkInTime}:00`);
+    const checkOutLocal = new Date(`${currentValues.checkOutDate}T${checkOutTime}:00`);
+    
+    // Convertir de hora local del navegador a UTC, asumiendo que el usuario ingresó hora de México
+    const checkIn = new Date(checkInLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
+    const checkOut = new Date(checkOutLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
   
     // Create FormData
     const formData = new FormData();
@@ -250,8 +259,22 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   // Update form when editing accommodation changes
   React.useEffect(() => {
     if (editingAccommodation) {
-      setCheckInDate(editingAccommodation.checkIn ? new Date(editingAccommodation.checkIn) : undefined);
-      setCheckOutDate(editingAccommodation.checkOut ? new Date(editingAccommodation.checkOut) : undefined);
+      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      const checkInISOString = editingAccommodation.checkIn;
+      const checkOutISOString = editingAccommodation.checkOut;
+      
+      // Extraer componentes del ISO string (formato: YYYY-MM-DDTHH:mm:ss.sssZ)
+      const checkInDateStr = checkInISOString.substring(0, 10); // YYYY-MM-DD
+      const checkInTimeStr = checkInISOString.substring(11, 16); // HH:mm
+      const checkOutDateStr = checkOutISOString.substring(0, 10); // YYYY-MM-DD
+      const checkOutTimeStr = checkOutISOString.substring(11, 16); // HH:mm
+      
+      // Crear objetos Date locales para los calendarios (sin "Z" para evitar conversión UTC)
+      const checkInDateTime = new Date(`${checkInDateStr}T${checkInTimeStr}:00`);
+      const checkOutDateTime = new Date(`${checkOutDateStr}T${checkOutTimeStr}:00`);
+      
+      setCheckInDate(checkInDateTime);
+      setCheckOutDate(checkOutDateTime);
       
       // Reset thumbnail states when editing different accommodation
       setThumbnailRemoved(false);
@@ -262,10 +285,10 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         name: editingAccommodation.name,
         type: editingAccommodation.type,
         location: editingAccommodation.location,
-        checkInDate: format(new Date(editingAccommodation.checkIn), "yyyy-MM-dd"),
-        checkInTime: format(new Date(editingAccommodation.checkIn), "HH:mm"),
-        checkOutDate: format(new Date(editingAccommodation.checkOut), "yyyy-MM-dd"),
-        checkOutTime: format(new Date(editingAccommodation.checkOut), "HH:mm"),
+        checkInDate: checkInDateStr,
+        checkInTime: checkInTimeStr,
+        checkOutDate: checkOutDateStr,
+        checkOutTime: checkOutTimeStr,
         roomType: editingAccommodation.roomType?.replace(/^\d+\s/, "") || "",
         roomCount: editingAccommodation.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
         price: editingAccommodation.price || "",

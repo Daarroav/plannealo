@@ -76,9 +76,10 @@ export function InsuranceFormModal({
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (initialData) {
-      const effectiveDateTime = new Date(initialData.effectiveDate);
-      const dateStr = format(effectiveDateTime, "yyyy-MM-dd");
-      const timeStr = format(effectiveDateTime, "HH:mm");
+      // Extraer fecha y hora directamente del string ISO sin conversión de zona horaria
+      const effectiveISOString = initialData.effectiveDate;
+      const dateStr = effectiveISOString.substring(0, 10); // YYYY-MM-DD
+      const timeStr = effectiveISOString.substring(11, 16); // HH:mm
       
       form.reset({
         provider: initialData.provider || "",
@@ -140,10 +141,16 @@ export function InsuranceFormModal({
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
 
-    // Combine date and time for effective date
-    const effectiveDateTime = currentValues.effectiveTime 
-      ? new Date(`${currentValues.effectiveDate}T${currentValues.effectiveTime}`)
-      : new Date(currentValues.effectiveDate);
+    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
+    // Necesitamos convertir a UTC para guardar
+    const MEXICO_OFFSET_MINUTES = -360;
+    
+    // Crear fecha/hora como fue ingresada
+    const effectiveTime = currentValues.effectiveTime || "00:00";
+    const effectiveLocal = new Date(`${currentValues.effectiveDate}T${effectiveTime}:00`);
+    
+    // Convertir a UTC
+    const effectiveDateTime = new Date(effectiveLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
 
     // Create FormData
     const formData = new FormData();
