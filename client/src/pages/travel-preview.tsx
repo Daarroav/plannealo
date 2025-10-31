@@ -229,73 +229,16 @@ export default function TravelPreview() {
       });
     });
 
-    // Agregar vuelos - calcular timestamp UTC real desde hora local y zona horaria
+    // Agregar vuelos - usar timestamp directo guardado en la BD
+    // La fecha ya viene en formato ISO guardada desde México
     flights.forEach((flight) => {
       const departureDate = new Date(flight.departureDate);
-      const [hours, minutes] = (flight.departureTime || '00:00').split(':').map(Number);
-      
-      let sortTimestamp = departureDate.getTime();
-      let timezoneOffset = 0; // Offset en minutos desde UTC
-      
-      if (flight.departureTimezone) {
-        try {
-          // Extraer la fecha en formato ISO desde departureDate
-          const isoDate = departureDate.toISOString().split('T')[0]; // YYYY-MM-DD
-          
-          // Crear una fecha/hora completa en formato ISO con la hora de salida
-          const localDateTimeStr = `${isoDate}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
-          
-          // Calcular el offset de la zona horaria del vuelo
-          const refDate = new Date(`${isoDate}T12:00:00Z`);
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: flight.departureTimezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          });
-          
-          const parts = formatter.formatToParts(refDate);
-          const tzYear = parseInt(parts.find(p => p.type === 'year')?.value || '0');
-          const tzMonth = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
-          const tzDay = parseInt(parts.find(p => p.type === 'day')?.value || '1');
-          const tzHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
-          const tzMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
-          
-          const localTime = new Date(tzYear, tzMonth, tzDay, tzHour, tzMinute, 0).getTime();
-          const utcTime = refDate.getTime();
-          timezoneOffset = Math.round((localTime - utcTime) / (1000 * 60));
-          
-          // Parsear la fecha/hora local como si fuera UTC (sin conversión automática)
-          const localAsUtc = new Date(localDateTimeStr + 'Z');
-          
-          // Convertir a UTC real restando el offset de la zona horaria
-          sortTimestamp = localAsUtc.getTime() - (timezoneOffset * 60 * 1000);
-          
-          console.log(`Flight ${flight.id}: ${flight.departureCity} at ${localDateTimeStr} (${flight.departureTimezone})`, {
-            localDateTime: localDateTimeStr,
-            timezone: flight.departureTimezone,
-            offsetMinutes: timezoneOffset,
-            utcTimestamp: sortTimestamp,
-            utcTime: new Date(sortTimestamp).toISOString()
-          });
-          
-        } catch (e) {
-          console.warn(`Could not adjust timezone for flight ${flight.id}:`, e);
-          sortTimestamp = departureDate.getTime();
-          timezoneOffset = 0;
-        }
-      }
       
       events.push({
         id: flight.id,
         type: "flight",
         date: departureDate,
-        sortTimestamp: sortTimestamp,
-        timezoneOffset: timezoneOffset,
+        sortTimestamp: departureDate.getTime(),
         data: flight,
       });
     });
@@ -350,28 +293,9 @@ export default function TravelPreview() {
         });
       });
 
-    // Ordenar cronológicamente con prioridad especial para vuelos
-    // Los vuelos se ordenan primero por fecha UTC, luego por zona horaria (offset descendente)
-    // Esto asegura que vuelos de zonas horarias adelantadas (Tokio GMT+9) aparezcan antes
-    // que vuelos de zonas atrasadas (Houston GMT-6) en el mismo día
-    return events.sort((a, b) => {
-      // Si ambos son vuelos del mismo día (mismo timestamp base), ordenar por zona horaria
-      if (a.type === 'flight' && b.type === 'flight') {
-        const aDayStart = new Date(a.date).setHours(0, 0, 0, 0);
-        const bDayStart = new Date(b.date).setHours(0, 0, 0, 0);
-        
-        // Si son del mismo día, priorizar por offset de zona horaria (descendente)
-        // Zonas más adelantadas (+9) van antes que zonas atrasadas (-6)
-        if (aDayStart === bDayStart && a.timezoneOffset !== undefined && b.timezoneOffset !== undefined) {
-          if (a.timezoneOffset !== b.timezoneOffset) {
-            return b.timezoneOffset - a.timezoneOffset; // Descendente: +9 antes que -6
-          }
-        }
-      }
-      
-      // Para todos los demás casos (o si los offsets son iguales), ordenar por timestamp UTC
-      return a.sortTimestamp - b.sortTimestamp;
-    });
+    // Ordenar cronológicamente por timestamp
+    // Todos los timestamps están en la misma referencia (hora guardada desde México)
+    return events.sort((a, b) => a.sortTimestamp - b.sortTimestamp);
   };
 
   const chronologicalEvents = getAllEvents();
@@ -413,18 +337,32 @@ export default function TravelPreview() {
 
   const groupEventsByDay = (events: any[]) => {
     const groups: { [key: string]: any[] } = {};
+    
+    // Zona horaria de México (GMT-6)
+    const MEXICO_TIMEZONE = 'America/Mexico_City';
 
     events.forEach((event) => {
-      // El sortTimestamp ya representa el momento UTC exacto del evento
-      // Extraer la fecha UTC directamente sin ajustes adicionales
-      const utcDate = new Date(event.sortTimestamp);
+      // Convertir el timestamp del evento a la zona horaria de México
+      const eventDate = new Date(event.sortTimestamp);
       
-      // Obtener los componentes de fecha en UTC
-      const year = utcDate.getUTCFullYear();
-      const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(utcDate.getUTCDate()).padStart(2, '0');
+      // Formatear la fecha en zona de México para obtener el día local
+      const mexicoFormatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: MEXICO_TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
       
-      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en UTC
+      const parts = mexicoFormatter.formatToParts(eventDate);
+      const year = parts.find(p => p.type === 'year')?.value || '';
+      const month = parts.find(p => p.type === 'month')?.value || '';
+      const day = parts.find(p => p.type === 'day')?.value || '';
+      
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en zona de México
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -435,12 +373,41 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // Crear fecha en UTC que represente la medianoche de ese día
-        const groupDate = new Date(Date.UTC(y, m - 1, day));
+        // Crear fecha que represente la medianoche de ese día en México
+        const groupDate = new Date(y, m - 1, day);
 
-        // Ordenar eventos dentro del día por timestamp UTC
+        // Ordenar eventos dentro del día por timestamp local de México
         groups[dateKey].sort((a, b) => {
-          return a.sortTimestamp - b.sortTimestamp;
+          // Obtener hora local en México para ordenar correctamente
+          const aDate = new Date(a.sortTimestamp);
+          const bDate = new Date(b.sortTimestamp);
+          
+          const aFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: MEXICO_TIMEZONE,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          const bFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: MEXICO_TIMEZONE,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          const aParts = aFormatter.formatToParts(aDate);
+          const bParts = bFormatter.formatToParts(bDate);
+          
+          const aHour = parseInt(aParts.find(p => p.type === 'hour')?.value || '0');
+          const aMin = parseInt(aParts.find(p => p.type === 'minute')?.value || '0');
+          const bHour = parseInt(bParts.find(p => p.type === 'hour')?.value || '0');
+          const bMin = parseInt(bParts.find(p => p.type === 'minute')?.value || '0');
+          
+          const aTimeInMinutes = aHour * 60 + aMin;
+          const bTimeInMinutes = bHour * 60 + bMin;
+          
+          return aTimeInMinutes - bTimeInMinutes;
         });
 
         return {
@@ -476,12 +443,36 @@ export default function TravelPreview() {
       "diciembre",
     ];
 
-    // La fecha ya está en formato UTC pero representa la fecha en México
-    // Usar UTC para obtener los componentes sin conversión adicional
-    const dayName = dayNames[date.getUTCDay()];
-    const dayNumber = date.getUTCDate();
-    const monthName = monthNames[date.getUTCMonth()];
-    const year = date.getUTCFullYear();
+    // Formatear en zona horaria de México
+    const MEXICO_TIMEZONE = 'America/Mexico_City';
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: MEXICO_TIMEZONE,
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const parts = formatter.formatToParts(date);
+    const weekdayEn = parts.find(p => p.type === 'weekday')?.value || '';
+    const dayNumber = parseInt(parts.find(p => p.type === 'day')?.value || '1');
+    const monthEn = parts.find(p => p.type === 'month')?.value || '';
+    const year = parseInt(parts.find(p => p.type === 'year')?.value || '2025');
+    
+    // Mapear día de la semana en inglés a español
+    const weekdayMap: Record<string, number> = {
+      'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6
+    };
+    
+    const monthMap: Record<string, number> = {
+      'January': 0, 'February': 1, 'March': 2, 'April': 3,
+      'May': 4, 'June': 5, 'July': 6, 'August': 7,
+      'September': 8, 'October': 9, 'November': 10, 'December': 11
+    };
+    
+    const dayName = dayNames[weekdayMap[weekdayEn] || 0];
+    const monthName = monthNames[monthMap[monthEn] || 0];
 
     return `${capitalize(dayName)} ${dayNumber} de ${monthName} de ${year}`;
   };
