@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
-import { format, toZonedTime, fromZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
@@ -119,6 +119,54 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     queryKey: ["/api/airports"],
   });
 
+  // Helper function to convert Mexico timezone to UTC
+  const mexicoToUTC = (mexicoDateTimeStr: string): Date => {
+    // Parse the date/time string as if it's in Mexico timezone
+    const [datePart, timePart] = mexicoDateTimeStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hour, minute] = timePart.split(':').map(Number);
+    
+    // Create a date formatter for Mexico timezone
+    const mexicoFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: MEXICO_TIMEZONE,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    // Create a reference date in UTC
+    const referenceDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
+    
+    // Get what this UTC time looks like in Mexico timezone
+    const mexicoParts = mexicoFormatter.formatToParts(referenceDate);
+    const mexicoHour = parseInt(mexicoParts.find(p => p.type === 'hour')?.value || '0');
+    const mexicoDay = parseInt(mexicoParts.find(p => p.type === 'day')?.value || '1');
+    
+    // Calculate the offset and adjust
+    const hourDiff = hour - mexicoHour;
+    const dayDiff = day - mexicoDay;
+    
+    const adjustedDate = new Date(Date.UTC(
+      year,
+      month - 1,
+      day,
+      hour + hourDiff,
+      minute,
+      0
+    ));
+    
+    // If day changed, we need to adjust
+    if (dayDiff !== 0) {
+      adjustedDate.setUTCDate(adjustedDate.getUTCDate() + dayDiff);
+    }
+    
+    return adjustedDate;
+  };
+
   const form = useForm<FlightForm>({
     resolver: zodResolver(flightFormSchema),
     defaultValues: {
@@ -139,13 +187,33 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     },
   });
 
-  // Helper function to format date components for the form
+  // Helper function to convert UTC ISO date to Mexico timezone components
   const formatDateComponents = (utcISODate: string, targetTimezone: string) => {
     try {
-      const zonedDate = toZonedTime(utcISODate, targetTimezone);
-      const dateStr = format(zonedDate, "yyyy-MM-dd", { timeZone: targetTimezone });
-      const timeStr = format(zonedDate, "HH:mm", { timeZone: targetTimezone });
-      return { dateStr, timeStr };
+      const utcDate = new Date(utcISODate);
+      
+      // Convert UTC to Mexico timezone using Intl API
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: MEXICO_TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      
+      const parts = formatter.formatToParts(utcDate);
+      const year = parts.find(p => p.type === 'year')?.value || '2025';
+      const month = parts.find(p => p.type === 'month')?.value || '01';
+      const day = parts.find(p => p.type === 'day')?.value || '01';
+      const hour = parts.find(p => p.type === 'hour')?.value || '00';
+      const minute = parts.find(p => p.type === 'minute')?.value || '00';
+      
+      return {
+        dateStr: `${year}-${month}-${day}`,
+        timeStr: `${hour}:${minute}`
+      };
     } catch (error) {
       console.error("Error formatting date components:", error, { utcISODate, targetTimezone });
       return { dateStr: "", timeStr: "" };
@@ -326,9 +394,9 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       let depTz = getTimezoneForAirport(extractIataCode(flight.departure.airport?.iata || flight.departure.airport?.icao || ''), MEXICO_TIMEZONE) || MEXICO_TIMEZONE;
       let arrTz = getTimezoneForAirport(extractIataCode(flight.arrival.airport?.iata || flight.arrival.airport?.icao || ''), MEXICO_TIMEZONE) || MEXICO_TIMEZONE;
 
-      // Format dates and times for the form fields in Mexico Timezone
-      const depComponents = formatDateComponents(flight.departure.scheduledTimeLocal, MEXICO_TIMEZONE);
-      const arrComponents = formatDateComponents(flight.arrival.scheduledTimeLocal, MEXICO_TIMEZONE);
+      // Format dates and times for the form fields - convert UTC to Mexico timezone
+      const depComponents = formatDateComponents(flight.departure.scheduledTimeLocal, depTz);
+      const arrComponents = formatDateComponents(flight.arrival.scheduledTimeLocal, arrTz);
 
       form.setValue("airline", flight.airline?.name || `${flight.airline?.iata || flight.airline?.icao || 'Aerolínea'}`);
       form.setValue("flightNumber", flight.number || "");
@@ -384,13 +452,13 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     departureTz = departureTz || MEXICO_TIMEZONE; // Fallback to Mexico City
     arrivalTz = arrivalTz || MEXICO_TIMEZONE;   // Fallback to Mexico City
 
-    // Combine date and time fields into ISO strings, interpreting them as Mexico Time
+    // Combine date and time fields - these are in Mexico timezone
     const departureDateTimeStr = `${currentValues.departureDateField}T${currentValues.departureTimeField}:00`;
     const arrivalDateTimeStr = `${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`;
 
-    // Convert the Mexico Time strings to UTC for saving
-    const departureUTC = fromZonedTime(departureDateTimeStr, MEXICO_TIMEZONE);
-    const arrivalUTC = fromZonedTime(arrivalDateTimeStr, MEXICO_TIMEZONE);
+    // Convert Mexico Time to UTC manually
+    const departureUTC = mexicoToUTC(departureDateTimeStr);
+    const arrivalUTC = mexicoToUTC(arrivalDateTimeStr);
 
     console.log('Converting Mexico time to UTC:', {
       departure: {

@@ -830,7 +830,7 @@ export default function TravelDetail() {
     return result;
   };
 
-  // Formatear fecha/hora de vuelo mostrando la hora exacta en zona horaria de México
+  // Formatear fecha/hora de vuelo siempre en zona México (GMT-6)
   const formatFlightDateTime = (
     date: Date | string | null,
     cityString: string | null,
@@ -838,9 +838,10 @@ export default function TravelDetail() {
   ): string => {
     if (!date) return "";
 
+    // Convertir a Date si es string
     const d = new Date(date);
 
-    // Formatear fecha en zona horaria de México
+    // SIEMPRE usar zona horaria de México, ignorando timezone del dispositivo
     const dateFmt = new Intl.DateTimeFormat("es-MX", {
       day: "2-digit",
       month: "short",
@@ -856,7 +857,7 @@ export default function TravelDetail() {
     // Normalizar abreviatura de mes
     month = month.replace(/\./g, "").replace("sept", "sep").toLowerCase();
 
-    // Formatear hora en zona horaria de México
+    // Formatear hora SIEMPRE en zona México
     const timeParts = new Intl.DateTimeFormat("es-MX", {
       hour: "2-digit",
       minute: "2-digit",

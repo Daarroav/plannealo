@@ -139,13 +139,13 @@ export default function TravelPreview() {
     return `${day} de ${month} de ${year}, ${hour}:${minute} ${dayPeriod}`;
   };
 
-  // Formatear fecha/hora de vuelo siempre en zona de México
+  // Formatear fecha/hora de vuelo SIEMPRE en zona México (GMT-6), sin importar el timezone del dispositivo
   const formatFlightDateTime = (
     date: Date | string | null,
     cityString: string | null,
     savedTimezone?: string | null
   ): string => {
-    if (!date) return "";
+    if (!date) return "";eturn "";
 
     const flightDate = typeof date === 'string' ? new Date(date) : date;
     
