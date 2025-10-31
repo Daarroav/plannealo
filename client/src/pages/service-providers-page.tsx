@@ -16,8 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { ServiceProvider } from "@/../../shared/schema";
 
-const LIMIT_PROVIDERS = 30;
-
 export default function ServiceProvidersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProvider, setEditingProvider] =
@@ -144,16 +142,6 @@ export default function ServiceProvidersPage() {
           </div>
           <Button
             onClick={() => {
-              // Validar límite de proveedores
-              if (providers.length >= LIMIT_PROVIDERS) {
-                toast({
-                  variant: "destructive",
-                  title: "⚠️ Límite alcanzado",
-                  description: `El máximo de ${LIMIT_PROVIDERS} proveedores ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
-                });
-                return;
-              }
-
               setEditingProvider(null);
               form.reset({ name: "", contactName: "", contactPhone: "" });
               setShowModal(true);

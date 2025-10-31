@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Plane, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Plane } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { Airport } from "@/../../shared/schema";
@@ -21,8 +21,6 @@ import { LocationCombobox } from "@/components/ui/location-combobox";
 interface TimezoneEntry {
   timezone: string;
 }
-
-const LIMIT_AIRPORTS = 30;
 
 export default function AirportsPage() {
   const [showModal, setShowModal] = useState(false);
@@ -226,16 +224,6 @@ export default function AirportsPage() {
           </div>
           <Button
             onClick={() => {
-              // Validar límite de aeropuertos
-              if (airports.length >= LIMIT_AIRPORTS) {
-                toast({
-                  variant: "destructive",
-                  title: "⚠️ Límite alcanzado",
-                  description: `El máximo de ${LIMIT_AIRPORTS} aeropuertos ha sido superado. Comunícate con el proveedor del servicio para ampliar el límite.`,
-                });
-                return;
-              }
-
               setEditingAirport(null);
               form.reset({
                 airportName: "",
