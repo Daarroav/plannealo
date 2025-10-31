@@ -89,6 +89,11 @@ export function CalendarView({ travels }: CalendarViewProps) {
     const targetDate = new Date(currentYear, currentMonth, day);
     
     return travels.filter(travel => {
+      // Excluir viajes con status = delete
+      if (travel.status === "delete") {
+        return false;
+      }
+      
       const startDate = new Date(travel.startDate);
       const endDate = new Date(travel.endDate);
       
@@ -108,6 +113,11 @@ export function CalendarView({ travels }: CalendarViewProps) {
     let colorIndex = 0;
     
     travels.forEach(travel => {
+      // Excluir viajes con status = delete
+      if (travel.status === "delete") {
+        return;
+      }
+      
       if (!colorMap.has(travel.id)) {
         if (travel.status === 'published') {
           colorMap.set(travel.id, PASTEL_COLORS[colorIndex % PASTEL_COLORS.length]);

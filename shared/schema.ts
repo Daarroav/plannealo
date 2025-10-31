@@ -19,7 +19,7 @@ export const travels = pgTable("travels", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   travelers: integer("travelers").notNull(),
-  status: text("status").notNull().default("draft"), // draft, published
+  status: text("status").notNull().default("draft"), // draft, published, delete
   coverImage: text("cover_image"),
   publicToken: text("public_token"), // Token para acceso público
   publicTokenExpiry: timestamp("public_token_expiry"), // Expiración del token

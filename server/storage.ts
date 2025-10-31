@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import session from "express-session";
 import { Store } from "express-session";
 import createMemoryStore from "memorystore";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql, and, count } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
@@ -50,6 +50,7 @@ export interface IStorage {
   getTravel(id: string): Promise<Travel | undefined>;
   getTravelByPublicToken(token: string): Promise<Travel | undefined>;
   updateTravel(id: string, travel: Partial<Travel>): Promise<Travel>;
+  // soft delete travel
   deleteTravel(id: string): Promise<void>;
 
   // Accommodation methods
@@ -136,7 +137,7 @@ export class DatabaseStorage implements IStorage {
           : "DATABASE_URL environment variable is not set for production"
       );
     }
-    
+
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -204,23 +205,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTravelsByUser(userId: string): Promise<Travel[]> {
-    return await db.select()
-      .from(travels)
-      .where(eq(travels.createdBy, userId))
-      .orderBy(desc(travels.updatedAt));
+    return await db.select().from(travels).where(
+      and(
+        eq(travels.createdBy, userId),
+        sql`${travels.status} != 'delete'`
+      )
+    );
   }
 
   async getTravels(): Promise<Travel[]> {
-    return await db.select().from(travels);
+    return await db.select().from(travels).where(sql`${travels.status} != 'delete'`);
   }
 
   async getTravel(id: string): Promise<Travel | undefined> {
-    const [travel] = await db.select().from(travels).where(eq(travels.id, id));
+    const [travel] = await db.select().from(travels).where(
+      and(
+        eq(travels.id, id),
+        sql`${travels.status} != 'delete'`
+      )
+    );
     return travel || undefined;
   }
 
   async getTravelByPublicToken(token: string): Promise<Travel | undefined> {
-    const [travel] = await db.select().from(travels).where(eq(travels.publicToken, token));
+    const [travel] = await db.select().from(travels).where(
+      and(
+        eq(travels.publicToken, token),
+        sql`${travels.status} != 'delete'`
+      )
+    );
     return travel || undefined;
   }
 
@@ -252,7 +265,12 @@ export class DatabaseStorage implements IStorage {
     const [travel] = await db
       .update(travels)
       .set(updateData)
-      .where(eq(travels.id, id))
+      .where(
+        and(
+          eq(travels.id, id),
+          sql`${travels.status} != 'delete'`
+        )
+      )
       .returning();
     if (!travel) {
       throw new Error("Travel not found");
@@ -261,8 +279,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTravel(id: string): Promise<void> {
-    await db.delete(travels).where(eq(travels.id, id));
-    // Related records will be deleted by cascade (if foreign keys are set up)
+    await db
+      .update(travels)
+      .set({ status: 'delete', updatedAt: new Date() })
+      .where(
+        and(
+          eq(travels.id, id),
+          sql`${travels.status} != 'delete'`
+        )
+      );
   }
 
   // Accommodation methods
@@ -307,7 +332,6 @@ export class DatabaseStorage implements IStorage {
     return activity;
   }
 
-  async getActivitiesByTravel(travelId: string): Promise<Activity[]>;
   async getActivitiesByTravel(travelId: string): Promise<Activity[]> {
     const result = await db.select()
       .from(activities)
@@ -521,36 +545,67 @@ export class DatabaseStorage implements IStorage {
     await db.delete(notes).where(eq(notes.id, id));
   }
 
-  async getClientStats() {
-    // Obtener todos los clientes
-    const clients = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, 'client'))
-      .leftJoin(travels, eq(users.id, travels.clientId));
-
-    // Procesar los datos
-    const clientsMap = new Map();
+  async getClientStats(): Promise<{
+    clients: Array<{
+      id: string;
+      email: string;
+      name: string;
+      joinedAt: Date;
+      lastActive: Date;
+      stats: {
+        total: number;
+        published: number;
+        draft: number;
+      };
+    }>;
+    stats: {
+      totalClients: number;
+      totalTravels: number;
+      publishedTravels: number;
+      draftTravels: number;
+    };
+  }> {
+    // Get all travels excluding deleted ones
+    const allTravels = await db.select().from(travels).where(sql`${travels.status} != 'delete'`);
 
     // Agrupar viajes por cliente
-    clients.forEach(({ users: user, travels: travel }) => {
-      if (!clientsMap.has(user.id)) {
-        clientsMap.set(user.id, {
-          id: user.id,
-          email: user.username,
-          name: user.name,
-          joinedAt: user.createdAt,
+    const clientsMap = new Map<string, {
+      id: string;
+      email: string;
+      name: string;
+      joinedAt: Date;
+      travels: Travel[];
+    }>();
+
+    allTravels.forEach((travel) => {
+      if (travel.clientId && !clientsMap.has(travel.clientId)) {
+        clientsMap.set(travel.clientId, {
+          id: travel.clientId,
+          email: "", // Will fetch later if needed or assume available elsewhere
+          name: "",  // Will fetch later if needed or assume available elsewhere
+          joinedAt: new Date(), // Will fetch later if needed or assume available elsewhere
           travels: [],
         });
       }
-
-      if (travel) {
-        clientsMap.get(user.id).travels.push(travel);
+      if (travel.clientId) {
+        clientsMap.get(travel.clientId)!.travels.push(travel);
       }
     });
 
+    // Fetch user details for clients in the map
+    const clientIds = Array.from(clientsMap.keys());
+    let usersData: User[] = [];
+    if (clientIds.length > 0) {
+      usersData = await db.select().from(users).where(
+        inArray(users.id, clientIds)
+      );
+    }
+
+    const usersMap = new Map<string, User>(usersData.map(u => [u.id, u]));
+
     // Calcular estadísticas para cada cliente
     const processedClients = Array.from(clientsMap.values()).map(client => {
+      const user = usersMap.get(client.id);
       const stats = {
         total: client.travels.length,
         published: client.travels.filter((t: any) => t.status === 'published').length,
@@ -559,10 +614,13 @@ export class DatabaseStorage implements IStorage {
 
       const lastActive = client.travels.length > 0
         ? new Date(Math.max(...client.travels.map((t: any) => new Date(t.updatedAt).getTime())))
-        : client.joinedAt;
+        : client.joinedAt; // Use joinedAt if no travels
 
       return {
-        ...client,
+        id: client.id,
+        email: user?.username || "",
+        name: user?.name || "",
+        joinedAt: user?.createdAt || client.joinedAt, // Use user's creation date
         lastActive,
         stats
       };
@@ -588,17 +646,25 @@ export class DatabaseStorage implements IStorage {
   }
 
 
-  async getTravelStats() {
-    const travelsInfo = await db.select().from(travels);
+  async getTravelStats(): Promise<{
+    totalTravels: number;
+    publishedTravels: number;
+    draftTravels: number;
+    cancelledTravels: number;
+    sentTravels: number;
+    completedTravels: number;
+  }> {
+    // Get all travels excluding deleted ones
+    const travelsInfo = await db.select().from(travels).where(sql`${travels.status} != 'delete'`);
 
     const stats = {
-      // Viajes Realizados
+      // Viajes Realizados (consider only non-deleted)
       totalTravels: travelsInfo.length,
       // Viajes Publicados
       publishedTravels: travelsInfo.filter((t: any) => t.status === 'published').length,
       // Viajes Borradores
       draftTravels: travelsInfo.filter((t: any) => t.status === 'draft').length,
-      // Viajes Cancelados
+      // Viajes Cancelados (assuming 'cancelled' is a valid status other than 'delete')
       cancelledTravels: travelsInfo.filter((t: any) => t.status === 'cancelled').length,
       // Viajes Enviados
       sentTravels: travelsInfo.filter((t: any) => t.status === 'sent').length,
@@ -613,9 +679,6 @@ export class DatabaseStorage implements IStorage {
     };
     return stats;
   }
-
-
-
 }
 
 export const storage = new DatabaseStorage();

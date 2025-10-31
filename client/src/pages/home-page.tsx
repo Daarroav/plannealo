@@ -87,6 +87,39 @@ export default function HomePage() {
     },
   });
 
+  const softDeleteTravelMutation = useMutation({
+    mutationFn: async (travelId: string) => {
+      const response = await fetch(`/api/travels/${travelId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "delete" }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al eliminar viaje");
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      toast({
+        title: "Viaje eliminado",
+        description: "El viaje ha sido eliminado correctamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper function to determine if a travel is past
   const isPastTravel = (travel: Travel) => {
     const endDate = new Date(travel.endDate);
@@ -97,6 +130,11 @@ export default function HomePage() {
 
   const filteredTravels = travels
     .filter(travel => {
+      // Excluir viajes con status = delete
+      if (travel.status === "delete") {
+        return false;
+      }
+
       const matchesSearch = travel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            travel.clientName.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -245,6 +283,7 @@ export default function HomePage() {
                         key={travel.id}
                         travel={travel}
                         onEdit={handleEditTravel}
+                        onDelete={(id) => softDeleteTravelMutation.mutate(id)}
                       />
                     ))}
                   </div>

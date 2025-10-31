@@ -1,16 +1,30 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 import type { Travel } from "@shared/schema";
 
 interface TravelCardProps {
   travel: Travel;
   onEdit: (travelId: string) => void;
+  onDelete?: (travelId: string) => void;
 }
 
-export function TravelCard({ travel, onEdit }: TravelCardProps) {
+export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const statusCard  = travel.status === "published" ? "" :  "opacity-50";
   const statusButton = travel.status === "published" ? "" :  "bg-yellow-100 text-yellow-800";
   const statusColor = travel.status === "published" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
@@ -21,10 +35,22 @@ export function TravelCard({ travel, onEdit }: TravelCardProps) {
     return format(new Date(date), "dd MMM", { locale: es });
   };
 
+  const handleDeleteConfirm = () => {
+    if (onDelete) {
+      onDelete(travel.id);
+    }
+    setShowDeleteDialog(false);
+  };
+
+  // If the travel status is 'delete', do not render the card at all
+  if (travel.status === "delete") {
+    return null;
+  }
+
   return (
     <div className={`border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 ${statusCard}`}>
-      <img 
-        src={travel.coverImage && travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"} 
+      <img
+        src={travel.coverImage && travel.coverImage.startsWith('/objects/') ? `/api${travel.coverImage}` : travel.coverImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250"}
         alt={travel.name}
         className="w-full h-48 object-cover"
         onError={(e) => {
@@ -49,14 +75,42 @@ export function TravelCard({ travel, onEdit }: TravelCardProps) {
             {travel.travelers} viajero{travel.travelers !== 1 ? 's' : ''}
           </span>
         </div>
-        <Button 
-          onClick={() => onEdit(travel.id)}
-          className={`w-full bg-muted hover:bg-muted/80 text-foreground text-sm font-medium ${statusButton}`}
-          variant="secondary"
-        >
-          {travel.status === "draft" ? "Continuar Editando" : "Editar Viaje"}
-        </Button>
+        <div className="flex gap-2">
+            <Button
+              onClick={() => onEdit(travel.id)}
+              variant="outline"
+              size="sm"
+              className={`w-full ${statusButton}`}
+            >
+              {travel.status === "draft" ? "Continuar Editando" : "Editar Viaje"}
+            </Button>
+            <Button
+              onClick={() => setShowDeleteDialog(true)}
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar viaje?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Este viaje será eliminado de forma permanente. No podrá editarlo ni volver a verlo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
