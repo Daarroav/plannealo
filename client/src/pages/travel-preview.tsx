@@ -145,7 +145,7 @@ export default function TravelPreview() {
     cityString: string | null,
     savedTimezone?: string | null
   ): string => {
-    if (!date) return "";eturn "";
+    if (!date) return "";
 
     const flightDate = typeof date === 'string' ? new Date(date) : date;
     
