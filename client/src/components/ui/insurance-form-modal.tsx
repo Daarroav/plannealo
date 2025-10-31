@@ -76,21 +76,11 @@ export function InsuranceFormModal({
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (initialData) {
-      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
-      // Necesitamos convertir de UTC a la hora que sería en México
+      // Extraer componentes directamente sin conversión de zona horaria
       const effectiveISOString = initialData.effectiveDate;
       
-      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
-      const MEXICO_OFFSET_MINUTES = -360;
-      
-      const effectiveUTC = new Date(effectiveISOString);
-      
-      // Ajustar por el offset de México para obtener la hora local de México
-      const effectiveMexico = new Date(effectiveUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
-      
-      // Extraer componentes en hora de México
-      const dateStr = effectiveMexico.toISOString().substring(0, 10);
-      const timeStr = effectiveMexico.toISOString().substring(11, 16);
+      const dateStr = effectiveISOString.substring(0, 10);
+      const timeStr = effectiveISOString.substring(11, 16);
       
       form.reset({
         provider: initialData.provider || "",
@@ -152,16 +142,10 @@ export function InsuranceFormModal({
     const currentValues = form.getValues();
     console.log("Form data before processing:", currentValues);
 
-    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
-    // Necesitamos convertir a UTC para guardar
-    const MEXICO_OFFSET_MINUTES = -360;
-    
-    // Crear fecha/hora como fue ingresada
+    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
     const effectiveTime = currentValues.effectiveTime || "00:00";
-    const effectiveLocal = new Date(`${currentValues.effectiveDate}T${effectiveTime}:00`);
-    
-    // Convertir a UTC
-    const effectiveDateTime = new Date(effectiveLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
+    const effectiveStr = `${currentValues.effectiveDate}T${effectiveTime}:00.000Z`;
+    const effectiveDateTime = new Date(effectiveStr);
 
     // Create FormData
     const formData = new FormData();

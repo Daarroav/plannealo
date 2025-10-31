@@ -70,24 +70,12 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   // Pre-llenar formulario cuando se está editando
   React.useEffect(() => {
     if (editingTransport) {
-      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
-      // Necesitamos convertir de UTC a la hora que sería en México
+      // Extraer componentes directamente sin conversión de zona horaria
       const pickupISOString = editingTransport.pickupDate;
       
-      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
-      const MEXICO_OFFSET_MINUTES = -360;
+      const pickupDateStr = pickupISOString.substring(0, 10);
+      const pickupTimeStr = pickupISOString.substring(11, 16);
       
-      const pickupUTC = new Date(pickupISOString);
-      
-      // Ajustar por el offset de México para obtener la hora local de México
-      const pickupMexico = new Date(pickupUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
-      
-      // Extraer componentes en hora de México
-      const pickupDateStr = pickupMexico.toISOString().substring(0, 10);
-      const pickupTimeStr = pickupMexico.toISOString().substring(11, 16);
-      
-      // Crear objeto Date para el calendario en hora local del navegador
-      // pero que represente visualmente la hora de México
       const pickupDateTime = new Date(`${pickupDateStr}T${pickupTimeStr}:00`);
       setPickupDate(pickupDateTime);
       
@@ -97,11 +85,9 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       
       if (editingTransport.endDate) {
         const endISOString = editingTransport.endDate;
-        const endUTC = new Date(endISOString);
-        const endMexico = new Date(endUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
         
-        endDateStr = endMexico.toISOString().substring(0, 10);
-        endTimeStr = endMexico.toISOString().substring(11, 16);
+        endDateStr = endISOString.substring(0, 10);
+        endTimeStr = endISOString.substring(11, 16);
         endDateTime = new Date(`${endDateStr}T${endTimeStr}:00`);
       }
       
@@ -201,19 +187,14 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
       }
     }
     
-    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
-    // Necesitamos convertir a UTC para guardar
-    const MEXICO_OFFSET_MINUTES = -360;
-    
-    // Crear fecha/hora de recogida como fue ingresada
-    const pickupLocal = new Date(`${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00`);
-    // Convertir a UTC
-    const pickupDateTime = new Date(pickupLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
+    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
+    const pickupStr = `${currentValues.pickupDateField}T${currentValues.pickupTimeField}:00.000Z`;
+    const pickupDateTime = new Date(pickupStr);
     
     let endDateTime = null;
     if (currentValues.endDateField && currentValues.endTimeField) {
-      const endLocal = new Date(`${currentValues.endDateField}T${currentValues.endTimeField}:00`);
-      endDateTime = new Date(endLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
+      const endStr = `${currentValues.endDateField}T${currentValues.endTimeField}:00.000Z`;
+      endDateTime = new Date(endStr);
     }
 
     // Create FormData

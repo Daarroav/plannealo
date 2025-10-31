@@ -159,21 +159,16 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     // Get the most current form values
     const currentValues = form.getValues();
     
-    // El usuario ingresó las horas pensando en zona horaria de México (GMT-6)
-    // Necesitamos convertir a UTC para guardar
-    const MEXICO_OFFSET_MINUTES = -360;
-    
     // Usar 00:00 si no se especifica hora
     const checkInTime = currentValues.checkInTime || "00:00";
     const checkOutTime = currentValues.checkOutTime || "00:00";
     
-    // Crear fecha/hora como fue ingresada (interpretada como hora local del navegador)
-    const checkInLocal = new Date(`${currentValues.checkInDate}T${checkInTime}:00`);
-    const checkOutLocal = new Date(`${currentValues.checkOutDate}T${checkOutTime}:00`);
+    // Guardar exactamente como el usuario lo ingresó, sin conversión de zona horaria
+    const checkInStr = `${currentValues.checkInDate}T${checkInTime}:00.000Z`;
+    const checkOutStr = `${currentValues.checkOutDate}T${checkOutTime}:00.000Z`;
     
-    // Convertir de hora local del navegador a UTC, asumiendo que el usuario ingresó hora de México
-    const checkIn = new Date(checkInLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
-    const checkOut = new Date(checkOutLocal.getTime() - MEXICO_OFFSET_MINUTES * 60 * 1000);
+    const checkIn = new Date(checkInStr);
+    const checkOut = new Date(checkOutStr);
   
     // Create FormData
     const formData = new FormData();
@@ -259,29 +254,18 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   // Update form when editing accommodation changes
   React.useEffect(() => {
     if (editingAccommodation) {
-      // Las fechas están guardadas en UTC, pero representan la hora local de México (GMT-6)
-      // Necesitamos convertir de UTC a la hora que sería en México
+      // Las fechas vienen en UTC pero representan la hora de México
+      // Simplemente extraemos los componentes directamente sin conversión
       const checkInISOString = editingAccommodation.checkIn;
       const checkOutISOString = editingAccommodation.checkOut;
       
-      // Convertir de UTC a hora de México (GMT-6 = -360 minutos)
-      const MEXICO_OFFSET_MINUTES = -360;
+      // Extraer componentes directamente del ISO string
+      const checkInDateStr = checkInISOString.substring(0, 10);
+      const checkInTimeStr = checkInISOString.substring(11, 16);
+      const checkOutDateStr = checkOutISOString.substring(0, 10);
+      const checkOutTimeStr = checkOutISOString.substring(11, 16);
       
-      const checkInUTC = new Date(checkInISOString);
-      const checkOutUTC = new Date(checkOutISOString);
-      
-      // Ajustar por el offset de México para obtener la hora local de México
-      const checkInMexico = new Date(checkInUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
-      const checkOutMexico = new Date(checkOutUTC.getTime() + MEXICO_OFFSET_MINUTES * 60 * 1000);
-      
-      // Extraer componentes en hora de México
-      const checkInDateStr = checkInMexico.toISOString().substring(0, 10);
-      const checkInTimeStr = checkInMexico.toISOString().substring(11, 16);
-      const checkOutDateStr = checkOutMexico.toISOString().substring(0, 10);
-      const checkOutTimeStr = checkOutMexico.toISOString().substring(11, 16);
-      
-      // Crear objetos Date para los calendarios en hora local del navegador
-      // pero que representen visualmente la hora de México
+      // Crear objetos Date para los calendarios sin conversión
       const checkInDateTime = new Date(`${checkInDateStr}T${checkInTimeStr}:00`);
       const checkOutDateTime = new Date(`${checkOutDateStr}T${checkOutTimeStr}:00`);
       
