@@ -448,18 +448,16 @@ export default function TravelPreview() {
     const groups: { [key: string]: any[] } = {};
 
     events.forEach((event) => {
-      // Convertir el timestamp del evento a zona horaria de México (GMT-6)
-      const MEXICO_OFFSET_MS = -6 * 60 * 60 * 1000; // -6 horas en milisegundos
+      // El sortTimestamp ya representa el momento UTC exacto del evento
+      // Extraer la fecha UTC directamente sin ajustes adicionales
+      const utcDate = new Date(event.sortTimestamp);
       
-      // Aplicar offset de México al timestamp para obtener la fecha local de México
-      const mexicoDate = new Date(event.sortTimestamp + MEXICO_OFFSET_MS);
+      // Obtener los componentes de fecha en UTC
+      const year = utcDate.getUTCFullYear();
+      const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(utcDate.getUTCDate()).padStart(2, '0');
       
-      // Obtener los componentes de fecha en la hora de México
-      const year = mexicoDate.getUTCFullYear();
-      const month = String(mexicoDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(mexicoDate.getUTCDate()).padStart(2, '0');
-      
-      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en hora de México
+      const dayKey = `${year}-${month}-${day}`; // YYYY-MM-DD en UTC
 
       if (!groups[dayKey]) groups[dayKey] = [];
       groups[dayKey].push(event);
@@ -470,7 +468,7 @@ export default function TravelPreview() {
       .map((dateKey) => {
         const [y, m, day] = dateKey.split("-").map(Number);
 
-        // Crear fecha en UTC que represente la medianoche de ese día en México
+        // Crear fecha en UTC que represente la medianoche de ese día
         const groupDate = new Date(Date.UTC(y, m - 1, day));
 
         // Ordenar eventos dentro del día por timestamp UTC
