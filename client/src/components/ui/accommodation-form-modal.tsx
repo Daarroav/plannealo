@@ -18,6 +18,7 @@ import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 import { useRef } from "react";
 import { FileText } from "lucide-react";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -53,11 +54,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   console.log("Editing accommodation:", editingAccommodation);
-  
+
 
   const form = useForm<AccommodationForm>({
     resolver: zodResolver(accommodationFormSchema),
@@ -79,7 +80,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     },
   });
 
-  
+
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -117,7 +118,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
 
 
- 
+
 
 
 
@@ -159,18 +160,18 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
     // Get the most current form values
     const currentValues = form.getValues();
-    
+
     // Usar 00:00 si no se especifica hora
     const checkInTime = currentValues.checkInTime || "00:00";
     const checkOutTime = currentValues.checkOutTime || "00:00";
-    
+
     // Convertir de componentes México a UTC
     const checkInUTC = mexicoComponentsToUTC(currentValues.checkInDate, checkInTime);
     const checkOutUTC = mexicoComponentsToUTC(currentValues.checkOutDate, checkOutTime);
-  
+
     // Create FormData
     const formData = new FormData();
-    
+
     // Add all form fields to formData
     formData.append('name', currentValues.name);
     formData.append('type', currentValues.type);
@@ -183,7 +184,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('policies', currentValues.policies || '');
     formData.append('notes', currentValues.notes || '');
     formData.append('travelId', currentValues.travelId);
-    
+
     // Handle thumbnail logic more explicitly
     if (thumbnail) {
       // New thumbnail uploaded
@@ -193,7 +194,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       formData.append('removeThumbnail', 'true');
     }
     // If no changes to thumbnail, don't send thumbnail data
-    
+
     // Only add new attached files to formData if they exist
     if (attachedFiles.length > 0) {
       attachedFiles.forEach((file, index) => {
@@ -216,7 +217,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         formData.append('existingAttachments', JSON.stringify(remainingAttachments));
       }
     }
-  
+
     // Enviar el formData directamente
     try {
       await onSubmit(formData);
@@ -255,18 +256,18 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       // Convertir UTC a componentes de México
       const checkInComponents = utcToMexicoComponents(editingAccommodation.checkIn);
       const checkOutComponents = utcToMexicoComponents(editingAccommodation.checkOut);
-      
+
       // Crear objetos Date para los calendarios
       const checkInDateTime = new Date(`${checkInComponents.dateStr}T${checkInComponents.timeStr}:00`);
       const checkOutDateTime = new Date(`${checkOutComponents.dateStr}T${checkOutComponents.timeStr}:00`);
-      
+
       setCheckInDate(checkInDateTime);
       setCheckOutDate(checkOutDateTime);
-      
+
       // Reset thumbnail states when editing different accommodation
       setThumbnailRemoved(false);
       setThumbnail(null);
-      
+
       form.reset({
         travelId,
         name: editingAccommodation.name,
@@ -311,7 +312,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       setPriceInCents(0);
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
-      
+
       form.reset({
         travelId,
         name: "",
@@ -347,25 +348,25 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-    
+
     // Remove all non-digits
     const digitsOnly = input.replace(/\D/g, "");
-    
+
     if (!digitsOnly) {
       setPriceInCents(0);
       form.setValue("price", "");
       return;
     }
-    
+
     // Convert to number (this represents cents)
     const cents = parseInt(digitsOnly, 10);
     setPriceInCents(cents);
-    
+
     // Save the dollar amount (cents / 100) as string in the form
     const dollars = cents / 100;
     form.setValue("price", dollars.toString());
   };
-  
+
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -378,7 +379,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
             {editingAccommodation ? "Modifica los detalles del alojamiento" : "Agrega un nuevo alojamiento al itinerario"}
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" encType="multipart/form-data">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -396,7 +397,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 </p>
               )}
             </div>
-            
+
             <div>
               <Label htmlFor="confirmationNumber">Número de Confirmación</Label>
               <Input
@@ -585,7 +586,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
             <Textarea
               id="policies"
               {...form.register("policies")}
-              placeholder="Describe las políticas de cancelación, modificación y otros términos importantes..."
+              placeholder="Describe las políticas de cancelación, modification y otros términos importantes..."
               rows={3}
             />
           </div>
@@ -705,11 +706,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
               </Button>
             </div>
 
-        
+
             {(attachedFiles.length > 0 || (editingAccommodation?.attachments && editingAccommodation.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Documentos Adjuntos:</p>
-                
+
                 {/* Show existing attachments */}
                 {editingAccommodation?.attachments
                   ?.filter((_, index) => !removedExistingAttachments.includes(index))
@@ -739,7 +740,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">

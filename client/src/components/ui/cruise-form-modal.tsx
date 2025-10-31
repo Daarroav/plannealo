@@ -65,7 +65,7 @@ export function CruiseFormModal({
         // Convertir UTC a componentes de México
         const depComponents = utcToMexicoComponents(editingCruise.departureDate);
         const arrComponents = utcToMexicoComponents(editingCruise.arrivalDate);
-        
+
         form.reset({
           cruiseLine: editingCruise.cruiseLine || "",
           confirmationNumber: editingCruise.confirmationNumber || "",
@@ -78,7 +78,7 @@ export function CruiseFormModal({
           notes: editingCruise.notes || "",
           attachments: editingCruise.attachments || [],
         });
-        
+
         setAttachedFiles([]);
         setRemovedExistingAttachments([]);
       } else {
@@ -140,7 +140,7 @@ export function CruiseFormModal({
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add form fields (no editing support yet, so no id)
     formData.append('cruiseLine', currentValues.cruiseLine);
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
@@ -149,7 +149,7 @@ export function CruiseFormModal({
     formData.append('arrivalDate', arrivalUTC);
     formData.append('arrivalPort', currentValues.arrivalPort);
     formData.append('notes', currentValues.notes || '');
-    
+
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -193,7 +193,7 @@ export function CruiseFormModal({
             Agrega información de crucero al itinerario
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Línea de Cruceros */}
@@ -331,7 +331,7 @@ export function CruiseFormModal({
             {(attachedFiles.length > 0 || (editingCruise?.attachments && editingCruise.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Documentos Adjuntos:</p>
-                
+
                 {/* Show existing attachments */}
                 {editingCruise?.attachments
                   ?.filter((_, index) => !removedExistingAttachments.includes(index))
@@ -358,7 +358,7 @@ export function CruiseFormModal({
                       </div>
                     );
                   })}
-                
+
                 {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">

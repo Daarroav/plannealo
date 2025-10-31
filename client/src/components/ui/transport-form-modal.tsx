@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { insertTransportSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
@@ -73,20 +74,20 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     if (editingTransport) {
       // Convertir UTC a componentes de México
       const pickupComponents = utcToMexicoComponents(editingTransport.pickupDate);
-      
+
       const pickupDateTime = new Date(`${pickupComponents.dateStr}T${pickupComponents.timeStr}:00`);
       setPickupDate(pickupDateTime);
-      
+
       let endDateTime = undefined;
       let endComponents = { dateStr: "", timeStr: "06:00" };
-      
+
       if (editingTransport.endDate) {
         endComponents = utcToMexicoComponents(editingTransport.endDate);
         endDateTime = new Date(`${endComponents.dateStr}T${endComponents.timeStr}:00`);
       }
-      
+
       setEndDate(endDateTime);
-      
+
       form.reset({
         travelId,
         type: editingTransport.type || "",
@@ -104,7 +105,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         notes: editingTransport.notes || "",
         attachments: editingTransport.attachments || [],
       });
-      
+
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
     } else {
@@ -156,14 +157,14 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
 
     // Get the most current form values
     const currentValues = form.getValues();
-    
+
     // Actualizar proveedor solo si ambos campos están vacíos
     if (currentValues.provider && currentValues.contactName && currentValues.contactNumber) {
       try {
         const providersResponse = await fetch('/api/service-providers', { credentials: 'include' });
         const providers = await providersResponse.json();
         const selectedProvider = providers.find((p: any) => p.name === currentValues.provider);
-        
+
         // Solo actualizar si ambos campos del proveedor están vacíos
         if (selectedProvider && !selectedProvider.contactName && !selectedProvider.contactPhone) {
           await fetch(`/api/service-providers/${selectedProvider.id}`, {
@@ -180,10 +181,10 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         console.error('Error updating provider contact:', error);
       }
     }
-    
+
     // Convertir de componentes México a UTC
     const pickupUTC = mexicoComponentsToUTC(currentValues.pickupDateField, currentValues.pickupTimeField);
-    
+
     let endUTC = null;
     if (currentValues.endDateField && currentValues.endTimeField) {
       endUTC = mexicoComponentsToUTC(currentValues.endDateField, currentValues.endTimeField);
@@ -191,7 +192,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add form fields
     if (editingTransport) {
       formData.append('id', editingTransport.id);
@@ -210,7 +211,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     formData.append('dropoffLocation', currentValues.dropoffLocation || '');
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
     formData.append('notes', currentValues.notes || '');
-    
+
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -268,7 +269,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
             Agrega información de transporte al itinerario
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Transport Type and Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -364,7 +365,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
           {/* Pickup Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Información de Recogida</h3>
-            
+
             <div>
               <Label htmlFor="pickupLocation">Lugar de Recogida *</Label>
               <Input
@@ -435,7 +436,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
           {/* Dropoff Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Información de Entrega (Opcional)</h3>
-            
+
             <div>
               <Label htmlFor="dropoffLocation">Lugar de Entrega</Label>
               <Input
@@ -524,7 +525,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
             {(attachedFiles.length > 0 || (editingTransport?.attachments && editingTransport.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Documentos Adjuntos:</p>
-                
+
                 {/* Show existing attachments */}
                 {editingTransport?.attachments
                   ?.filter((_, index) => !removedExistingAttachments.includes(index))
@@ -551,7 +552,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                       </div>
                     );
                   })}
-                
+
                 {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">

@@ -18,6 +18,7 @@ import { insertActivitySchema } from "@shared/schema";
 import { FileText } from "lucide-react";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
+import { fromZonedTime, toZonedTime } from "date-fns-tz";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
@@ -49,7 +50,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
 
   console.info("Editing activity:", editingActivity);
-  
+
   const form = useForm<ActivityForm>({
     resolver: zodResolver(activityFormSchema),
     defaultValues: {
@@ -75,13 +76,13 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     if (editingActivity) {
       // Convertir UTC a componentes de México
       const components = utcToMexicoComponents(editingActivity.date);
-      
+
       // Crear objeto Date para el calendario
       const activityDateTime = new Date(`${components.dateStr}T${components.timeStr}:00`);
       setActivityDate(activityDateTime);
       setRemovedExistingAttachments([]);
       setAttachedFiles([]);
-      
+
       form.reset({
         travelId,
         name: editingActivity.name || "",
@@ -149,14 +150,14 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     const currentValues = form.getValues();
 
     console.info("Form values:", currentValues);
-    
+
     // Actualizar proveedor solo si ambos campos están vacíos
     if (currentValues.provider && currentValues.contactName && currentValues.contactPhone) {
       try {
         const providersResponse = await fetch('/api/service-providers', { credentials: 'include' });
         const providers = await providersResponse.json();
         const selectedProvider = providers.find((p: any) => p.name === currentValues.provider);
-        
+
         // Solo actualizar si ambos campos del proveedor están vacíos
         if (selectedProvider && !selectedProvider.contactName && !selectedProvider.contactPhone) {
           await fetch(`/api/service-providers/${selectedProvider.id}`, {
@@ -173,13 +174,13 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
         console.error('Error updating provider contact:', error);
       }
     }
-    
+
     // Convertir de componentes México a UTC
     const activityUTC = mexicoComponentsToUTC(currentValues.activityDate, currentValues.startTime);
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add form fields
     if (editingActivity) {
       formData.append('id', editingActivity.id);
@@ -198,7 +199,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     formData.append('contactPhone', currentValues.contactPhone || '');
     formData.append('placeStart', currentValues.startLocation);
     formData.append('placeEnd', currentValues.endLocation || '');
-    
+
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -252,7 +253,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
             Agrega una nueva actividad al itinerario del viaje
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -487,7 +488,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
             {(attachedFiles.length > 0 || (editingActivity?.attachments && editingActivity.attachments.length > 0)) && (
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Documentos Adjuntos:</p>
-                
+
                 {/* Show existing attachments */}
                 {editingActivity?.attachments
                   ?.filter((_, index) => !removedExistingAttachments.includes(index))
@@ -514,7 +515,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                       </div>
                     );
                   })}
-                
+
                 {/* Show new attachments */}
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">

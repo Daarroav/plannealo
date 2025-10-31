@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FileText, X } from "lucide-react";
-import { format } from "date-fns";
+import { format, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { insertInsuranceSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
@@ -79,7 +78,7 @@ export function InsuranceFormModal({
     if (initialData) {
       // Convertir UTC a componentes de México
       const components = utcToMexicoComponents(initialData.effectiveDate);
-      
+
       form.reset({
         provider: initialData.provider || "",
         policyNumber: initialData.policyNumber || "",
@@ -92,8 +91,8 @@ export function InsuranceFormModal({
         notes: initialData.notes || "",
         attachments: initialData.attachments || [],
       });
-      
- 
+
+
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
     } else {
@@ -146,7 +145,7 @@ export function InsuranceFormModal({
 
     // Create FormData
     const formData = new FormData();
-    
+
     // Add form fields
     if (initialData) {
       formData.append('id', initialData.id);
@@ -159,7 +158,7 @@ export function InsuranceFormModal({
     formData.append('importantInfo', currentValues.importantInfo || '');
     formData.append('policyDescription', currentValues.policyDescription || '');
     formData.append('notes', currentValues.notes || '');
-    
+
     // Add attached files
     attachedFiles.forEach((file) => {
       formData.append('attachments', file);
@@ -203,7 +202,7 @@ export function InsuranceFormModal({
             {initialData ? "Modifica la información del seguro de viaje" : "Agrega información de seguro de viaje al itinerario"}
           </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Información Básica */}
           <div className="space-y-4">
@@ -304,7 +303,7 @@ export function InsuranceFormModal({
           {/* Información Detallada */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Detalles de la Política</h3>
-            
+
             {/* Información Importante */}
             <div className="space-y-2">
               <Label htmlFor="importantInfo">Información Importante</Label>
@@ -331,7 +330,7 @@ export function InsuranceFormModal({
           {/* Archivos Adjuntos */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Archivos Adjuntos</h3>
-            
+
             <div className="border-2 border-dashed border-border rounded-lg p-6">
               <div className="text-center">
                 <Upload className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -360,7 +359,7 @@ export function InsuranceFormModal({
               {(attachedFiles.length > 0 || (initialData?.attachments && initialData.attachments.length > 0)) && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Documentos Adjuntos:</h4>
-                  
+
                   {/* Show existing attachments */}
                   {initialData?.attachments
                     ?.filter((_, index) => !removedExistingAttachments.includes(index))
@@ -388,7 +387,7 @@ export function InsuranceFormModal({
                         </div>
                       );
                     })}
-                  
+
                   {/* Show new attachments */}
                   {attachedFiles.map((fileName, index) => (
                     <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">

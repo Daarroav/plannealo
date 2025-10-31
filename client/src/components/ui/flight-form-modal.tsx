@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
-import { format, utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
+import { format, toZonedTime, fromZonedTime } from "date-fns-tz";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
@@ -142,7 +142,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   // Helper function to format date components for the form
   const formatDateComponents = (utcISODate: string, targetTimezone: string) => {
     try {
-      const zonedDate = utcToZonedTime(utcISODate, targetTimezone);
+      const zonedDate = toZonedTime(utcISODate, targetTimezone);
       const dateStr = format(zonedDate, "yyyy-MM-dd", { timeZone: targetTimezone });
       const timeStr = format(zonedDate, "HH:mm", { timeZone: targetTimezone });
       return { dateStr, timeStr };
@@ -389,8 +389,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const arrivalDateTimeStr = `${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`;
 
     // Convert the Mexico Time strings to UTC for saving
-    const departureUTC = zonedTimeToUtc(departureDateTimeStr, MEXICO_TIMEZONE);
-    const arrivalUTC = zonedTimeToUtc(arrivalDateTimeStr, MEXICO_TIMEZONE);
+    const departureUTC = fromZonedTime(departureDateTimeStr, MEXICO_TIMEZONE);
+    const arrivalUTC = fromZonedTime(arrivalDateTimeStr, MEXICO_TIMEZONE);
 
     console.log('Converting Mexico time to UTC:', {
       departure: {
