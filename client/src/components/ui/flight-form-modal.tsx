@@ -233,9 +233,14 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       const depComponents = formatDateComponents(editingFlight.departureDate, MEXICO_TIMEZONE);
       const arrComponents = formatDateComponents(editingFlight.arrivalDate, MEXICO_TIMEZONE);
 
-      // Set date and time states for calendar/time inputs
-      setDepartureDate(new Date(editingFlight.departureDate)); // Use UTC date as base for Date object
-      setArrivalDate(new Date(editingFlight.arrivalDate));
+      // Crear objetos Date que representen la fecha en zona México (sin conversión de timezone del navegador)
+      // Parsear componentes y crear fecha "local" que ignorará el timezone del navegador
+      const [depYear, depMonth, depDay] = depComponents.dateStr.split('-').map(Number);
+      const [arrYear, arrMonth, arrDay] = arrComponents.dateStr.split('-').map(Number);
+      
+      // Crear Date usando el constructor que toma año, mes, día (en zona local del navegador pero con valores de México)
+      setDepartureDate(new Date(depYear, depMonth - 1, depDay));
+      setArrivalDate(new Date(arrYear, arrMonth - 1, arrDay));
 
       form.reset({
         travelId,
