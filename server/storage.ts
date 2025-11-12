@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import session from "express-session";
 import { Store } from "express-session";
 import createMemoryStore from "memorystore";
-import { eq, desc, sql, and, count } from "drizzle-orm";
+import { eq, desc, sql, and, count, inArray } from "drizzle-orm";
 import { db } from "./db";
 import {
   users,
