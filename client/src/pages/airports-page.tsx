@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Plane } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Plane, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { Airport } from "@/../../shared/schema";
@@ -302,7 +302,7 @@ export default function AirportsPage() {
                           <p className="font-semibold text-xs mb-1">
                             Zonas horarias:
                           </p>
-                          {(airport.timezones as TimezoneEntry[]).map(
+                          {(airport.timezones as any[]).map(
                             (tz, idx) => (
                               <p
                                 key={idx}
