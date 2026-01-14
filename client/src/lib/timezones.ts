@@ -216,7 +216,7 @@ export function mexicoComponentsToUTC(dateStr: string, timeStr: string = '00:00'
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
-  });
+  } as Intl.DateTimeFormatOptions);
   
   const parts = formatter.formatToParts(date);
   const p = (type: string) => parts.find(part => part.type === type)?.value;
