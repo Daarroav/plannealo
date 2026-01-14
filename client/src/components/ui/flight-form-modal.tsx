@@ -461,9 +461,23 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const departureDateTimeStr = `${currentValues.departureDateField}T${currentValues.departureTimeField}:00`;
     const arrivalDateTimeStr = `${currentValues.arrivalDateField}T${currentValues.arrivalTimeField}:00`;
 
+    console.log('DEBUG DATE ISSUE:', {
+      departureDateField: currentValues.departureDateField,
+      departureTimeField: currentValues.departureTimeField,
+      departureDateTimeStr,
+      arrivalDateField: currentValues.arrivalDateField,
+      arrivalDateTimeStr
+    });
+
     // Convert Mexico Time to UTC manually
     const departureUTC = mexicoToUTC(departureDateTimeStr);
     const arrivalUTC = mexicoToUTC(arrivalDateTimeStr);
+
+    console.log('DEBUG DATE CONVERTED:', {
+      departureUTC: departureUTC.toISOString(),
+      departureUTCFull: departureUTC.toString(),
+      arrivalUTC: arrivalUTC.toISOString()
+    });
 
     console.log('Converting Mexico time to UTC:', {
       departure: {
