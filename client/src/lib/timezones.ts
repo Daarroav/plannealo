@@ -196,53 +196,36 @@ export function utcToMexicoComponents(utcDateString: string): { dateStr: string;
  * Output: ISO string en UTC
  */
 export function mexicoComponentsToUTC(dateStr: string, timeStr: string = '00:00'): string {
-  // Crear string de fecha en formato que se interpretará en la zona de México
-  const dateTimeStr = `${dateStr}T${timeStr}:00`;
+  // El problema es que new Date(year, month, day, ...) usa la zona horaria del sistema (ej: Japón)
+  // Para evitar desplazamientos, forzamos la interpretación en la zona horaria deseada
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes] = timeStr.split(':').map(Number);
+
+  // Creamos una fecha que represente ese momento exacto como si fuera UTC inicialmente
+  // y luego le restamos el offset de la zona horaria objetivo (México)
   
-  // Parsear como si estuviera en zona de México
+  // Para simplificar y ser exactos: 
+  // 1. Construimos una cadena ISO parcial
+  const isoStr = `${dateStr}T${timeStr}:00.000`;
+  
+  // 2. Usamos Intl.DateTimeFormat para encontrar el offset de Mexico City en ese momento
+  const date = new Date(isoStr + 'Z'); // Asumimos UTC temporalmente
+  
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: MEXICO_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
   });
   
-  // Crear fecha temporal en zona local del navegador
-  const tempDate = new Date(dateTimeStr);
+  const parts = formatter.formatToParts(date);
+  const p = (type: string) => parts.find(part => part.type === type)?.value;
+  const formattedStr = `${p('year')}-${p('month')}-${p('day')}T${p('hour')}:${p('minute')}:${p('second')}.000Z`;
   
-  // Obtener componentes en zona de México
-  const parts = formatter.formatToParts(tempDate);
-  const year = parseInt(parts.find(p => p.type === 'year')?.value || '0');
-  const month = parseInt(parts.find(p => p.type === 'month')?.value || '1') - 1;
-  const day = parseInt(parts.find(p => p.type === 'day')?.value || '1');
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const d1 = new Date(isoStr + 'Z');
+  const d2 = new Date(formattedStr);
+  const offsetMs = d1.getTime() - d2.getTime();
   
-  // Crear Date en UTC que represente esa hora en México
-  // México está típicamente en GMT-6 (o GMT-5 en horario de verano)
-  // Necesitamos agregar esas horas para convertir a UTC
-  const mexicoDate = new Date(Date.UTC(year, month, day, hours, minutes, 0));
-  
-  // Obtener el offset de México para esa fecha específica
-  const mexicoFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: MEXICO_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-  
-  const mexicoParts = mexicoFormatter.formatToParts(mexicoDate);
-  const mexicoHour = parseInt(mexicoParts.find(p => p.type === 'hour')?.value || '0');
-  
-  // Calcular la diferencia y ajustar
-  const hourDiff = hours - mexicoHour;
-  mexicoDate.setUTCHours(mexicoDate.getUTCHours() + hourDiff);
-  
-  return mexicoDate.toISOString();
+  const finalDate = new Date(d1.getTime() + offsetMs);
+  return finalDate.toISOString();
 }

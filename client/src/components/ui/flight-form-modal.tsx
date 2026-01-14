@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { insertFlightSchema } from "@shared/schema";
 import { AirportSearch } from "./airport-search";
 import { FlightSearchModal } from "./flight-search-modal";
-import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
+import { extractIataCode, getTimezoneForAirport, mexicoComponentsToUTC } from "@/lib/timezones";
 import { TIMEZONE_CATALOG, type TimezoneOption } from "@/lib/timezone-catalog";
 import { TimezoneCombobox } from "./timezone-combobox";
 import { AirportCombobox } from "./airport-combobox";
@@ -121,25 +121,12 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
 
   // Helper function to convert Mexico timezone to UTC
   const mexicoToUTC = (mexicoDateTimeStr: string): Date => {
-    // Parse the date/time string as if it's in Mexico timezone
-    const [datePart, timePart] = mexicoDateTimeStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute] = timePart.split(':').map(Number);
+    // Input format: YYYY-MM-DDTHH:mm
+    const [dateStr, timeStr] = mexicoDateTimeStr.split('T');
     
-    // El problema de que se recorre un mes es probablemente por el uso de month en lugar de month - 1
-    // en algún cálculo o por cómo Intl.DateTimeFormat maneja la referencia.
-    // Vamos a usar un enfoque más directo y seguro.
-    
-    // Crear la fecha asumiendo que los valores son locales (México)
-    const localDate = new Date(year, month - 1, day, hour, minute, 0);
-    
-    console.log('DEBUG DATE CALCULATION:', {
-      input: mexicoDateTimeStr,
-      parsed: { year, month, day, hour, minute },
-      localDate: localDate.toString()
-    });
-
-    return localDate;
+    // Usamos la función centralizada que ya maneja la independencia de la zona horaria del navegador
+    const utcIso = mexicoComponentsToUTC(dateStr, timeStr);
+    return new Date(utcIso);
   };
 
   const form = useForm<FlightForm>({
