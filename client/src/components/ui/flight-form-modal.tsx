@@ -126,45 +126,20 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     const [year, month, day] = datePart.split('-').map(Number);
     const [hour, minute] = timePart.split(':').map(Number);
     
-    // Create a date formatter for Mexico timezone
-    const mexicoFormatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: MEXICO_TIMEZONE,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
+    // El problema de que se recorre un mes es probablemente por el uso de month en lugar de month - 1
+    // en algún cálculo o por cómo Intl.DateTimeFormat maneja la referencia.
+    // Vamos a usar un enfoque más directo y seguro.
+    
+    // Crear la fecha asumiendo que los valores son locales (México)
+    const localDate = new Date(year, month - 1, day, hour, minute, 0);
+    
+    console.log('DEBUG DATE CALCULATION:', {
+      input: mexicoDateTimeStr,
+      parsed: { year, month, day, hour, minute },
+      localDate: localDate.toString()
     });
-    
-    // Create a reference date in UTC
-    const referenceDate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0));
-    
-    // Get what this UTC time looks like in Mexico timezone
-    const mexicoParts = mexicoFormatter.formatToParts(referenceDate);
-    const mexicoHour = parseInt(mexicoParts.find(p => p.type === 'hour')?.value || '0');
-    const mexicoDay = parseInt(mexicoParts.find(p => p.type === 'day')?.value || '1');
-    
-    // Calculate the offset and adjust
-    const hourDiff = hour - mexicoHour;
-    const dayDiff = day - mexicoDay;
-    
-    const adjustedDate = new Date(Date.UTC(
-      year,
-      month - 1,
-      day,
-      hour + hourDiff,
-      minute,
-      0
-    ));
-    
-    // If day changed, we need to adjust
-    if (dayDiff !== 0) {
-      adjustedDate.setUTCDate(adjustedDate.getUTCDate() + dayDiff);
-    }
-    
-    return adjustedDate;
+
+    return localDate;
   };
 
   const form = useForm<FlightForm>({
