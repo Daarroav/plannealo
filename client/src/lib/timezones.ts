@@ -196,21 +196,15 @@ export function utcToMexicoComponents(utcDateString: string): { dateStr: string;
  * Output: ISO string en UTC
  */
 export function mexicoComponentsToUTC(dateStr: string, timeStr: string = '00:00'): string {
-  // El problema es que new Date(year, month, day, ...) usa la zona horaria del sistema (ej: Japón)
-  // Para evitar desplazamientos, forzamos la interpretación en la zona horaria deseada
   const [year, month, day] = dateStr.split('-').map(Number);
   const [hours, minutes] = timeStr.split(':').map(Number);
 
-  // Creamos una fecha que represente ese momento exacto como si fuera UTC inicialmente
-  // y luego le restamos el offset de la zona horaria objetivo (México)
+  // La forma más robusta y simple de crear una fecha en una zona horaria específica
+  // independientemente de la zona horaria del navegador:
+  // 1. Creamos la fecha usando Date.UTC asumiendo que los valores son UTC
+  const utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes));
   
-  // Para simplificar y ser exactos: 
-  // 1. Construimos una cadena ISO parcial
-  const isoStr = `${dateStr}T${timeStr}:00.000`;
-  
-  // 2. Usamos Intl.DateTimeFormat para encontrar el offset de Mexico City en ese momento
-  const date = new Date(isoStr + 'Z'); // Asumimos UTC temporalmente
-  
+  // 2. Obtenemos la representación de esa fecha en la zona horaria de México
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: MEXICO_TIMEZONE,
     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -218,14 +212,21 @@ export function mexicoComponentsToUTC(dateStr: string, timeStr: string = '00:00'
     hour12: false
   } as Intl.DateTimeFormatOptions);
   
-  const parts = formatter.formatToParts(date);
+  const parts = formatter.formatToParts(utcDate);
   const p = (type: string) => parts.find(part => part.type === type)?.value;
-  const formattedStr = `${p('year')}-${p('month')}-${p('day')}T${p('hour')}:${p('minute')}:${p('second')}.000Z`;
   
-  const d1 = new Date(isoStr + 'Z');
-  const d2 = new Date(formattedStr);
-  const offsetMs = d1.getTime() - d2.getTime();
+  // 3. Reconstruimos la fecha que el formateador cree que es
+  const formattedDate = new Date(Date.UTC(
+    parseInt(p('year')!),
+    parseInt(p('month')!) - 1,
+    parseInt(p('day')!),
+    parseInt(p('hour')!),
+    parseInt(p('minute')!),
+    parseInt(p('second')!)
+  ));
   
-  const finalDate = new Date(d1.getTime() + offsetMs);
-  return finalDate.toISOString();
+  // 4. La diferencia es el offset de la zona horaria en ese momento exacto
+  const offsetMs = utcDate.getTime() - formattedDate.getTime();
+  
+  return new Date(utcDate.getTime() + offsetMs).toISOString();
 }
