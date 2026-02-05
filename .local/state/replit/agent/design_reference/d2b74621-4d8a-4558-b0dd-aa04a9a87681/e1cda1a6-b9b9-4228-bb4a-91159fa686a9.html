@@ -1,0 +1,689 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLANNEALO - Gestión de Itinerarios de Viaje</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f8f9fa',
+                            100: '#e9ecef',
+                            500: '#6c757d',
+                            900: '#212529'
+                        },
+                        accent: {
+                            500: '#dc3545',
+                            600: '#c82333'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-primary-50 font-inter">
+    <!-- @COMPONENT: NavigationHeader -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-primary-900">PLANNEALO</h1>
+                        <p class="text-xs text-primary-500">Gestión de Viajes</p>
+                    </div>
+                </div>
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-primary-900 hover:text-accent-500 px-3 py-2 text-sm font-medium border-b-2 border-accent-500">Viajes</a>
+                    <a href="#" class="text-primary-500 hover:text-primary-900 px-3 py-2 text-sm font-medium">Clientes</a>
+                    <a href="#" class="text-primary-500 hover:text-primary-900 px-3 py-2 text-sm font-medium">Reportes</a>
+                </nav>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="text-primary-500 hover:text-primary-900">
+                        <i class="fas fa-bell text-lg"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-primary-500"></i>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-primary-900" data-bind="user.name">María González</p>
+                            <p class="text-xs text-primary-500">Agente de Viajes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: NavigationHeader -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- @COMPONENT: PageHeader -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-primary-900 mb-2">Gestión de Viajes</h2>
+                    <p class="text-primary-500">Crea y administra los itinerarios de tus clientes</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button class="bg-accent-500 hover:bg-accent-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 inline-flex items-center space-x-2"
+                            data-event="click:openNewTravelModal">
+                        <i class="fas fa-plus"></i>
+                        <span>Nuevo Viaje</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: PageHeader -->
+
+        <!-- @COMPONENT: TravelOverview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-plane text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-primary-500">Viajes Activos</p>
+                        <p class="text-2xl font-bold text-primary-900" data-bind="stats.activeTrips">24</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-primary-500">Clientes</p>
+                        <p class="text-2xl font-bold text-primary-900" data-bind="stats.clients">89</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-primary-500">Borradores</p>
+                        <p class="text-2xl font-bold text-primary-900" data-bind="stats.drafts">7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: TravelOverview -->
+
+        <!-- @COMPONENT: TravelGrid -->
+        <div class="bg-white rounded-lg border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <h3 class="text-lg font-semibold text-primary-900 mb-4 sm:mb-0">Itinerarios Recientes</h3>
+                    <div class="flex space-x-3">
+                        <div class="relative">
+                            <input type="text" placeholder="Buscar viajes..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                            <i class="fas fa-search absolute left-3 top-3 text-primary-500"></i>
+                        </div>
+                        <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                            <option>Todos</option>
+                            <option>Publicados</option>
+                            <option>Borradores</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <!-- @MAP: travels.map(travel => ( -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-mock="true">
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                        <!-- Beautiful coastal sunset over turquoise waters with palm trees -->
+                        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250" 
+                             alt="Viaje a Riviera Maya" 
+                             class="w-full h-48 object-cover" />
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-semibold text-primary-900">Riviera Maya 2024</h4>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Publicado</span>
+                            </div>
+                            <p class="text-sm text-primary-500 mb-3">Cliente: Ana Martínez</p>
+                            <div class="flex items-center text-xs text-primary-500 space-x-4 mb-3">
+                                <span><i class="fas fa-calendar mr-1"></i>15-22 Mar</span>
+                                <span><i class="fas fa-users mr-1"></i>2 viajeros</span>
+                            </div>
+                            <button class="w-full bg-primary-50 hover:bg-primary-100 text-primary-900 py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-event="click:editTravel">
+                                Editar Viaje
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                        <!-- Stunning European city architecture with historic buildings and cobblestone streets -->
+                        <img src="https://images.unsplash.com/photo-1520986606214-8b456906c813?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=250" 
+                             alt="Viaje a Europa" 
+                             class="w-full h-48 object-cover" />
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-semibold text-primary-900">Europa Clásica</h4>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Borrador</span>
+                            </div>
+                            <p class="text-sm text-primary-500 mb-3">Cliente: Carlos Ruiz</p>
+                            <div class="flex items-center text-xs text-primary-500 space-x-4 mb-3">
+                                <span><i class="fas fa-calendar mr-1"></i>10-25 Abr</span>
+                                <span><i class="fas fa-users mr-1"></i>4 viajeros</span>
+                            </div>
+                            <button class="w-full bg-primary-50 hover:bg-primary-100 text-primary-900 py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-event="click:editTravel">
+                                Continuar Editando
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                        <!-- Majestic mountain landscape with snow-capped peaks and alpine scenery -->
+                        <img src="https://pixabay.com/get/g0dd037b49a9ba942c0af2cbca4983d8adefeb8103a759b4e02142df5b48c90aa3df39a29de661cf36af5e5602855b0bc0a40b2d03cb8516e5cb5ca0818ce7f43_1280.jpg" 
+                             alt="Viaje a Patagonia" 
+                             class="w-full h-48 object-cover" />
+                        <div class="p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-semibold text-primary-900">Patagonia Adventure</h4>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Publicado</span>
+                            </div>
+                            <p class="text-sm text-primary-500 mb-3">Cliente: Laura Fernández</p>
+                            <div class="flex items-center text-xs text-primary-500 space-x-4 mb-3">
+                                <span><i class="fas fa-calendar mr-1"></i>05-18 May</span>
+                                <span><i class="fas fa-users mr-1"></i>3 viajeros</span>
+                            </div>
+                            <button class="w-full bg-primary-50 hover:bg-primary-100 text-primary-900 py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-event="click:editTravel">
+                                Editar Viaje
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: TravelGrid -->
+    </div>
+
+    <!-- @COMPONENT: NewTravelModal -->
+    <!-- @STATE: isNewTravelModalOpen:boolean = false -->
+    <div id="newTravelModal" class="fixed inset-0 z-50 overflow-y-auto hidden" data-implementation="Show/hide based on isNewTravelModalOpen state">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" data-event="click:closeModal"></div>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-primary-900">Crear Nuevo Viaje</h3>
+                    <button class="text-primary-500 hover:text-primary-900" data-event="click:closeModal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form class="space-y-6" data-implementation="Should validate form before submission">
+                    <!-- Travel Basic Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-primary-900 mb-2">Nombre del Viaje *</label>
+                            <input type="text" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+                                   placeholder="Ej: Riviera Maya 2024">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-primary-900 mb-2">Cliente *</label>
+                            <input type="text" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent"
+                                   placeholder="Nombre del cliente">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-primary-900 mb-2">Fecha de Inicio *</label>
+                            <input type="date" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-primary-900 mb-2">Fecha de Fin *</label>
+                            <input type="date" required 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-primary-900 mb-2">Número de Viajeros *</label>
+                        <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent-500 focus:border-transparent">
+                            <option value="">Seleccionar...</option>
+                            <option value="1">1 viajero</option>
+                            <option value="2">2 viajeros</option>
+                            <option value="3">3 viajeros</option>
+                            <option value="4">4 viajeros</option>
+                            <option value="5+">5+ viajeros</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-primary-900 mb-2">Imagen de Portada</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-accent-500 transition-colors duration-200">
+                            <i class="fas fa-image text-4xl text-primary-300 mb-4"></i>
+                            <p class="text-primary-600 mb-2">Arrastra una imagen o haz clic para seleccionar</p>
+                            <p class="text-sm text-primary-500">PNG, JPG hasta 10MB</p>
+                            <button type="button" class="mt-3 bg-primary-100 hover:bg-primary-200 text-primary-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-implementation="Use ObjectUploader component for file upload">
+                                Seleccionar Imagen
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <button type="button" 
+                                class="px-6 py-3 border border-gray-300 rounded-lg text-primary-900 hover:bg-primary-50 font-medium transition-colors duration-200"
+                                data-event="click:closeModal">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-3 bg-accent-500 hover:bg-accent-600 text-white rounded-lg font-medium transition-colors duration-200"
+                                data-event="click:createTravel">
+                            Crear Viaje
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: NewTravelModal -->
+
+    <!-- @COMPONENT: TravelDetailView (Phase 1 - Initial Reservation) -->
+    <div id="travelDetailView" class="fixed inset-0 z-50 overflow-y-auto hidden bg-primary-50" data-implementation="Show when editing a travel">
+        <div class="min-h-screen">
+            <!-- Header for Travel Detail -->
+            <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-16">
+                        <div class="flex items-center space-x-4">
+                            <button class="text-primary-500 hover:text-primary-900" data-event="click:backToTravelList">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div>
+                                <h1 class="text-xl font-bold text-primary-900" data-bind="travel.name">Riviera Maya 2024</h1>
+                                <p class="text-sm text-primary-500" data-bind="travel.client">Cliente: Ana Martínez</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full" data-bind="travel.status">Borrador</span>
+                            <button class="bg-primary-100 hover:bg-primary-200 text-primary-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-event="click:saveDraft">
+                                Guardar Borrador
+                            </button>
+                            <button class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                                    data-event="click:publishTravel">
+                                Publicar Viaje
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    <!-- Sidebar Navigation -->
+                    <div class="lg:col-span-1">
+                        <nav class="space-y-2 sticky top-24">
+                            <a href="#accommodations" class="flex items-center space-x-3 px-4 py-3 bg-accent-50 text-accent-600 rounded-lg border-l-4 border-accent-500">
+                                <i class="fas fa-bed"></i>
+                                <span class="font-medium">Alojamientos</span>
+                                <span class="ml-auto bg-accent-100 text-accent-600 px-2 py-1 rounded-full text-xs" data-bind="accommodations.length">2</span>
+                            </a>
+                            <a href="#activities" class="flex items-center space-x-3 px-4 py-3 text-primary-600 hover:bg-primary-50 rounded-lg">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <span>Actividades</span>
+                                <span class="ml-auto bg-primary-100 text-primary-600 px-2 py-1 rounded-full text-xs" data-bind="activities.length">3</span>
+                            </a>
+                            <a href="#flights" class="flex items-center space-x-3 px-4 py-3 text-primary-600 hover:bg-primary-50 rounded-lg">
+                                <i class="fas fa-plane"></i>
+                                <span>Vuelos</span>
+                                <span class="ml-auto bg-primary-100 text-primary-600 px-2 py-1 rounded-full text-xs" data-bind="flights.length">2</span>
+                            </a>
+                            <a href="#transport" class="flex items-center space-x-3 px-4 py-3 text-primary-600 hover:bg-primary-50 rounded-lg">
+                                <i class="fas fa-car"></i>
+                                <span>Transporte</span>
+                                <span class="ml-auto bg-primary-100 text-primary-600 px-2 py-1 rounded-full text-xs" data-bind="transport.length">1</span>
+                            </a>
+                        </nav>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="lg:col-span-3">
+                        <!-- @COMPONENT: AccommodationsSection -->
+                        <section id="accommodations" class="mb-12">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-primary-900">Alojamientos</h2>
+                                <button class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-flex items-center space-x-2"
+                                        data-event="click:addAccommodation">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Agregar Alojamiento</span>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- @MAP: accommodations.map(accommodation => ( -->
+                                <div class="bg-white rounded-lg border border-gray-200 p-6" data-mock="true">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-bed text-primary-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-primary-900">Hotel Xcaret</h3>
+                                                <p class="text-primary-500">Resort Todo Incluido</p>
+                                                <p class="text-sm text-primary-500">Riviera Maya, México</p>
+                                            </div>
+                                        </div>
+                                        <button class="text-primary-500 hover:text-accent-500" data-event="click:editAccommodation">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Check-in</p>
+                                            <p class="text-primary-500">15 Mar 2024, 15:00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Check-out</p>
+                                            <p class="text-primary-500">22 Mar 2024, 12:00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Habitación</p>
+                                            <p class="text-primary-500">Suite Familiar</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Precio Total</p>
+                                            <p class="text-accent-500 font-semibold">$2,500 USD</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Confirmación</p>
+                                            <p class="text-primary-500">XCA-789456</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-t border-gray-200 pt-4">
+                                        <p class="text-sm font-medium text-primary-900 mb-2">Notas Especiales</p>
+                                        <p class="text-primary-500 text-sm">Cliente solicita habitación con vista al mar. Llegada tarde confirmada.</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </section>
+                        <!-- @END_COMPONENT: AccommodationsSection -->
+                        
+                        <!-- @COMPONENT: ActivitiesSection -->
+                        <section id="activities" class="mb-12">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-primary-900">Actividades y Tours</h2>
+                                <button class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-flex items-center space-x-2"
+                                        data-event="click:addActivity">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Agregar Actividad</span>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- @MAP: activities.map(activity => ( -->
+                                <div class="bg-white rounded-lg border border-gray-200 p-6" data-mock="true">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-swimming-pool text-blue-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-primary-900">Xcaret Eco Park</h3>
+                                                <p class="text-primary-500">Parque Ecológico</p>
+                                                <p class="text-sm text-primary-500">Proveedor: Xcaret Group</p>
+                                            </div>
+                                        </div>
+                                        <button class="text-primary-500 hover:text-accent-500" data-event="click:editActivity">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Fecha</p>
+                                            <p class="text-primary-500">17 Mar 2024</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Horario</p>
+                                            <p class="text-primary-500">09:00 - 18:00</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Confirmación</p>
+                                            <p class="text-primary-500">XCP-123456</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-t border-gray-200 pt-4">
+                                        <p class="text-sm font-medium text-primary-900 mb-2">Condiciones</p>
+                                        <p class="text-primary-500 text-sm">Incluye almuerzo buffet. Cancelación gratuita hasta 24h antes.</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </section>
+                        <!-- @END_COMPONENT: ActivitiesSection -->
+                        
+                        <!-- @COMPONENT: FlightsSection -->
+                        <section id="flights" class="mb-12">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-primary-900">Vuelos</h2>
+                                <button class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-flex items-center space-x-2"
+                                        data-event="click:addFlight">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Agregar Vuelo</span>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- @MAP: flights.map(flight => ( -->
+                                <div class="bg-white rounded-lg border border-gray-200 p-6" data-mock="true">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-plane text-green-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-primary-900">Ciudad de México → Cancún</h3>
+                                                <p class="text-primary-500">Aeroméxico</p>
+                                                <p class="text-sm text-primary-500">Vuelo AM 345</p>
+                                            </div>
+                                        </div>
+                                        <button class="text-primary-500 hover:text-accent-500" data-event="click:editFlight">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Salida</p>
+                                            <p class="text-primary-500">15 Mar, 08:30</p>
+                                            <p class="text-sm text-primary-500">MEX Terminal 2</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Llegada</p>
+                                            <p class="text-primary-500">15 Mar, 11:15</p>
+                                            <p class="text-sm text-primary-500">CUN Terminal 3</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Clase</p>
+                                            <p class="text-primary-500">Turista</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Reserva</p>
+                                            <p class="text-primary-500">AM789KLM</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </section>
+                        <!-- @END_COMPONENT: FlightsSection -->
+                        
+                        <!-- @COMPONENT: TransportSection -->
+                        <section id="transport" class="mb-12">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-bold text-primary-900">Transporte Local</h2>
+                                <button class="bg-accent-500 hover:bg-accent-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 inline-flex items-center space-x-2"
+                                        data-event="click:addTransport">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Agregar Transporte</span>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <!-- @MAP: transports.map(transport => ( -->
+                                <div class="bg-white rounded-lg border border-gray-200 p-6" data-mock="true">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
+                                                <i class="fas fa-car text-orange-600 text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <h3 class="text-lg font-semibold text-primary-900">Traslado Aeropuerto - Hotel</h3>
+                                                <p class="text-primary-500">Transporte Privado</p>
+                                                <p class="text-sm text-primary-500">Cancún Shuttle Services</p>
+                                            </div>
+                                        </div>
+                                        <button class="text-primary-500 hover:text-accent-500" data-event="click:editTransport">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Fecha</p>
+                                            <p class="text-primary-500">15 Mar 2024</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Horario</p>
+                                            <p class="text-primary-500">12:00 - 13:30</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-primary-900">Confirmación</p>
+                                            <p class="text-primary-500">CSS-987654</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-t border-gray-200 pt-4">
+                                        <p class="text-sm font-medium text-primary-900 mb-2">Lugar de Recogida</p>
+                                        <p class="text-primary-500 text-sm">Aeropuerto de Cancún, Terminal 3 - Zona de Llegadas</p>
+                                        <p class="text-sm font-medium text-primary-900 mb-2 mt-3">Notas</p>
+                                        <p class="text-primary-500 text-sm">Conductor estará esperando con letrero del nombre del cliente.</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </section>
+                        <!-- @END_COMPONENT: TransportSection -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: TravelDetailView -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            'use strict';
+            
+            // Modal management
+            const newTravelModal = document.getElementById('newTravelModal');
+            const travelDetailView = document.getElementById('travelDetailView');
+            
+            // Event handlers for modal controls
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('[data-event="click:openNewTravelModal"]')) {
+                    e.preventDefault();
+                    newTravelModal.classList.remove('hidden');
+                }
+                
+                if (e.target.closest('[data-event="click:closeModal"]')) {
+                    e.preventDefault();
+                    newTravelModal.classList.add('hidden');
+                }
+                
+                if (e.target.closest('[data-event="click:editTravel"]')) {
+                    e.preventDefault();
+                    newTravelModal.classList.add('hidden');
+                    travelDetailView.classList.remove('hidden');
+                }
+                
+                if (e.target.closest('[data-event="click:backToTravelList"]')) {
+                    e.preventDefault();
+                    travelDetailView.classList.add('hidden');
+                }
+            });
+            
+            // Smooth scrolling for navigation
+            document.addEventListener('click', function(e) {
+                const anchor = e.target.closest('a[href^="#"]');
+                if (anchor) {
+                    e.preventDefault();
+                    const targetId = anchor.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // Update active navigation state
+                        document.querySelectorAll('nav a').forEach(link => {
+                            link.classList.remove('bg-accent-50', 'text-accent-600', 'border-accent-500');
+                            link.classList.add('text-primary-600');
+                        });
+                        
+                        anchor.classList.add('bg-accent-50', 'text-accent-600', 'border-accent-500');
+                        anchor.classList.remove('text-primary-600');
+                    }
+                }
+            });
+            
+            // Form validation placeholder
+            document.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // TODO: Implement form validation and submission logic
+                console.log('Form submitted - implement validation and API call');
+            });
+        })();
+    </script>
+</body>
+</html>
