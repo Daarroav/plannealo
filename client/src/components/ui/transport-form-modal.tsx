@@ -18,6 +18,8 @@ import { insertTransportSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
@@ -47,6 +49,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
   const [endDate, setEndDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   const form = useForm<TransportForm>({
     resolver: zodResolver(transportFormSchema),
@@ -106,6 +113,12 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         attachments: editingTransport.attachments || [],
       });
 
+      setCostValue({
+        currency: editingTransport.costCurrency || "MXN",
+        total: editingTransport.costAmount || "",
+        breakdown: normalizeCostBreakdown(editingTransport.costBreakdown),
+      });
+
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
     } else {
@@ -127,6 +140,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
         confirmationNumber: "",
         notes: "",
         attachments: [],
+      });
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
       });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
@@ -211,6 +229,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     formData.append('dropoffLocation', currentValues.dropoffLocation || '');
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
     formData.append('notes', currentValues.notes || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
 
     // Add attached files
     attachedFiles.forEach((file) => {
@@ -238,6 +261,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     setEndDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
   };
 
   const handleClose = () => {
@@ -246,6 +274,11 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
     setEndDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     onClose();
   };
 
@@ -498,6 +531,8 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
               placeholder="Información adicional, instrucciones especiales, etc."
             />
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* File Attachments */}
           <div>

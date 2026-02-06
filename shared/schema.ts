@@ -39,6 +39,9 @@ export const accommodations = pgTable("accommodations", {
   checkOut: timestamp("check_out").notNull(),
   roomType: text("room_type").notNull(),
   price: text("price"),
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   confirmationNumber: text("confirmation_number"),
   policies: text("policies"),
   notes: text("notes"),
@@ -55,6 +58,9 @@ export const activities = pgTable("activities", {
   date: timestamp("date").notNull(),
   startTime: text("start_time"),
   endTime: text("end_time"),
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   confirmationNumber: text("confirmation_number"),
   conditions: text("conditions"),
   notes: text("notes"),
@@ -76,6 +82,9 @@ export const flights = pgTable("flights", {
   departureTime: text("departure_time"),
   arrivalDate: timestamp("arrival_date").notNull(),
   arrivalTime: text("arrival_time"),
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   departureTerminal: text("departure_terminal"),
   arrivalTerminal: text("arrival_terminal"),
   class: text("class").notNull(),
@@ -97,6 +106,9 @@ export const transports = pgTable("transports", {
   pickupLocation: text("pickup_location").notNull(),
   endDate: timestamp("end_date"),
   dropoffLocation: text("dropoff_location"),
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   confirmationNumber: text("confirmation_number"),
   notes: text("notes"),
   attachments: text("attachments").array(), // Archivos adjuntos
@@ -111,6 +123,9 @@ export const cruises = pgTable("cruises", {
   departurePort: text("departure_port").notNull(), // puerto
   arrivalDate: timestamp("arrival_date").notNull(), // fecha y horario de desembarque
   arrivalPort: text("arrival_port").notNull(), // puerto de desembarque
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   notes: text("notes"),
   attachments: text("attachments").array(), // Archivos adjuntos
 });
@@ -125,6 +140,9 @@ export const insurances = pgTable("insurances", {
   effectiveDate: timestamp("effective_date").notNull(), // Fecha y hora
   importantInfo: text("important_info"), // Información importante
   policyDescription: text("policy_description"), // Descripción de la política
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   attachments: text("attachments").array(), // Archivos adjuntos
   notes: text("notes"), // Notas adicionales
 });
@@ -136,6 +154,9 @@ export const notes = pgTable("notes", {
   noteDate: timestamp("note_date").notNull(), // Fecha
   content: text("content").notNull(), // Texto con notas
   visibleToTravelers: boolean("visible_to_travelers").notNull().default(true), // Visible para viajeros
+  costAmount: text("cost_amount"),
+  costCurrency: text("cost_currency"),
+  costBreakdown: text("cost_breakdown"),
   attachments: text("attachments").array(), // Archivos adjuntos
 });
 

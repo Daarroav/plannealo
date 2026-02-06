@@ -11,6 +11,8 @@ import { insertCruiseSchema } from "@shared/schema";
 import { Upload, FileText, X } from "lucide-react";
 import React from "react";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Form validation schema - extends the base schema with date string handling
 const cruiseFormSchema = insertCruiseSchema.extend({
@@ -42,6 +44,11 @@ export function CruiseFormModal({
 }: CruiseFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
   const form = useForm<CruiseFormData>({
     resolver: zodResolver(cruiseFormSchema),
     defaultValues: {
@@ -79,6 +86,12 @@ export function CruiseFormModal({
           attachments: editingCruise.attachments || [],
         });
 
+        setCostValue({
+          currency: editingCruise.costCurrency || "MXN",
+          total: editingCruise.costAmount || "",
+          breakdown: normalizeCostBreakdown(editingCruise.costBreakdown),
+        });
+
         setAttachedFiles([]);
         setRemovedExistingAttachments([]);
       } else {
@@ -93,6 +106,11 @@ export function CruiseFormModal({
           arrivalPort: "",
           notes: "",
           attachments: [],
+        });
+        setCostValue({
+          currency: "MXN",
+          total: "",
+          breakdown: [],
         });
         setAttachedFiles([]);
         setRemovedExistingAttachments([]);
@@ -149,6 +167,11 @@ export function CruiseFormModal({
     formData.append('arrivalDate', arrivalUTC);
     formData.append('arrivalPort', currentValues.arrivalPort);
     formData.append('notes', currentValues.notes || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
 
     // Add attached files
     attachedFiles.forEach((file) => {
@@ -175,12 +198,22 @@ export function CruiseFormModal({
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
   };
 
   const handleClose = () => {
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     onOpenChange(false);
   };
 
@@ -304,6 +337,8 @@ export function CruiseFormModal({
               className="min-h-[80px]"
             />
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* File Attachments */}
           <div>

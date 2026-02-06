@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Upload, FileText, X } from "lucide-react";
 import { insertNoteSchema } from "@shared/schema";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
@@ -39,6 +41,11 @@ export function NoteFormModal({
 }: NoteFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
@@ -82,6 +89,11 @@ export function NoteFormModal({
           visibleToTravelers: editingNote.visibleToTravelers ?? true,
           attachments: editingNote.attachments || [],
         });
+        setCostValue({
+          currency: editingNote.costCurrency || "MXN",
+          total: editingNote.costAmount || "",
+          breakdown: normalizeCostBreakdown(editingNote.costBreakdown),
+        });
       } else {
         form.reset({
           title: editingNote.title || "",
@@ -90,6 +102,11 @@ export function NoteFormModal({
           content: editingNote.content || "",
           visibleToTravelers: editingNote.visibleToTravelers ?? true,
           attachments: editingNote.attachments || [],
+        });
+        setCostValue({
+          currency: editingNote.costCurrency || "MXN",
+          total: editingNote.costAmount || "",
+          breakdown: normalizeCostBreakdown(editingNote.costBreakdown),
         });
       }
 
@@ -103,6 +120,11 @@ export function NoteFormModal({
         content: "",
         visibleToTravelers: true,
         attachments: [],
+      });
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
       });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
@@ -169,6 +191,11 @@ export function NoteFormModal({
 
     formData.append('content', currentValues.content);
     formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
 
     // Add attached files
     attachedFiles.forEach((file) => {
@@ -195,6 +222,11 @@ export function NoteFormModal({
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
   };
 
   const handleClose = () => {
@@ -208,6 +240,11 @@ export function NoteFormModal({
     });
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
 
     // Force a small delay to ensure any pending mutations complete
     setTimeout(() => {
@@ -310,6 +347,8 @@ export function NoteFormModal({
               </p>
             </div>
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* Documentos Adjuntos */}
           <div className="space-y-4">

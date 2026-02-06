@@ -62,6 +62,27 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const [user] = await db
+      .insert(users)
+      .values({ ...insertUser, id })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  }
+
   async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
   }

@@ -12,6 +12,7 @@ import express from 'express'; // Instalacion para archivos estaticos
 import path from 'path';
 import fs from "fs";  // Para crear carpetas
 import { Buffer } from 'buffer';
+import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { airports, insertAirportSchema } from "../shared/schema";
 import { db } from "./db";
@@ -38,6 +39,26 @@ function parseObjectPath(path: string): { bucketName: string; objectName: string
 
 // Helper function to upload file to Object Storage
 async function uploadFileToObjectStorage(file: Express.Multer.File, folder: string): Promise<string> {
+  const shouldUseLocalStorage = !process.env.PRIVATE_OBJECT_DIR;
+
+  if (shouldUseLocalStorage) {
+    const uploadsRoot = path.join(process.cwd(), "uploads", folder);
+    await fs.promises.mkdir(uploadsRoot, { recursive: true });
+
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const baseName = path
+      .basename(file.originalname || "file", ext)
+      .replace(/[^a-zA-Z0-9-_]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    const safeBaseName = baseName || "file";
+    const fileName = `${Date.now()}-${randomUUID()}-${safeBaseName}${ext}`;
+    const filePath = path.join(uploadsRoot, fileName);
+
+    await fs.promises.writeFile(filePath, file.buffer);
+
+    return `/objects/uploads/${folder}/${fileName}`;
+  }
+
   // Ensure correct content type is set, especially for PDFs
   let contentType = file.mimetype;
 
@@ -380,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Condiciones para el acceso al viaje
           const isOwner = travel.createdBy === req.user!.id;
-          const isAdmin = req.user!.role === "admin";
+          const isAdmin = req.user!.role === "admin" || req.user!.role === "master";
 
           if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "Access denied" });
@@ -460,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Condiciones para el acceso al viaje
           const isOwner = travel.createdBy === req.user!.id;
-          const isAdmin = req.user!.role === "admin";
+          const isAdmin = req.user!.role === "admin" || req.user!.role === "master";
 
           if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "Access denied" });
@@ -505,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Verificar permisos del usuario autenticado
             const isOwner = travel.createdBy === req.user!.id;
-            const isAdmin = req.user!.role === "admin";
+            const isAdmin = req.user!.role === "admin" || req.user!.role === "master";
 
             if (!isOwner && !isAdmin) {
               return res.status(403).json({ message: "Access denied" });
@@ -1952,6 +1973,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const objectPath = req.path.replace("/api", "");
           console.log("Serving object path:", objectPath);
 
+          if (objectPath.startsWith("/objects/uploads/")) {
+            const relativePath = objectPath.replace("/objects/uploads/", "");
+            const uploadsRoot = path.join(process.cwd(), "uploads");
+            const resolvedPath = path.normalize(path.join(uploadsRoot, relativePath));
+
+            if (!resolvedPath.startsWith(uploadsRoot)) {
+              return res.status(400).json({ error: "Invalid object path" });
+            }
+
+            return res.sendFile(resolvedPath);
+          }
+
           const objectStorageService = new ObjectStorageService();
 
           // Check if environment variables are set
@@ -2000,6 +2033,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       app.get("/api/objects/*/metadata", async (req, res) => {
         try {
           const objectPath = req.path.replace("/api", "").replace("/metadata", "");
+
+          if (objectPath.startsWith("/objects/uploads/")) {
+            const relativePath = objectPath.replace("/objects/uploads/", "");
+            const uploadsRoot = path.join(process.cwd(), "uploads");
+            const resolvedPath = path.normalize(path.join(uploadsRoot, relativePath));
+
+            if (!resolvedPath.startsWith(uploadsRoot)) {
+              return res.status(400).json({ error: "Invalid object path" });
+            }
+
+            const stats = await fs.promises.stat(resolvedPath);
+            const originalName = path.basename(resolvedPath);
+
+            return res.json({
+              originalName,
+              uploadedAt: stats.mtime.toISOString(),
+              contentType: "application/octet-stream",
+              size: stats.size.toString(),
+            });
+          }
+
           const objectStorageService = new ObjectStorageService();
           const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 

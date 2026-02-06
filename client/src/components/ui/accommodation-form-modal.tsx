@@ -19,6 +19,8 @@ import { useRef } from "react";
 import { FileText } from "lucide-react";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -54,6 +56,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailRemoved, setThumbnailRemoved] = useState<boolean>(false);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,7 +80,6 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
       checkOutTime: editingAccommodation?.checkOut ? format(new Date(editingAccommodation.checkOut), "HH:mm") : "",
       roomType: editingAccommodation?.roomType?.replace(/^\d+\s/, "") || "",
       roomCount: editingAccommodation?.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
-      price: editingAccommodation?.price || "",
       confirmationNumber: editingAccommodation?.confirmationNumber || "",
       policies: editingAccommodation?.policies || "",
       notes: editingAccommodation?.notes || "",
@@ -179,7 +185,12 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     formData.append('checkIn', checkInUTC);
     formData.append('checkOut', checkOutUTC);
     formData.append('roomType', `${currentValues.roomCount} ${currentValues.roomType}`);
-    formData.append('price', currentValues.price || '');
+    formData.append('price', costValue.total || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
     formData.append('policies', currentValues.policies || '');
     formData.append('notes', currentValues.notes || '');
@@ -242,7 +253,11 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
     setCheckOutDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
-    setPriceInCents(0);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -279,39 +294,34 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         checkOutTime: checkOutComponents.timeStr,
         roomType: editingAccommodation.roomType?.replace(/^\d+\s/, "") || "",
         roomCount: editingAccommodation.roomType ? parseInt(editingAccommodation.roomType.split(' ')[0]) || 1 : 1,
-        price: editingAccommodation.price || "",
         confirmationNumber: editingAccommodation.confirmationNumber || "",
         policies: editingAccommodation.policies || "",
         notes: editingAccommodation.notes || "",
         attachments: editingAccommodation.attachments || [],
       });
 
-      // Sync price formatting
-      if (editingAccommodation.price) {
-        const priceValue = parseFloat(editingAccommodation.price);
-        if (priceValue > 0) {
-          const cents = Math.round(priceValue * 100);
-          setPriceInCents(cents);
-        } else {
-          setPriceInCents(0);
-        }
-      } else {
-        setPriceInCents(0);
-      }
-
       // Reset attached files state - don't try to convert existing URLs to File objects
       // This prevents overwriting when only updating thumbnail
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
+      setCostValue({
+        currency: editingAccommodation?.costCurrency || "MXN",
+        total: editingAccommodation?.costAmount || editingAccommodation?.price || "",
+        breakdown: normalizeCostBreakdown(editingAccommodation?.costBreakdown),
+      });
     } else {
       // Reset all states for new accommodation
       setCheckInDate(undefined);
       setCheckOutDate(undefined);
       setThumbnailRemoved(false);
       setThumbnail(null);
-      setPriceInCents(0);
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
+      });
 
       form.reset({
         travelId,
@@ -324,48 +334,12 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
         checkOutTime: "06:00",
         roomType: "",
         roomCount: 1,
-        price: "",
         confirmationNumber: "",
         policies: "",
         notes: "",
       });
     }
   }, [editingAccommodation, form, travelId]);
-
-
-  const [priceInCents, setPriceInCents] = useState<number>(0);
-
-  // Format currency using Intl.NumberFormat
-  const formatCurrency = (cents: number): string => {
-    const pesos = cents / 100;
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(pesos);
-  };
-
-  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
-
-    // Remove all non-digits
-    const digitsOnly = input.replace(/\D/g, "");
-
-    if (!digitsOnly) {
-      setPriceInCents(0);
-      form.setValue("price", "");
-      return;
-    }
-
-    // Convert to number (this represents cents)
-    const cents = parseInt(digitsOnly, 10);
-    setPriceInCents(cents);
-
-    // Save the dollar amount (cents / 100) as string in the form
-    const dollars = cents / 100;
-    form.setValue("price", dollars.toString());
-  };
 
 
   return (
@@ -525,7 +499,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
             </div>
           </div>
 
-          {/* Room Details and Pricing */}
+          {/* Room Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="roomCount">Cantidad de Habitaciones *</Label>
@@ -557,28 +531,9 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 </p>
               )}
             </div>
-
-            <div className="w-full">
-            <label htmlFor="price" className="block mb-1 font-medium">
-              Precio Total
-            </label>
-            <Input
-              id="price"
-              type="text"
-              value={priceInCents > 0 ? formatCurrency(priceInCents) : ""}
-              onChange={handlePriceChange}
-              placeholder="$15,000.00"
-            />
-            <input type="hidden" {...form.register("price")} />
-            {form.formState.errors.price && (
-              <p className="text-sm text-destructive mt-1">
-                {form.formState.errors.price.message}
-              </p>
-            )}
           </div>
 
-
-          </div>
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* Policies */}
           <div>

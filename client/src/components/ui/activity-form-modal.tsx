@@ -19,6 +19,8 @@ import { FileText } from "lucide-react";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
@@ -48,6 +50,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   const [activityDate, setActivityDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   console.info("Editing activity:", editingActivity);
 
@@ -99,10 +106,20 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
         conditions: editingActivity.conditions || "",
         notes: editingActivity.notes || "",
       });
+      setCostValue({
+        currency: editingActivity.costCurrency || "MXN",
+        total: editingActivity.costAmount || "",
+        breakdown: normalizeCostBreakdown(editingActivity.costBreakdown),
+      });
     } else {
       setActivityDate(undefined);
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
+      });
       form.reset({
         travelId,
         name: "",
@@ -195,6 +212,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     formData.append('confirmationNumber', currentValues.confirmationNumber || '');
     formData.append('conditions', currentValues.conditions || '');
     formData.append('notes', currentValues.notes || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
     formData.append('contactName', currentValues.contactName || '');
     formData.append('contactPhone', currentValues.contactPhone || '');
     formData.append('placeStart', currentValues.startLocation);
@@ -233,6 +255,11 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
     setActivityDate(undefined);
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     onClose();
   };
 
@@ -461,6 +488,8 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
               rows={3}
             />
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* File Attachments */}
           <div>

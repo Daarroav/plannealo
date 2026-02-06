@@ -21,6 +21,8 @@ import { extractIataCode, getTimezoneForAirport, mexicoComponentsToUTC } from "@
 import { TIMEZONE_CATALOG, type TimezoneOption } from "@/lib/timezone-catalog";
 import { TimezoneCombobox } from "./timezone-combobox";
 import { AirportCombobox } from "./airport-combobox";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -105,6 +107,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   // Zonas horarias manuales (cuando no se usa búsqueda automática)
   const [manualDepartureTimezone, setManualDepartureTimezone] = useState<string>("");
@@ -221,6 +228,12 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         attachments: editingFlight.attachments || [],
       });
 
+      setCostValue({
+        currency: editingFlight.costCurrency || "MXN",
+        total: editingFlight.costAmount || "",
+        breakdown: normalizeCostBreakdown(editingFlight.costBreakdown),
+      });
+
       setManualDepartureTimezone(depTz);
       setManualArrivalTimezone(arrTz);
 
@@ -261,6 +274,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         arrivalTerminal: "",
         class: "",
         attachments: [],
+      });
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
       });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
@@ -472,6 +490,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     formData.append('departureTerminal', currentValues.departureTerminal || '');
     formData.append('arrivalTerminal', currentValues.arrivalTerminal || '');
     formData.append('class', currentValues.class || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
 
     // Add determined timezones to formData
     formData.append('departureTimezone', departureTz);
@@ -502,6 +525,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     setRemovedExistingAttachments([]);
     setManualDepartureTimezone("");
     setManualArrivalTimezone("");
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
   };
 
   const handleClose = () => {
@@ -512,6 +540,11 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     setRemovedExistingAttachments([]);
     setManualDepartureTimezone("");
     setManualArrivalTimezone("");
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     onClose();
   };
 
@@ -833,6 +866,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
               )}
             </div>
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           <div>
             <Label>Documentos Adjuntos</Label>

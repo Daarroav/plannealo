@@ -13,6 +13,8 @@ import { format, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { insertInsuranceSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
+import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
+import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 
 // Form validation schema - extends the base schema with date string handling
@@ -54,6 +56,11 @@ export function InsuranceFormModal({
 }: InsuranceFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [costValue, setCostValue] = useState<CostValue>({
+    currency: "MXN",
+    total: "",
+    breakdown: [],
+  });
 
   console.log("Initial data:", initialData);
 
@@ -92,7 +99,11 @@ export function InsuranceFormModal({
         attachments: initialData.attachments || [],
       });
 
-
+      setCostValue({
+        currency: initialData.costCurrency || "MXN",
+        total: initialData.costAmount || "",
+        breakdown: normalizeCostBreakdown(initialData.costBreakdown),
+      });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
     } else {
@@ -107,6 +118,11 @@ export function InsuranceFormModal({
         policyDescription: "",
         notes: "",
         attachments: [],
+      });
+      setCostValue({
+        currency: "MXN",
+        total: "",
+        breakdown: [],
       });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
@@ -158,6 +174,11 @@ export function InsuranceFormModal({
     formData.append('importantInfo', currentValues.importantInfo || '');
     formData.append('policyDescription', currentValues.policyDescription || '');
     formData.append('notes', currentValues.notes || '');
+    formData.append('costAmount', costValue.total || '');
+    formData.append('costCurrency', costValue.currency || 'MXN');
+    if (costValue.breakdown.length > 0) {
+      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
+    }
 
     // Add attached files
     attachedFiles.forEach((file) => {
@@ -184,12 +205,22 @@ export function InsuranceFormModal({
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
   };
 
   const handleClose = () => {
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
+    setCostValue({
+      currency: "MXN",
+      total: "",
+      breakdown: [],
+    });
     onOpenChange(false);
   };
 
@@ -326,6 +357,8 @@ export function InsuranceFormModal({
               />
             </div>
           </div>
+
+          <CostBreakdownFields value={costValue} onChange={setCostValue} />
 
           {/* Archivos Adjuntos */}
           <div className="space-y-4">

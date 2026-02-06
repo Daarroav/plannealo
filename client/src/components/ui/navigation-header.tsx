@@ -13,6 +13,11 @@ import {
 export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const roleLabels: Record<string, string> = {
+    master: "Maestro",
+    admin: "Administrador",
+    traveler: "Viajero",
+  };
 
 
   // Opciones de navegación según el rol
@@ -163,7 +168,7 @@ export function NavigationHeader() {
               <div className="hidden md:block">
                 <p className="text-sm font-medium text-foreground">{user?.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {user?.role === "admin" ? "Administrador" : "Agente de Viajes"}
+                  {roleLabels[user?.role ?? ""] || "Usuario"}
                 </p>
               </div>
               <Button
