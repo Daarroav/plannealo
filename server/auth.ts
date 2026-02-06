@@ -87,8 +87,10 @@ export function setupAuth(app: Express) {
       return res.status(400).send("Username already exists");
     }
 
+    // Forzar rol traveler en registro público
     const user = await storage.createUser({
       ...req.body,
+      role: 'traveler',
       password: await hashPassword(req.body.password),
     });
 

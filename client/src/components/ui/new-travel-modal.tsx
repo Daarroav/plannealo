@@ -12,6 +12,7 @@ import type { Travel } from "@shared/schema";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { User } from "@shared/schema";
+import { useAuth } from "@/hooks/use-auth";
 
 const newTravelSchema = z.object({
   name: z.string().min(1, "El nombre del viaje es requerido"),
@@ -38,6 +39,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   
+  const { user } = useAuth();
 
   console.info("Travel", travel?.clientId);
   const form = useForm<NewTravelForm>({
@@ -63,6 +65,22 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
   // Efecto para resetear el formulario cuando se abre el modal o cambia la información del usuario
   useEffect(() => {
     if (!isOpen) return;
+    
+    // Si el usuario es viajero y está creando un viaje
+    if (!travel && user && user.role === "traveler") {
+      form.reset({
+        name: "",
+        clientName: user.name || "",
+        clientEmail: user.username || "",
+        startDate: "",
+        endDate: "",
+        travelers: 1,
+      });
+      setIsEditing(false);
+      setSelectedImage(null);
+      setImagePreview(null);
+      return;
+    }
     
     if (travel) {
       // Solo actualizamos el formulario si tenemos la información del usuario o si estamos editando
@@ -101,7 +119,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
     // Limpiar la imagen seleccionada al abrir/cerrar el modal
     setSelectedImage(null);
     setImagePreview(null);
-  }, [isOpen, travel, travelInfoUser]);
+  }, [isOpen, travel, travelInfoUser, user]);
 
   const handleImageSelect = () => {
     fileInputRef.current?.click();

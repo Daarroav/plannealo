@@ -14,19 +14,39 @@ export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
 
-  const catalogItems = [
-    { path: "/clients", label: "Clientes", icon: Users },
-    { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
-    { path: "/service-providers", label: "Proveedores", icon: Handshake },
-  ];
 
-  const navItems: Array<{ path: string; label: string; icon?: any }> = [
-    { path: "/", label: "Viajes", icon: Plane },
-    { path: "/reports", label: "Reportes" },
-  ];
+  // Opciones de navegación según el rol
+  let catalogItems: Array<{ path: string; label: string; icon?: any }> = [];
+  let navItems: Array<{ path: string; label: string; icon?: any }> = [];
 
-  if (user?.role === "admin") {
-    navItems.push({ path: "/backups", label: "Respaldos", icon: Database });
+  if (user?.role === "master") {
+    navItems = [
+      { path: "/", label: "Viajes", icon: Plane },
+      { path: "/reports", label: "Reportes" },
+      { path: "/backups", label: "Respaldos", icon: Database },
+      { path: "/users-admin", label: "Usuarios", icon: Users },
+    ];
+    catalogItems = [
+      { path: "/clients", label: "Clientes", icon: Users },
+      { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
+      { path: "/service-providers", label: "Proveedores", icon: Handshake },
+    ];
+  } else if (user?.role === "admin") {
+    navItems = [
+      { path: "/", label: "Viajes", icon: Plane },
+      { path: "/reports", label: "Reportes" },
+      { path: "/backups", label: "Respaldos", icon: Database },
+    ];
+    catalogItems = [
+      { path: "/clients", label: "Clientes", icon: Users },
+      { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
+      { path: "/service-providers", label: "Proveedores", icon: Handshake },
+    ];
+  } else if (user?.role === "traveler") {
+    navItems = [
+      { path: "/", label: "Viajes", icon: Plane },
+    ];
+    catalogItems = [];
   }
 
   return (
@@ -56,35 +76,36 @@ export function NavigationHeader() {
                 {item.label}
               </Link>
             ))}
-            
-            {/* Menú de Catálogos */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium flex items-center gap-2 ${
-                    catalogItems.some(item => location === item.path) ? "border-b-2 border-accent" : ""
-                  }`}
-                >
-                  Catálogos
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {catalogItems.map((item) => (
-                  <DropdownMenuItem key={item.path} asChild>
-                    <Link
-                      to={item.path}
-                      className={`cursor-pointer flex items-center gap-2 ${
-                        location === item.path ? "bg-accent text-accent-foreground" : ""
-                      }`}
-                    >
-                      {item.icon && <item.icon className="h-4 w-4" />}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Mostrar menú de catálogos solo si hay items (no para traveler) */}
+            {catalogItems.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`text-foreground hover:text-accent px-3 py-2 text-sm font-medium flex items-center gap-2 ${
+                      catalogItems.some(item => location === item.path) ? "border-b-2 border-accent" : ""
+                    }`}
+                  >
+                    Catálogos
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {catalogItems.map((item) => (
+                    <DropdownMenuItem key={item.path} asChild>
+                      <Link
+                        to={item.path}
+                        className={`cursor-pointer flex items-center gap-2 ${
+                          location === item.path ? "bg-accent text-accent-foreground" : ""
+                        }`}
+                      >
+                        {item.icon && <item.icon className="h-4 w-4" />}
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </nav>
 
           {/* Menú dropdown para pantallas medianas y pequeñas */}
@@ -109,22 +130,27 @@ export function NavigationHeader() {
                     </Link>
                   </DropdownMenuItem>
                 ))}
-                <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground">
-                  Catálogos
-                </DropdownMenuItem>
-                {catalogItems.map((item) => (
-                  <DropdownMenuItem key={item.path} asChild>
-                    <Link
-                      to={item.path}
-                      className={`cursor-pointer pl-6 flex items-center gap-2 ${
-                        location === item.path ? "bg-accent text-accent-foreground" : ""
-                      }`}
-                    >
-                      {item.icon && <item.icon className="h-4 w-4" />}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
+                {/* Mostrar menú de catálogos solo si hay items (no para traveler) */}
+                {catalogItems.length > 0 && (
+                  <>
+                    <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground">
+                      Catálogos
+                    </DropdownMenuItem>
+                    {catalogItems.map((item) => (
+                      <DropdownMenuItem key={item.path} asChild>
+                        <Link
+                          to={item.path}
+                          className={`cursor-pointer pl-6 flex items-center gap-2 ${
+                            location === item.path ? "bg-accent text-accent-foreground" : ""
+                          }`}
+                        >
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>

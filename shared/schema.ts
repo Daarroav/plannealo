@@ -8,7 +8,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").default("agent"),
+  role: text("role").notNull().default("traveler"), // 'master', 'admin', 'traveler'
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -194,9 +194,11 @@ export const serviceProviders = pgTable("service_providers", {
 });
 
 // Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-});
+export const insertUserSchema = createInsertSchema(users)
+  .omit({ id: true })
+  .extend({
+    role: z.enum(["master", "admin", "traveler"]).default("traveler"),
+  });
 
 
 export const insertTravelSchema = createInsertSchema(travels)

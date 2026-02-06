@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { requireAuth, requireRole } from "./middleware/roles";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
@@ -82,6 +83,58 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configurar autenticación y sesión ANTES de las rutas protegidas
+  setupAuth(app);
+
+  // Crear usuario (solo master)
+  app.post('/api/users', requireAuth, requireRole(['master']), async (req, res) => {
+    try {
+      const { username, password, name, role } = req.body;
+      if (!username || !password || !name || !role) {
+        return res.status(400).json({ error: 'Faltan campos requeridos' });
+      }
+      const existing = await storage.getUserByUsername(username);
+      if (existing) {
+        return res.status(400).json({ error: 'El usuario ya existe' });
+      }
+      const hashedPassword = await (await import('./auth')).hashPassword(password);
+      const user = await storage.createUser({ username, password: hashedPassword, name, role });
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al crear usuario' });
+    }
+  });
+
+  // Editar usuario (solo master)
+  app.put('/api/users/:id', requireAuth, requireRole(['master']), async (req, res) => {
+    try {
+      const { name, role } = req.body;
+      const user = await storage.updateUser(req.params.id, { name, role });
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al editar usuario' });
+    }
+  });
+
+  // Eliminar usuario (solo master)
+  app.delete('/api/users/:id', requireAuth, requireRole(['master']), async (req, res) => {
+    try {
+      await storage.deleteUser(req.params.id);
+      res.sendStatus(204);
+    } catch (error) {
+      res.status(500).json({ error: 'Error al eliminar usuario' });
+    }
+  });
+
+    // Endpoint para listar todos los usuarios (solo master)
+    app.get('/api/users', requireAuth, requireRole(['master']), async (req, res) => {
+      try {
+        const users = await storage.getAllUsers();
+        res.json(users);
+      } catch (error) {
+        res.status(500).json({ error: 'Error al obtener usuarios' });
+      }
+    });
   // Setup authentication routes
 
   // Configuración de multer para subir archivos al Object Storage
@@ -97,14 +150,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', express.static('uploads')); // Configuración de archivos estáticos
 
   // Backup endpoint
-  app.get('/api/backup', async (req, res) => {
+  app.get('/api/backup', requireAuth, requireRole(['master', 'admin']), async (req, res) => {
     try {
-      // Check if user is admin
-      const user = (req as any).user;
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: 'Access denied. Admin only.' });
-      }
-
       // Backup logic would go here
       res.json({ message: 'Backup endpoint - implementation pending' });
     } catch (error) {
@@ -138,8 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Setup authentication routes first
-  setupAuth(app);
+  // (setupAuth ya se ejecutó antes de las rutas protegidas)
 
   // Travel routes
   // Obtener estadísticas de clientes

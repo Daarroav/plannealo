@@ -41,15 +41,15 @@ export default function HomePage() {
   const createTravelMutation = useMutation({
     mutationFn: async (data: any) => {
       const { _selectedImage, ...travelData } = data;
-      
+
       // Create FormData to include the image
       const formData = new FormData();
-      
+
       // Add all travel data fields
       Object.keys(travelData).forEach(key => {
         formData.append(key, travelData[key]);
       });
-      
+
       // Add cover image if provided
       if (_selectedImage) {
         formData.append('coverImage', _selectedImage);
@@ -63,8 +63,17 @@ export default function HomePage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error creating travel");
+        let errorMsg = 'Error al crear el viaje.';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData?.message || errorMsg;
+        } catch {
+          // Si no es JSON, intenta como texto
+          try {
+            errorMsg = await response.text();
+          } catch {}
+        }
+        throw new Error(errorMsg);
       }
 
       return await response.json();

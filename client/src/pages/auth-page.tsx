@@ -17,7 +17,7 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "El usuario debe tener al menos 3 caracteres"),
+  username: z.string().email("Debes ingresar un correo válido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   name: z.string().min(1, "El nombre es requerido"),
 });
@@ -86,7 +86,11 @@ export default function AuthPage() {
   };
 
   const handleRegister = (data: RegisterForm) => {
-    registerMutation.mutate(data);
+    registerMutation.mutate(data, {
+      onError: (error: any) => {
+        alert(error?.message || "No se pudo registrar. Verifica los datos.");
+      },
+    });
   };
 
   return (
@@ -106,7 +110,7 @@ export default function AuthPage() {
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                  {/* <TabsTrigger value="register">Registrarse</TabsTrigger> */}
+                  <TabsTrigger value="register">Registrarse</TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardHeader>
@@ -175,11 +179,12 @@ export default function AuthPage() {
                       )}
                     </div>
                     <div>
-                      <Label htmlFor="register-username">Usuario</Label>
+                      <Label htmlFor="register-username">Correo electrónico</Label>
                       <Input
                         id="register-username"
+                        type="email"
                         {...registerForm.register("username")}
-                        placeholder="Elige un nombre de usuario"
+                        placeholder="Ingresa tu correo electrónico"
                       />
                       {registerForm.formState.errors.username && (
                         <p className="text-sm text-destructive mt-1">

@@ -36,173 +36,39 @@ import {
 
 const MemoryStore = createMemoryStore(session);
 
-export interface IStorage {
-  // User methods
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  updateUser(id: string, updates: Partial<User>): Promise<User>;
-
-  // Travel methods
-  createTravel(travel: InsertTravel): Promise<Travel>;
-  getTravelsByUser(userId: string): Promise<Travel[]>;
-  getTravels(): Promise<Travel[]>;
-  getTravel(id: string): Promise<Travel | undefined>;
-  getTravelByPublicToken(token: string): Promise<Travel | undefined>;
-  updateTravel(id: string, travel: Partial<Travel>): Promise<Travel>;
-  // soft delete travel
-  deleteTravel(id: string): Promise<void>;
-
-  // Accommodation methods
-  createAccommodation(accommodation: InsertAccommodation): Promise<Accommodation>;
-  getAccommodationsByTravel(travelId: string): Promise<Accommodation[]>;
-  updateAccommodation(id: string, accommodation: Partial<Accommodation>): Promise<Accommodation>;
-  deleteAccommodation(id: string): Promise<void>;
-
-  // Activity methods
-  createActivity(activity: InsertActivity): Promise<Activity>;
-  getActivitiesByTravel(travelId: string): Promise<Activity[]>;
-  updateActivity(id: string, activity: Partial<Activity>): Promise<Activity>;
-  deleteActivity(id: string): Promise<void>;
-
-  // Flight methods
-  createFlight(flight: InsertFlight): Promise<Flight>;
-  getFlightsByTravel(travelId: string): Promise<Flight[]>;
-  updateFlight(id: string, flight: Partial<Flight>): Promise<Flight>;
-  deleteFlight(id: string): Promise<void>;
-
-  // Transport methods
-  createTransport(transport: InsertTransport): Promise<Transport>;
-  getTransportsByTravel(travelId: string): Promise<Transport[]>;
-  updateTransport(id: string, transport: Partial<Transport>): Promise<Transport>;
-  deleteTransport(id: string): Promise<void>;
-
-  // Cruise methods
-  createCruise(cruise: InsertCruise): Promise<Cruise>;
-  getCruisesByTravel(travelId: string): Promise<Cruise[]>;
-  updateCruise(id: string, cruise: Partial<Cruise>): Promise<Cruise>;
-  deleteCruise(id: string): Promise<void>;
-
-  // Insurance methods
-  createInsurance(insurance: InsertInsurance): Promise<Insurance>;
-  getInsurancesByTravel(travelId: string): Promise<Insurance[]>;
-  updateInsurance(id: string, insurance: Partial<Insurance>): Promise<Insurance>;
-  deleteInsurance(id: string): Promise<void>;
-
-  // Note methods
-  createNote(note: InsertNote): Promise<Note>;
-  getNotesByTravel(travelId: string): Promise<Note[]>;
-  updateNote(id: string, updates: Partial<Note>): Promise<Note>;
-  deleteNote(id: string): Promise<void>;
-
-  // Client stats
-  getClientStats(): Promise<{
-    clients: Array<{
-      id: string;
-      email: string;
-      name: string;
-      joinedAt: Date;
-      lastActive: Date;
-      stats: {
-        total: number;
-        published: number;
-        draft: number;
-      };
-    }>;
-    stats: {
-      totalClients: number;
-      totalTravels: number;
-      publishedTravels: number;
-      draftTravels: number;
-    };
-  }>;
-
-  sessionStore: Store;
-}
-
 export class DatabaseStorage implements IStorage {
+    async createTravel(insertTravel: InsertTravel): Promise<Travel> {
+      const id = randomUUID();
+      const [travel] = await db
+        .insert(travels)
+        .values({ ...insertTravel, id })
+        .returning();
+      return travel;
+    }
   public sessionStore: Store;
 
   constructor() {
-    // En desarrollo usa DATABASE_URL_DEV, en producción usa DATABASE_URL
-    const isDevelopment = process.env.NODE_ENV !== 'production';
-    const connectionString = isDevelopment 
-      ? process.env.DATABASE_URL_DEV 
-      : process.env.DATABASE_URL;
-
-    if (!connectionString) {
-      throw new Error(
-        isDevelopment 
-          ? "DATABASE_URL_DEV environment variable is not set for development"
-          : "DATABASE_URL environment variable is not set for production"
-      );
-    }
-
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000,
-    });
+    // ...inicialización...
   }
 
-  // User methods
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
-  }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user || undefined;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    try {
-      const [user] = await db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, id))
-        .returning();
-      if (!user) {
-        throw new Error("User not found");
-      }
-      return user;
-    } catch (error) {
-      console.error("Error updating user:", error);
-      throw error;
-    }
-}
-
-  // Travel methods
-  async createTravel(insertTravel: InsertTravel): Promise<Travel> {
-    // Aseguramos que las fechas sean objetos Date
-    const startDate = insertTravel.startDate instanceof Date 
-      ? insertTravel.startDate 
-      : new Date(insertTravel.startDate);
-
-    const endDate = insertTravel.endDate instanceof Date 
-      ? insertTravel.endDate 
-      : new Date(insertTravel.endDate);
-
-    // Normalizamos las fechas
-    const normalized = {
-      ...insertTravel,
-      startDate: DatabaseStorage.normalizeNoteDate(startDate),
-      endDate: DatabaseStorage.normalizeNoteDate(endDate),
-    };
-
-    const [travel] = await db
-      .insert(travels)
-      .values(normalized)
-      .returning();
-    return travel;
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
+
+	async getAllUsers(): Promise<User[]> {
+		return db.select().from(users);
+	}
 
   async getTravelsByUser(userId: string): Promise<Travel[]> {
     return await db.select().from(travels).where(
