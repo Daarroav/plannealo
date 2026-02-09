@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -142,13 +142,22 @@ export default function UsersAdminPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  // Validación de email simple
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     try {
       if (!formState.name || !formState.role || (!isEditing && (!formState.username || !formState.password))) {
-        setError("Completa los campos requeridos");
+        setError("Completa todos los campos requeridos");
         return;
       }
-
+      if (!isEditing && !isValidEmail(formState.username)) {
+        setError("El correo electrónico no es válido");
+        return;
+      }
       const payload = isEditing
         ? { name: formState.name, role: formState.role }
         : {
@@ -157,18 +166,15 @@ export default function UsersAdminPage() {
             name: formState.name,
             role: formState.role,
           };
-
       const response = await fetch(isEditing ? `/api/users/${formState.id}` : "/api/users", {
         method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const message = (await response.json().catch(() => null))?.error || "Error al guardar usuario";
         throw new Error(message);
       }
-
       await refreshUsers();
       setDialogOpen(false);
     } catch (err) {
@@ -279,67 +285,82 @@ export default function UsersAdminPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{isEditing ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
-            <DialogDescription>
-              {isEditing ? "Actualiza el nombre y rol del usuario" : "Crea un nuevo usuario con rol"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nombre</Label>
-              <Input
-                id="name"
-                value={formState.name}
-                onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
-              />
+          <form onSubmit={handleSubmit}>
+            <DialogHeader>
+              <DialogTitle>{isEditing ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
+              {isEditing && (
+                <DialogDescription>
+                  Actualiza el nombre y rol del usuario
+                </DialogDescription>
+              )}
+            </DialogHeader>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nombre</Label>
+                <Input
+                  id="name"
+                  value={formState.name}
+                  onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="role-input">Rol</Label>
+                <Select
+                  value={formState.role}
+                  onValueChange={(value) => setFormState((prev) => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="master">Maestro</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="traveler">Viajero</SelectItem>
+                  </SelectContent>
+                </Select>
+                {/* Input oculto para accesibilidad y autofill */}
+                <input id="role-input" name="role" value={formState.role} readOnly hidden tabIndex={-1} aria-hidden="true" />
+              </div>
+              {!isEditing && (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="username">Correo electrónico</Label>
+                    <Input
+                      id="username"
+                      value={formState.username}
+                      onChange={(event) => setFormState((prev) => ({ ...prev, username: event.target.value }))}
+                      required
+                      type="email"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formState.password}
+                      onChange={(event) => setFormState((prev) => ({ ...prev, password: event.target.value }))}
+                      required
+                    />
+                  </div>
+                </>
+              )}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="role">Rol</Label>
-              <Select
-                value={formState.role}
-                onValueChange={(value) => setFormState((prev) => ({ ...prev, role: value }))}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Selecciona un rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="master">Maestro</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="traveler">Viajero</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {!isEditing && (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="username">Correo electronico</Label>
-                  <Input
-                    id="username"
-                    value={formState.username}
-                    onChange={(event) => setFormState((prev) => ({ ...prev, username: event.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Contrasena</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formState.password}
-                    onChange={(event) => setFormState((prev) => ({ ...prev, password: event.target.value }))}
-                  />
-                </div>
-              </>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mt-2 text-sm">
+                {error}
+              </div>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-accent text-accent hover:bg-accent/10">
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit} className="bg-accent hover:bg-accent/90">
-              Guardar
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setDialogOpen(false)} className="border-accent text-accent hover:bg-accent/10">
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-accent hover:bg-accent/90">
+                Guardar
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
