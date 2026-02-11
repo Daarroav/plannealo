@@ -1,9 +1,9 @@
-modules = ["nodejs-20", "web", "postgresql-16"]
+modules = ["nodejs-20", "web", "bash"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 packages = ["glib", "gtk3", "nss", "cups", "libdrm", "mesa", "alsa-lib"]
 
 [deployment]
@@ -43,3 +43,8 @@ waitForPort = 5000
 
 [objectStorage]
 defaultBucketID = "replit-objstore-63d3f435-c8e1-4860-b636-8a86ee5d0992"
+
+[userenv]
+
+[userenv.development]
+DATABASE_URL_DEV = "postgresql://postgres:password@helium/heliumdb?sslmode=disable"
