@@ -47,4 +47,4 @@ defaultBucketID = "replit-objstore-63d3f435-c8e1-4860-b636-8a86ee5d0992"
 [userenv]
 
 [userenv.development]
-DATABASE_URL_DEV = "postgresql://postgres:password@helium/heliumdb?sslmode=disable"
+DATABASE_URL_DEV = "postgresql://neondb_owner:npg_1aVRIK2DvyLu@ep-sweet-water-ah2mks3e-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
