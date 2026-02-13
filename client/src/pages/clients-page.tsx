@@ -35,7 +35,7 @@ export default function ClientsPage() {
       try {
         const response = await fetch("/api/clients/stats");
         if (!response.ok) {
-          throw new Error("Error al cargar los datos de clientes");
+          throw new Error("Error al cargar los datos de viajeros");
         }
         const data = await response.json();
         setClients(data.clients);
@@ -88,8 +88,8 @@ export default function ClientsPage() {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">Clientes</h2>
-              <p className="text-muted-foreground">Visualiza y administra los clientes de tus viajes</p>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Viajeros</h2>
+              <p className="text-muted-foreground">Visualiza y administra los viajeros de tus viajes</p>
             </div>
             <div className="mt-4 md:mt-0">
             {/* <Button 
@@ -97,7 +97,7 @@ export default function ClientsPage() {
                 className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
-                <span>Nuevo Cliente</span>
+                <span>Nuevo Viajero</span>
               </Button> */}
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function ClientsPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
                 <StatsCard
-                    title="Clientes"
+                    title="Viajeros"
                     value={stats?.totalClients || 0}
                     icon={Users}
                     iconBgColor="bg-green-100"
@@ -144,7 +144,7 @@ export default function ClientsPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Viajero</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Miembro desde</th>
              

@@ -15,6 +15,7 @@ import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { CoverImageUploader } from "@/components/ui/cover-image-uploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
@@ -215,6 +216,7 @@ export default function TravelDetail() {
       return await response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/travels/${travelId}/full`] });
       queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId] });
       queryClient.invalidateQueries({ queryKey: ["/api/travels"] });
       toast({
@@ -231,20 +233,9 @@ export default function TravelDetail() {
     },
   });
 
-  const getUploadParameters = async () => {
-    const response = await apiRequest("POST", "/api/objects/upload", {});
-    const data = await response.json();
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
-
-  const handleImageUploadComplete = (result: any) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadURL = result.successful[0].uploadURL;
-      updateCoverImageMutation.mutate(uploadURL);
-    }
+  const handleCoverImageUpload = (objectPath: string) => {
+    console.log("Cover image uploaded:", objectPath);
+    updateCoverImageMutation.mutate(objectPath);
   };
 
   const createAccommodationMutation = useMutation({
@@ -917,6 +908,19 @@ export default function TravelDetail() {
     }, 0);
     const amount = amountRaw ? parseCostAmount(amountRaw) : breakdownTotal;
     const currency = data?.costCurrency?.trim?.() || data?.costCurrency || "MXN";
+    
+    // Debug logging para verificar valores
+    if (amount > 0) {
+      console.log(`[Cost Debug] ${getItemTitle(item)}:`, {
+        type: item.type,
+        rawValue: amountRaw,
+        parsedAmount: amount,
+        currency: currency,
+        breakdown: data?.costBreakdown,
+        breakdownTotal: breakdownTotal
+      });
+    }
+    
     return { amount, currency };
   };
 
@@ -1107,6 +1111,17 @@ export default function TravelDetail() {
     return acc;
   }, {});
 
+  // Debug: Verificar totales calculados
+  console.log('[Cost Summary]', {
+    totalItems: costItems.length,
+    totals: totalsByCurrency,
+    itemsBreakdown: costItems.map(item => ({
+      title: getItemTitle(item.item),
+      amount: item.amount,
+      currency: item.currency
+    }))
+  });
+
   const navigationItems = [
     { id: "all", label: "Itinerario", icon: Clock, count: itineraryItems.length },
     { id: "accommodation", label: "Alojamientos", icon: Bed, count: accommodations.length },
@@ -1130,7 +1145,7 @@ export default function TravelDetail() {
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-foreground">{travel.name}</h1>
-                <p className="text-sm text-muted-foreground">Cliente: {travel.clientName}</p>
+                <p className="text-sm text-muted-foreground">Viajero: {travel.clientName}</p>
               </div>
             </div>
 
@@ -1167,16 +1182,13 @@ export default function TravelDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Imagen de Portada</h2>
-            <ObjectUploader
-              maxNumberOfFiles={1}
-              maxFileSize={10485760}
-              onGetUploadParameters={getUploadParameters}
-              onComplete={handleImageUploadComplete}
+            <CoverImageUploader
+              onUploadComplete={handleCoverImageUpload}
               buttonClassName="bg-accent hover:bg-accent/90 text-white"
             >
               <Camera className="w-4 h-4 mr-2" />
               Cambiar Imagen
-            </ObjectUploader>
+            </CoverImageUploader>
           </div>
           <div className="relative w-full h-64 lg:h-80 rounded-lg overflow-hidden bg-muted">
             <img
@@ -1198,7 +1210,7 @@ export default function TravelDetail() {
               <div className="p-6 text-white">
                 <h3 className="text-2xl font-bold mb-2">{travel.name}</h3>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-lg opacity-90">Cliente: {travel.clientName}</p>
+                  <p className="text-lg opacity-90">Viajero: {travel.clientName}</p>
                   <div onClick={() => setIsNewTravelModalOpen(true)}>
                     <Edit className="w-6 h-6 mr-2 hover:text-red-500 bg-red-500 hover:bg-white p-1 rounded-lg transition cursor-pointer" />
                   </div>
@@ -1442,6 +1454,10 @@ export default function TravelDetail() {
                       case "flight": {
                         const flight = item.data as Flight;
                         const flightCost = getItemCost(item);
+                        const flightTitle = flight.departureAirport && flight.arrivalAirport 
+                          ? `${flight.departureAirport} → ${flight.arrivalAirport}`
+                          : `${flight.departureCity} → ${flight.arrivalCity}`;
+                        
                         return (
                           <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-purple-500">
                             <div className="flex justify-between items-start">
@@ -1449,15 +1465,15 @@ export default function TravelDetail() {
                                 <div className="flex items-center gap-2 mb-2">
                                   <Badge variant="secondary">Vuelo</Badge>
                                   <h4 className="font-semibold text-foreground">
-                                    {flight.airline} {flight.flightNumber}
+                                    {flightTitle}
                                   </h4>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                   <div>
-                                    <span className="font-medium">Origen:</span> {flight.departureCity}
+                                    <span className="font-medium">Aerolínea:</span> {flight.airline} {flight.flightNumber}
                                   </div>
                                   <div>
-                                    <span className="font-medium">Destino:</span> {flight.arrivalCity}
+                                    <span className="font-medium">Clase:</span> {flight.class}
                                   </div>
                                   <div>
                                     <span className="font-medium">Salida:</span> {formatFlightDateTime(flight.departureDate)}
@@ -1721,7 +1737,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("accommodation");
                   }}
+                  className="justify-start"
                 >
+                  <Bed className="w-4 h-4 mr-2" />
                   Alojamiento
                 </Button>
                 <Button
@@ -1730,7 +1748,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("activity");
                   }}
+                  className="justify-start"
                 >
+                  <MapPin className="w-4 h-4 mr-2" />
                   Actividad
                 </Button>
                 <Button
@@ -1739,7 +1759,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("flight");
                   }}
+                  className="justify-start"
                 >
+                  <Plane className="w-4 h-4 mr-2" />
                   Vuelo
                 </Button>
                 <Button
@@ -1748,7 +1770,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("transport");
                   }}
+                  className="justify-start"
                 >
+                  <Car className="w-4 h-4 mr-2" />
                   Transporte
                 </Button>
                 <Button
@@ -1757,7 +1781,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("cruise");
                   }}
+                  className="justify-start"
                 >
+                  <Ship className="w-4 h-4 mr-2" />
                   Crucero
                 </Button>
                 <Button
@@ -1766,7 +1792,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("insurance");
                   }}
+                  className="justify-start"
                 >
+                  <Shield className="w-4 h-4 mr-2" />
                   Seguro
                 </Button>
                 <Button
@@ -1775,7 +1803,9 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("note");
                   }}
+                  className="justify-start"
                 >
+                  <StickyNote className="w-4 h-4 mr-2" />
                   Nota
                 </Button>
               </div>
@@ -1804,9 +1834,11 @@ export default function TravelDetail() {
                 ) : (
                   <div className="space-y-3">
                     {Object.entries(totalsByCurrency).map(([currency, total]) => (
-                      <div key={currency} className="flex items-center justify-between text-sm">
-                        <span className="font-medium">Total {currency}</span>
-                        <span className="text-foreground">{formatCurrency(total, currency)}</span>
+                      <div key={currency} className="rounded-lg bg-accent/10 border border-accent/20 p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-base font-bold text-accent">Total {currency}</span>
+                          <span className="text-lg font-bold text-accent">{formatCurrency(total, currency)}</span>
+                        </div>
                       </div>
                     ))}
                   </div>

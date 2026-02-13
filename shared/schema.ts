@@ -23,7 +23,7 @@ export const travels = pgTable("travels", {
   coverImage: text("cover_image"),
   publicToken: text("public_token"), // Token para acceso público
   publicTokenExpiry: timestamp("public_token_expiry"), // Expiración del token
-  clientId: varchar("client_id").references(() => users.id, { onDelete: 'set null' }), // Id cliente 
+  clientId: varchar("client_id").references(() => users.id, { onDelete: 'set null' }), // Id viajero 
   createdBy: varchar("created_by").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`),
@@ -76,7 +76,9 @@ export const flights = pgTable("flights", {
   travelId: varchar("travel_id").notNull().references(() => travels.id, { onDelete: 'restrict' }),
   airline: text("airline").notNull(),
   flightNumber: text("flight_number").notNull(),
+  departureAirport: text("departure_airport"), // Nombre completo del aeropuerto de salida
   departureCity: text("departure_city").notNull(),
+  arrivalAirport: text("arrival_airport"), // Nombre completo del aeropuerto de llegada
   arrivalCity: text("arrival_city").notNull(),
   departureDate: timestamp("departure_date").notNull(),
   departureTime: text("departure_time"),

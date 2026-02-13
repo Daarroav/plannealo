@@ -13,7 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 const shareFormSchema = z.object({
   recipientEmail: z.string().email("Debe ser un email válido"),
-  clientName: z.string().min(1, "El nombre del cliente es requerido"),
+  clientName: z.string().min(1, "El nombre del viajero es requerido"),
 });
 
 type ShareFormData = z.infer<typeof shareFormSchema>;
@@ -144,16 +144,16 @@ export function ShareTravelModal({
               <strong>Viaje:</strong> {travelTitle}
             </div>
 
-            {/* Información del Cliente */}
+            {/* Información del Viajero */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Datos del Cliente</h3>
+              <h3 className="text-lg font-semibold text-foreground">Datos del Viajero</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="clientName">Nombre del Cliente</Label>
+                <Label htmlFor="clientName">Nombre del Viajero</Label>
                 <Input
                   id="clientName"
                   {...form.register("clientName")}
-                  placeholder="Nombre completo del cliente"
+                  placeholder="Nombre completo del viajero"
                 />
                 {form.formState.errors.clientName && (
                   <p className="text-sm text-red-500">
@@ -168,7 +168,7 @@ export function ShareTravelModal({
                   id="recipientEmail"
                   type="email"
                   {...form.register("recipientEmail")}
-                  placeholder="cliente@ejemplo.com"
+                  placeholder="viajero@ejemplo.com"
                 />
                 {form.formState.errors.recipientEmail && (
                   <p className="text-sm text-red-500">
@@ -180,7 +180,7 @@ export function ShareTravelModal({
               <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border">
                 <h4 className="font-medium text-sm text-blue-800 dark:text-blue-200">📧 Información del envío</h4>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
-                  El cliente recibirá un correo con un enlace seguro para ver el itinerario. 
+                  El viajero recibirá un correo con un enlace seguro para ver el itinerario. 
                   El enlace será válido por 90 días aprox. y no requiere crear una cuenta.
                 </p>
               </div>

@@ -21,6 +21,8 @@ import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
 import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { useQuery } from "@tanstack/react-query";
 
 // Extend the schema with additional fields for the form
 const accommodationFormSchema = insertAccommodationSchema.extend({
@@ -63,6 +65,12 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Obtener catálogo de alojamientos
+  const { data: catalog = [] } = useQuery({
+    queryKey: ["/api/catalog/accommodations"],
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
 
   console.log("Editing accommodation:", editingAccommodation);
 
@@ -359,11 +367,27 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="name">Nombre del Alojamiento *</Label>
-              <Input
-                id="name"
-                {...form.register("name")}
+              <AutocompleteInput
+                value={form.watch("name")}
+                onChange={(value, data) => {
+                  form.setValue("name", value);
+                }}
+                onLoadData={(data) => {
+                  // Cargar todos los datos del catálogo
+                  if (data.type) form.setValue("type", data.type);
+                  if (data.location) form.setValue("location", data.location);
+                  if (data.roomType) {
+                    form.setValue("roomType", data.roomType);
+                    form.setValue("roomCount", 1);
+                  }
+                  if (data.policies) form.setValue("policies", data.policies);
+                }}
+                options={catalog.map((item: any) => ({
+                  value: item.name,
+                  label: `${item.name} - ${item.location}`,
+                  data: item,
+                }))}
                 placeholder="Ej: Hotel Xcaret México"
-                required
               />
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive mt-1">

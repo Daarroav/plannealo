@@ -240,7 +240,7 @@ async function importToProduction() {
   console.log();
   console.log(`VIAJE: ${travelData.name}`);
   console.log(`   ID: ${travelData.id}`);
-  console.log(`   Cliente: ${travelData.clientName}`);
+  console.log(`   Viajero: ${travelData.clientName}`);
   console.log(`   Fechas: ${travelData.startDate.toLocaleDateString()} - ${travelData.endDate.toLocaleDateString()}`);
   console.log(`   Viajeros: ${travelData.travelers}`);
   console.log(`   Estado: ${travelData.status}`);

@@ -662,7 +662,11 @@ export default function TravelPreview() {
           </div>
         );
 
-      case "flight":
+      case "flight": {
+        const flightTitle = event.data.departureAirport && event.data.arrivalAirport 
+          ? `${event.data.departureAirport} → ${event.data.arrivalAirport}`
+          : `${event.data.departureCity} → ${event.data.arrivalCity}`;
+        
         return (
           <div
             key={event.id}
@@ -672,7 +676,7 @@ export default function TravelPreview() {
               <div className="flex items-center space-x-2">
                 <Plane className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold w-fit">
-                  Vuelo: {event.data.departureCity} → {event.data.arrivalCity}
+                  Vuelo: {flightTitle}
                 </h3>
               </div>
               <Badge variant="secondary" className="text-xs">
@@ -746,6 +750,7 @@ export default function TravelPreview() {
             />
           </div>
         );
+      }
 
       case "transport":
         return (

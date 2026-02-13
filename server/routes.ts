@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // (setupAuth ya se ejecutó antes de las rutas protegidas)
 
   // Travel routes
-  // Obtener estadísticas de clientes
+  // Obtener estadísticas de viajeros
   app.get("/api/clients/stats", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "No autenticado" });
@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       console.error("Error fetching client stats:", error);
-      res.status(500).json({ message: "Error al obtener estadísticas de clientes" });
+      res.status(500).json({ message: "Error al obtener estadísticas de viajeros" });
     }
   });
 
@@ -256,6 +256,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching reports:", error);
       res.status(500).json({ message: "Error al obtener informes" });
+    }
+  });
+
+  // Rutas de catálogo para autocompletar
+  app.get("/api/catalog/accommodations", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const catalog = await storage.getAccommodationsCatalog(req.user!.id);
+      res.json(catalog);
+    } catch (error) {
+      console.error("Error fetching accommodations catalog:", error);
+      res.status(500).json({ message: "Error al obtener catálogo de alojamientos" });
+    }
+  });
+
+  app.get("/api/catalog/activities", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const catalog = await storage.getActivitiesCatalog(req.user!.id);
+      res.json(catalog);
+    } catch (error) {
+      console.error("Error fetching activities catalog:", error);
+      res.status(500).json({ message: "Error al obtener catálogo de actividades" });
+    }
+  });
+
+  app.get("/api/catalog/flights", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const catalog = await storage.getFlightsCatalog(req.user!.id);
+      res.json(catalog);
+    } catch (error) {
+      console.error("Error fetching flights catalog:", error);
+      res.status(500).json({ message: "Error al obtener catálogo de vuelos" });
+    }
+  });
+
+  app.get("/api/catalog/transports", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const catalog = await storage.getTransportsCatalog(req.user!.id);
+      res.json(catalog);
+    } catch (error) {
+      console.error("Error fetching transports catalog:", error);
+      res.status(500).json({ message: "Error al obtener catálogo de transportes" });
     }
   });
 
@@ -302,11 +359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log("Travelers convertido a número:", travelData.travelers);
           }
 
-          // Verificar si el cliente ya existe
+          // Verificar si el viajero ya existe
           let client = await storage.getUserByUsername(clientEmail);
-          console.log("Cliente encontrado/creado:", client?.id);
+          console.log("Viajero encontrado/creado:", client?.id);
 
-          // Si no existe, crear un nuevo usuario cliente
+          // Si no existe, crear un nuevo usuario viajero
           if (!client) {
             const tempPassword = Math.random().toString(36).slice(-8);
             client = await storage.createUser({
@@ -315,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: req.body.clientName,
               role: 'client',
             });
-            console.log("Nuevo cliente creado con ID:", client.id);
+            console.log("Nuevo viajero creado con ID:", client.id);
           }
 
           const validated = insertTravelSchema.parse({
@@ -341,7 +398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               // Upload file to object storage
               console.log("Subiendo archivo a Object Storage...");
-              const objectPath = await uploadFileToObjectStorage(req.file, 'covers');
+              const objectPath = await uploadFileToObjectStorage(req.file, 'travel-covers');
               console.log("Archivo subido exitosamente. Object Path:", objectPath);
               
               // Set ACL policy for public access
@@ -428,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             try {
               // Upload file to object storage
               console.log("Subiendo archivo a Object Storage...");
-              const objectPath = await uploadFileToObjectStorage(req.file, 'covers');
+              const objectPath = await uploadFileToObjectStorage(req.file, 'travel-covers');
               console.log("Archivo subido exitosamente. Object Path:", objectPath);
               
               // Set ACL policy for public access
@@ -465,6 +522,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.status(500).json({ 
             message: "Error updating travel",
             error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      });
+
+      // Test endpoint para verificar que la ruta funciona
+      app.get("/api/travels/upload-test", async (req, res) => {
+        console.log("TEST ENDPOINT REACHED");
+        res.json({ message: "Test endpoint works", authenticated: req.isAuthenticated ? req.isAuthenticated() : false });
+      });
+
+      // Endpoint directo para subir imagen de portada (almacenamiento local)
+      app.post("/api/travels/upload-cover-direct", upload.single('file'), async (req, res) => {
+        console.log("=== ENDPOINT UPLOAD-COVER-DIRECT LLAMADO ===");
+        console.log("Authenticated:", req.isAuthenticated ? req.isAuthenticated() : 'No auth function');
+        console.log("File received:", req.file ? 'Yes' : 'No');
+        console.log("Body:", req.body);
+        
+        if (!req.isAuthenticated()) {
+          console.log("Usuario no autenticado");
+          return res.status(401).json({ error: "Not authenticated" });
+        }
+
+        try {
+          if (!req.file) {
+            console.log("No se recibió archivo");
+            return res.status(400).json({ error: "No file uploaded" });
+          }
+
+          console.log("=== SUBIDA DIRECTA DE IMAGEN ===");
+          console.log("Archivo:", req.file.originalname);
+          console.log("Tamaño:", req.file.size);
+          console.log("Tipo:", req.file.mimetype);
+          
+          const objectPath = await uploadFileToObjectStorage(req.file, 'travel-covers');
+          console.log("Imagen subida a:", objectPath);
+          
+          res.json({ uploadURL: objectPath });
+        } catch (error) {
+          console.error("Error uploading cover image:", error);
+          console.error("Stack:", error instanceof Error ? error.stack : 'No stack');
+          res.status(500).json({ 
+            error: "Error uploading cover image",
+            message: error instanceof Error ? error.message : 'Unknown error'
           });
         }
       });
@@ -652,6 +752,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
+          // Debug: Log cost values being saved
+          console.log('[Accommodation Cost Debug]', {
+            price: req.body.price,
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency
+          });
+
           const validated = insertAccommodationSchema.parse({
             ...req.body,
             travelId: req.params.travelId,
@@ -794,6 +901,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
+          // Debug: Log cost values being saved
+          console.log('[Activity Cost Debug]', {
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency,
+            costBreakdown: req.body.costBreakdown
+          });
+
           const validated = insertActivitySchema.parse({
             ...req.body,
             travelId: req.params.travelId,
@@ -877,6 +991,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               attachments.push(attachment);
             }
           }
+
+          // Debug: Log cost values being saved
+          console.log('[Flight Cost Debug]', {
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency,
+            costBreakdown: req.body.costBreakdown
+          });
 
           const validated = insertFlightSchema.parse({
             ...req.body,
@@ -964,6 +1085,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
+          // Debug: Log cost values being saved
+          console.log('[Transport Cost Debug]', {
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency,
+            costBreakdown: req.body.costBreakdown
+          });
+
           const validated = insertTransportSchema.parse({
             ...req.body,
             travelId: req.params.travelId,
@@ -1049,6 +1177,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               attachments.push(attachment);
             }
           }
+
+          // Debug: Log cost values being saved
+          console.log('[Cruise Cost Debug]', {
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency,
+            costBreakdown: req.body.costBreakdown
+          });
 
           const validated = insertCruiseSchema.parse({
             ...req.body,
@@ -1165,6 +1300,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           console.log("Insurance data before validation:", insuranceData);
+          
+          // Debug: Log cost values being saved
+          console.log('[Insurance Cost Debug]', {
+            costAmount: req.body.costAmount,
+            costCurrency: req.body.costCurrency,
+            costBreakdown: req.body.costBreakdown
+          });
 
           const validated = insertInsuranceSchema.parse(insuranceData);
 
@@ -2348,19 +2490,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Endpoint para obtener URL de carga de objetos
+      app.post("/api/objects/upload", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ error: "Not authenticated" });
+        }
+
+        try {
+          console.log("=== OBTENIENDO URL DE CARGA ===");
+          
+          // Check if using local storage
+          const shouldUseLocalStorage = !process.env.PRIVATE_OBJECT_DIR;
+          
+          if (shouldUseLocalStorage) {
+            // For local storage, return a special flag to indicate direct upload
+            console.log("Usando almacenamiento local, retornando indicador de subida directa");
+            return res.json({ 
+              useDirectUpload: true,
+              uploadURL: "/api/travels/upload-cover-direct" 
+            });
+          }
+          
+          const objectStorageService = new ObjectStorageService();
+          const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+          console.log("URL de carga generada exitosamente");
+          res.json({ uploadURL });
+        } catch (error) {
+          console.error("Error getting upload URL:", error);
+          console.error("Error stack:", error instanceof Error ? error.stack : 'No stack available');
+          res.status(500).json({ 
+            error: "Error getting upload URL",
+            message: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      });
+
       app.put("/api/travels/:id/cover-image", async (req, res) => {
         try {
           const travelId = req.params.id;
           const { coverImageURL } = req.body;
 
-          const objectStorageService = new ObjectStorageService();
-          const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-            coverImageURL,
-            {
-              owner: "system", // For now, using system as owner
-              visibility: "public",
-            },
-          );
+          console.log("=== ACTUALIZANDO IMAGEN DE PORTADA ===");
+          console.log("Travel ID:", travelId);
+          console.log("Cover Image URL:", coverImageURL);
+
+          let objectPath = coverImageURL;
+
+          // Only try to set ACL policy if using Object Storage (not local storage)
+          const shouldUseLocalStorage = !process.env.PRIVATE_OBJECT_DIR;
+          
+          if (!shouldUseLocalStorage) {
+            const objectStorageService = new ObjectStorageService();
+            objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+              coverImageURL,
+              {
+                owner: "system",
+                visibility: "public",
+              },
+            );
+          }
 
           // Update travel with cover image URL
           const travel = await storage.getTravel(travelId);
@@ -2369,8 +2557,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Update the travel object with the cover image path
+          console.log("Actualizando viaje con coverImage:", objectPath);
           await storage.updateTravel(travelId, { ...travel, coverImage: objectPath });
-
+          
+          console.log("Imagen de portada actualizada exitosamente");
           res.json({ objectPath });
         } catch (error) {
           console.error("Error updating cover image:", error);

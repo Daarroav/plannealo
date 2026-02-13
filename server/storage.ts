@@ -455,7 +455,7 @@ export class DatabaseStorage implements IStorage {
     // Get all travels excluding deleted ones
     const allTravels = await db.select().from(travels).where(sql`${travels.status} != 'delete'`);
 
-    // Agrupar viajes por cliente
+    // Agrupar viajes por viajero
     const clientsMap = new Map<string, {
       id: string;
       email: string;
@@ -490,7 +490,7 @@ export class DatabaseStorage implements IStorage {
 
     const usersMap = new Map<string, User>(usersData.map(u => [u.id, u]));
 
-    // Calcular estadísticas para cada cliente
+    // Calcular estadísticas para cada viajero
     const processedClients = Array.from(clientsMap.values()).map(client => {
       const user = usersMap.get(client.id);
       const stats = {
@@ -565,6 +565,195 @@ export class DatabaseStorage implements IStorage {
       }).length
     };
     return stats;
+  }
+
+  // Catálogo de Alojamientos
+  async getAccommodationsCatalog(userId: string) {
+    // Obtener todos los viajes del usuario
+    const userTravels = await db
+      .select({ id: travels.id })
+      .from(travels)
+      .where(eq(travels.createdBy, userId));
+    
+    const travelIds = userTravels.map(t => t.id);
+    
+    if (travelIds.length === 0) {
+      return [];
+    }
+
+    // Obtener todos los alojamientos únicos de esos viajes
+    const allAccommodations = await db
+      .select()
+      .from(accommodations)
+      .where(inArray(accommodations.travelId, travelIds));
+
+    // Crear un mapa para eliminar duplicados basándose en nombre + ubicación
+    const uniqueMap = new Map();
+    
+    allAccommodations.forEach(acc => {
+      const key = `${acc.name}-${acc.location}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, {
+          name: acc.name,
+          type: acc.type,
+          location: acc.location,
+          roomType: acc.roomType,
+          price: acc.price,
+          policies: acc.policies,
+        });
+      }
+    });
+
+    return Array.from(uniqueMap.values());
+  }
+
+  // Catálogo de Actividades
+  async getActivitiesCatalog(userId: string) {
+    const userTravels = await db
+      .select({ id: travels.id })
+      .from(travels)
+      .where(eq(travels.createdBy, userId));
+    
+    const travelIds = userTravels.map(t => t.id);
+    
+    if (travelIds.length === 0) {
+      return [];
+    }
+
+    const allActivities = await db
+      .select()
+      .from(activities)
+      .where(inArray(activities.travelId, travelIds));
+
+    const uniqueMap = new Map();
+    
+    allActivities.forEach(act => {
+      const key = `${act.name}-${act.provider || 'no-provider'}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, {
+          name: act.name,
+          type: act.type,
+          provider: act.provider,
+          contactName: act.contactName,
+          contactPhone: act.contactPhone,
+          conditions: act.conditions,
+        });
+      }
+    });
+
+    return Array.from(uniqueMap.values());
+  }
+
+  // Catálogo de Vuelos (aerolíneas y rutas)
+  async getFlightsCatalog(userId: string) {
+    const userTravels = await db
+      .select({ id: travels.id })
+      .from(travels)
+      .where(eq(travels.createdBy, userId));
+    
+    const travelIds = userTravels.map(t => t.id);
+    
+    if (travelIds.length === 0) {
+      return { airlines: [], routes: [], departureAirports: [], arrivalAirports: [] };
+    }
+
+    const allFlights = await db
+      .select()
+      .from(flights)
+      .where(inArray(flights.travelId, travelIds));
+
+    // Aerolíneas únicas
+    const airlinesSet = new Set<string>();
+    allFlights.forEach(f => airlinesSet.add(f.airline));
+
+    // Aeropuertos de salida únicos
+    const departureAirportsMap = new Map();
+    allFlights.forEach(f => {
+      if (f.departureAirport && f.departureCity) {
+        const key = `${f.departureCity}|${f.departureAirport}`;
+        if (!departureAirportsMap.has(key)) {
+          departureAirportsMap.set(key, {
+            city: f.departureCity,
+            airportName: f.departureAirport,
+            label: f.departureAirport,
+          });
+        }
+      }
+    });
+
+    // Aeropuertos de llegada únicos
+    const arrivalAirportsMap = new Map();
+    allFlights.forEach(f => {
+      if (f.arrivalAirport && f.arrivalCity) {
+        const key = `${f.arrivalCity}|${f.arrivalAirport}`;
+        if (!arrivalAirportsMap.has(key)) {
+          arrivalAirportsMap.set(key, {
+            city: f.arrivalCity,
+            airportName: f.arrivalAirport,
+            label: f.arrivalAirport,
+          });
+        }
+      }
+    });
+
+    // Rutas únicas (combinación origen-destino)
+    const routesMap = new Map();
+    allFlights.forEach(f => {
+      const key = `${f.departureCity}-${f.arrivalCity}`;
+      if (!routesMap.has(key)) {
+        routesMap.set(key, {
+          departureCity: f.departureCity,
+          arrivalCity: f.arrivalCity,
+          departureAirport: f.departureAirport,
+          arrivalAirport: f.arrivalAirport,
+          departureTerminal: f.departureTerminal,
+          arrivalTerminal: f.arrivalTerminal,
+        });
+      }
+    });
+
+    return {
+      airlines: Array.from(airlinesSet),
+      routes: Array.from(routesMap.values()),
+      departureAirports: Array.from(departureAirportsMap.values()),
+      arrivalAirports: Array.from(arrivalAirportsMap.values()),
+    };
+  }
+
+  // Catálogo de Transportes
+  async getTransportsCatalog(userId: string) {
+    const userTravels = await db
+      .select({ id: travels.id })
+      .from(travels)
+      .where(eq(travels.createdBy, userId));
+    
+    const travelIds = userTravels.map(t => t.id);
+    
+    if (travelIds.length === 0) {
+      return [];
+    }
+
+    const allTransports = await db
+      .select()
+      .from(transports)
+      .where(inArray(transports.travelId, travelIds));
+
+    const uniqueMap = new Map();
+    
+    allTransports.forEach(trans => {
+      const key = `${trans.name}-${trans.provider || 'no-provider'}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, {
+          type: trans.type,
+          name: trans.name,
+          provider: trans.provider,
+          contactName: trans.contactName,
+          contactNumber: trans.contactNumber,
+        });
+      }
+    });
+
+    return Array.from(uniqueMap.values());
   }
 }
 

@@ -71,7 +71,7 @@ export default function ReportsPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-3xl font-bold text-foreground mb-2">Reportes</h2>
-            <p className="text-muted-foreground">Visualiza y administra los clientes de tus viajes</p>
+            <p className="text-muted-foreground">Visualiza y administra los viajeros de tus viajes</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col md:flex-row gap-2">
             <Popover>

@@ -227,7 +227,7 @@ async function importMissingTravels() {
     const { travel, related } = item;
     console.log(`${index + 1}. VIAJE: ${travel.name}`);
     console.log(`   ID: ${travel.id}`);
-    console.log(`   Cliente: ${travel.clientName}`);
+    console.log(`   Viajero: ${travel.clientName}`);
     console.log(`   Fechas: ${travel.startDate.toLocaleDateString()} - ${travel.endDate.toLocaleDateString()}`);
     console.log(`   Viajeros: ${travel.travelers}`);
     console.log(`   Estado: ${travel.status}`);

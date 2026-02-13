@@ -222,7 +222,7 @@ export class EmailService {
         <h3>${travel.name}</h3>
         <div class="travel-details">
           <div class="detail-item">
-            <span class="detail-label">Cliente</span>
+            <span class="detail-label">Viajero</span>
             <span class="detail-value">${travel.clientName}</span>
           </div>
           <div class="detail-item">
@@ -343,7 +343,7 @@ PLANNEALO ha preparado todos los detalles de tu viaje.
 
 --- DETALLES DEL VIAJE ---
 Nombre: ${travel.name}
-Cliente: ${travel.clientName}
+Viajero: ${travel.clientName}
 Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString("es-ES")}
 Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString("es-ES")}
 ${travel.destination ? `Destino: ${travel.destination}` : ""}

@@ -11,7 +11,7 @@
 
 ### Producción
 - Variable: `DATABASE_URL`
-- Uso: Datos reales de clientes
+- Uso: Datos reales de viajeros
 - ⚠️ **PROTEGER A TODA COSTA**
 
 ## 📋 Proceso Seguro para Cambios en la Base de Datos

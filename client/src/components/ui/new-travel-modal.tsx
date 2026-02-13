@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const newTravelSchema = z.object({
   name: z.string().min(1, "El nombre del viaje es requerido"),
-  clientName: z.string().min(1, "El nombre del cliente es requerido"),
+  clientName: z.string().min(1, "El nombre del viajero es requerido"),
   clientEmail: z.string().email("El correo electrónico no es válido"),
   startDate: z.string().min(1, "La fecha de inicio es requerida"),
   endDate: z.string().min(1, "La fecha de fin es requerida"),
@@ -212,12 +212,12 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="clientEmail">Correo Electrónico del Cliente *</Label>
+                <Label htmlFor="clientEmail">Correo Electrónico del Viajero *</Label>
                 <Input 
                   id="clientEmail" 
                   type="email" 
                   {...form.register("clientEmail")} 
-                  placeholder="cliente@ejemplo.com" 
+                  placeholder="viajero@ejemplo.com" 
                 />
                 {form.formState.errors.clientEmail && (
                   <p className="text-sm text-destructive mt-1">
@@ -228,7 +228,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
             
       
               <div className="space-y-2">
-                <Label htmlFor="clientName">Nombre del Cliente *</Label>
+                <Label htmlFor="clientName">Nombre del Viajero *</Label>
                 <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
                 {form.formState.errors.clientName && (
                   <p className="text-sm text-destructive mt-1">

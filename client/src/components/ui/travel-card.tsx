@@ -64,7 +64,7 @@ export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
             {statusText}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground mb-3">Cliente: {travel.clientName}</p>
+        <p className="text-sm text-muted-foreground mb-3">Viajero: {travel.clientName}</p>
         <div className="flex items-center text-xs text-muted-foreground space-x-4 mb-3">
           <span className="flex items-center">
             <Calendar className="mr-1 h-3 w-3" />

@@ -12,6 +12,7 @@ import { NewTravelModal } from "@/components/ui/new-travel-modal";
 import { CalendarView } from "@/components/ui/calendar-view";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Plane, Users, Clock, Plus, Search, Grid3X3, Calendar } from "lucide-react";
 import type { Travel } from "@shared/schema";
 
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [statusFilter, setStatusFilter] = useState("current");
   const [activeTab, setActiveTab] = useState("list");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: travels = [], isLoading: travelsLoading } = useQuery<Travel[]>({
     queryKey: ["/api/travels"],
@@ -183,8 +185,8 @@ export default function HomePage() {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">Gestión de Viajes</h2>
-              <p className="text-muted-foreground">Crea y administra los itinerarios de tus clientes</p>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Mis viajes</h2>
+              <p className="text-muted-foreground">Crea y administra los itinerarios de tus viajes</p>
             </div>
             <div className="mt-4 md:mt-0">
               <Button 
@@ -207,13 +209,15 @@ export default function HomePage() {
             iconBgColor="bg-green-100"
             iconTextColor="text-green-600"
           />
-          <StatsCard
-            title="Clientes"
-            value={stats?.clients || 0}
-            icon={Users}
-            iconBgColor="bg-blue-100"
-            iconTextColor="text-blue-600"
-          />
+          {(user?.role === "admin" || user?.role === "master") && (
+            <StatsCard
+              title="Viajeros"
+              value={stats?.clients || 0}
+              icon={Users}
+              iconBgColor="bg-blue-100"
+              iconTextColor="text-blue-600"
+            />
+          )}
           <StatsCard
             title="Borradores"
             value={stats?.drafts || 0}

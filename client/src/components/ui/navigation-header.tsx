@@ -26,30 +26,30 @@ export function NavigationHeader() {
 
   if (user?.role === "master") {
     navItems = [
-      { path: "/", label: "Viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Plane },
       { path: "/reports", label: "Reportes" },
       { path: "/backups", label: "Respaldos", icon: Database },
       { path: "/users-admin", label: "Usuarios", icon: Users },
     ];
     catalogItems = [
-      { path: "/clients", label: "Clientes", icon: Users },
+      { path: "/clients", label: "Viajeros", icon: Users },
       { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
       { path: "/service-providers", label: "Proveedores", icon: Handshake },
     ];
   } else if (user?.role === "admin") {
     navItems = [
-      { path: "/", label: "Viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Plane },
       { path: "/reports", label: "Reportes" },
       { path: "/backups", label: "Respaldos", icon: Database },
     ];
     catalogItems = [
-      { path: "/clients", label: "Clientes", icon: Users },
+      { path: "/clients", label: "Viajeros", icon: Users },
       { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
       { path: "/service-providers", label: "Proveedores", icon: Handshake },
     ];
   } else if (user?.role === "traveler") {
     navItems = [
-      { path: "/", label: "Viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Plane },
     ];
     catalogItems = [];
   }

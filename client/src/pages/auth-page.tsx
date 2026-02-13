@@ -256,7 +256,7 @@ export default function AuthPage() {
             </h2>
             <p className="text-white text-opacity-90">
               PLANNEALO te permite crear, organizar y administrar itinerarios de
-              viaje completos para tus clientes de manera eficiente y
+              viaje completos para tus viajeros de manera eficiente y
               profesional.
             </p>
           </div>
@@ -282,9 +282,9 @@ export default function AuthPage() {
                 <Users className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="font-medium text-white">Gestión de Clientes</h3>
+                <h3 className="font-medium text-white">Gestión de Viajeros</h3>
                 <p className="text-sm text-white text-opacity-80">
-                  Organiza y administra las reservas de múltiples clientes
+                  Organiza y administra las reservas de múltiples viajeros
                 </p>
               </div>
             </div>

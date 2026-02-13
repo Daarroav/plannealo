@@ -23,6 +23,7 @@ import { TimezoneCombobox } from "./timezone-combobox";
 import { AirportCombobox } from "./airport-combobox";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
 import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
+import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -30,6 +31,8 @@ const flightFormSchema = insertFlightSchema.extend({
   departureTimeField: z.string().min(1, "La hora de salida es requerida"),
   arrivalDateField: z.string().min(1, "La fecha de llegada es requerida"),
   arrivalTimeField: z.string().min(1, "La hora de llegada es requerida"),
+  departureAirport: z.string().optional(),
+  arrivalAirport: z.string().optional(),
   attachments: z.array(z.string()).optional(),
 }).omit({
   departureDate: true,
@@ -126,6 +129,79 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     queryKey: ["/api/airports"],
   });
 
+  // Cargar catálogo de vuelos
+  const { data: flightsCatalog } = useQuery<{
+    airlines: string[];
+    routes: any[];
+    departureAirports: Array<{ city: string; airportName: string; label: string }>;
+    arrivalAirports: Array<{ city: string; airportName: string; label: string }>;
+  }>({
+    queryKey: ["/api/catalog/flights"],
+  });
+
+  // Preparar opciones de aeropuertos combinando catálogo y base de datos
+  const departureAirportOptions = React.useMemo(() => {
+    const catalogOptions = (flightsCatalog?.departureAirports || []).map(a => ({
+      value: a.airportName,
+      label: a.airportName,
+      data: a,
+      isRecent: true,
+    }));
+
+    const allAirportOptions = airports
+      .filter((airport: any) => airport.airportName)
+      .map((airport: any) => ({
+        value: airport.airportName,
+        label: airport.iataCode 
+          ? `${airport.airportName} (${airport.iataCode})` 
+          : airport.airportName,
+        data: {
+          airportName: airport.airportName,
+          city: airport.iataCode 
+            ? `${airport.iataCode} - ${airport.city || airport.airportName}`
+            : airport.airportName,
+        },
+        isRecent: false,
+      }));
+
+    // Combinar y eliminar duplicados
+    const seen = new Set(catalogOptions.map(o => o.value));
+    const uniqueAllOptions = allAirportOptions.filter((o: any) => !seen.has(o.value));
+    
+    return [...catalogOptions, ...uniqueAllOptions];
+  }, [flightsCatalog, airports]);
+
+  const arrivalAirportOptions = React.useMemo(() => {
+    const catalogOptions = (flightsCatalog?.arrivalAirports || []).map(a => ({
+      value: a.airportName,
+      label: a.airportName,
+      data: a,
+      isRecent: true,
+    }));
+
+    const allAirportOptions = airports
+      .filter((airport: any) => airport.airportName)
+      .map((airport: any) => ({
+        value: airport.airportName,
+        label: airport.iataCode 
+          ? `${airport.airportName} (${airport.iataCode})` 
+          : airport.airportName,
+        data: {
+          airportName: airport.airportName,
+          city: airport.iataCode 
+            ? `${airport.iataCode} - ${airport.city || airport.airportName}`
+            : airport.airportName,
+        },
+        isRecent: false,
+      }));
+
+    // Combinar y eliminar duplicados
+    const seen = new Set(catalogOptions.map(o => o.value));
+    const uniqueAllOptions = allAirportOptions.filter((o: any) => !seen.has(o.value));
+    
+    return [...catalogOptions, ...uniqueAllOptions];
+  }, [flightsCatalog, airports]);
+
   // Helper function to convert Mexico timezone to UTC
   const mexicoToUTC = (mexicoDateTimeStr: string): Date => {
     // Input format: YYYY-MM-DDTHH:mm
@@ -218,6 +294,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         reservationNumber: editingFlight.reservationNumber || "",
         departureCity: editingFlight.departureCity || "",
         arrivalCity: editingFlight.arrivalCity || "",
+        departureAirport: editingFlight.departureAirport || "",
+        arrivalAirport: editingFlight.arrivalAirport || "",
         departureDateField: depComponents.dateStr,
         departureTimeField: depComponents.timeStr,
         arrivalDateField: arrComponents.dateStr,
@@ -266,6 +344,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         reservationNumber: "",
         departureCity: "",
         arrivalCity: "",
+        departureAirport: "",
+        arrivalAirport: "",
         departureDateField: "",
         departureTimeField: "06:00",
         arrivalDateField: "",
@@ -387,6 +467,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
       form.setValue("flightNumber", flight.number || "");
       form.setValue("departureCity", `${flight.departure?.airport?.iata || flight.departure?.airport?.icao || 'N/A'} - ${flight.departure?.airport?.municipalityName || 'Ciudad de origen'}`);
       form.setValue("arrivalCity", `${flight.arrival?.airport?.iata || flight.arrival?.airport?.icao || 'N/A'} - ${flight.arrival?.airport?.municipalityName || 'Ciudad de destino'}`);
+      form.setValue("departureAirport", flight.departure?.airport?.name || "");
+      form.setValue("arrivalAirport", flight.arrival?.airport?.name || "");
       form.setValue("departureDateField", depComponents.dateStr);
       form.setValue("departureTimeField", depComponents.timeStr);
       form.setValue("arrivalDateField", arrComponents.dateStr);
@@ -670,6 +752,28 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
             </div>
 
             <div>
+              <Label htmlFor="departureAirport">Nombre del Aeropuerto de Salida</Label>
+              <AutocompleteInput
+                id="departureAirport"
+                value={form.watch("departureAirport") || ""}
+                onChange={(value) => form.setValue("departureAirport", value)}
+                options={departureAirportOptions}
+                placeholder="Ej: Aeropuerto Internacional de Cancún"
+                onLoadData={(airport) => {
+                  if (airport) {
+                    form.setValue("departureAirport", airport.airportName);
+                    if (airport.city) {
+                      form.setValue("departureCity", airport.city);
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Opcional: El nombre completo del aeropuerto para mejor visualización
+              </p>
+            </div>
+
+            <div>
               <Label htmlFor="departureTimezone">Zona Horaria de Salida *</Label>
               <TimezoneCombobox
                 id="departureTimezone"
@@ -753,6 +857,28 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                   {form.formState.errors.arrivalCity.message}
                 </p>
               )}
+            </div>
+
+            <div>
+              <Label htmlFor="arrivalAirport">Nombre del Aeropuerto de Llegada</Label>
+              <AutocompleteInput
+                id="arrivalAirport"
+                value={form.watch("arrivalAirport") || ""}
+                onChange={(value) => form.setValue("arrivalAirport", value)}
+                options={arrivalAirportOptions}
+                placeholder="Ej: Aeropuerto Internacional de Guadalajara"
+                onLoadData={(airport) => {
+                  if (airport) {
+                    form.setValue("arrivalAirport", airport.airportName);
+                    if (airport.city) {
+                      form.setValue("arrivalCity", airport.city);
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Opcional: El nombre completo del aeropuerto para mejor visualización
+              </p>
             </div>
 
             <div>
