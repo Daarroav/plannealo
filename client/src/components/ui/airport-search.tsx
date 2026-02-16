@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandInput } from "@/components/ui/command";
-import { Check, ChevronDown, Plane } from "lucide-react";
+import { CheckOne, Down, Airplane } from "@icon-park/react";
 import { cn } from "@/lib/utils";
 
 interface Airport {
@@ -92,12 +92,12 @@ export function AirportSearch({ label, placeholder, value, onSelect, error }: Ai
             )}
           >
             <div className="flex items-center space-x-2">
-              <Plane className="w-4 h-4" />
+              <Airplane className="w-4 h-4" />
               <span className="truncate">
                 {displayValue || placeholder}
               </span>
             </div>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Down className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[400px] p-0" align="start">

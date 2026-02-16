@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, Paperclip, Close } from "@icon-park/react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -92,7 +92,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   rel="noopener noreferrer"
                   className="flex items-center space-x-2"
                 >
-                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <Paperclip className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-foreground">{file.name}</span>
                 </a>
               </div>

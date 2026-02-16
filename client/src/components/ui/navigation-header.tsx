@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { User, Menu, Database, ChevronDown, Plane, Users, PlaneTakeoff, Handshake } from "lucide-react";
+import { User, Hamburger as MenuIcon, DataServer, Down, Airplane, People, Airplane as PlaneTicket, Shop, TakeOff } from "@icon-park/react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
 import {
@@ -26,30 +26,30 @@ export function NavigationHeader() {
 
   if (user?.role === "master") {
     navItems = [
-      { path: "/", label: "Mis viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Airplane },
       { path: "/reports", label: "Reportes" },
-      { path: "/backups", label: "Respaldos", icon: Database },
-      { path: "/users-admin", label: "Usuarios", icon: Users },
+      { path: "/backups", label: "Respaldos", icon: DataServer },
+      { path: "/users-admin", label: "Usuarios", icon: People },
     ];
     catalogItems = [
-      { path: "/clients", label: "Viajeros", icon: Users },
-      { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
-      { path: "/service-providers", label: "Proveedores", icon: Handshake },
+      { path: "/clients", label: "Viajeros", icon: People },
+      { path: "/airports", label: "Aeropuertos", icon: TakeOff },
+      { path: "/service-providers", label: "Proveedores", icon: Shop },
     ];
   } else if (user?.role === "admin") {
     navItems = [
-      { path: "/", label: "Mis viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Airplane },
       { path: "/reports", label: "Reportes" },
-      { path: "/backups", label: "Respaldos", icon: Database },
+      { path: "/backups", label: "Respaldos", icon: DataServer },
     ];
     catalogItems = [
-      { path: "/clients", label: "Viajeros", icon: Users },
-      { path: "/airports", label: "Aeropuertos", icon: PlaneTakeoff },
-      { path: "/service-providers", label: "Proveedores", icon: Handshake },
+      { path: "/clients", label: "Viajeros", icon: People },
+      { path: "/airports", label: "Aeropuertos", icon: TakeOff },
+      { path: "/service-providers", label: "Proveedores", icon: Shop },
     ];
   } else if (user?.role === "traveler") {
     navItems = [
-      { path: "/", label: "Mis viajes", icon: Plane },
+      { path: "/", label: "Mis viajes", icon: Airplane },
     ];
     catalogItems = [];
   }
@@ -91,7 +91,7 @@ export function NavigationHeader() {
                     }`}
                   >
                     Catálogos
-                    <ChevronDown className="h-4 w-4" />
+                    <Down className="h-4 w-4" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
@@ -118,7 +118,7 @@ export function NavigationHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <Menu className="h-5 w-5" />
+                  <MenuIcon className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">

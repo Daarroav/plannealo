@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Delete } from "@icon-park/react";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -33,7 +33,7 @@ export function DeleteConfirmationDialog({
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
-              <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <Delete className="h-5 w-5 text-red-600 dark:text-red-400" />
             </div>
             <AlertDialogTitle>{title}</AlertDialogTitle>
           </div>

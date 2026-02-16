@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Users, Trash2 } from "lucide-react";
+import { Calendar, People, Delete } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -26,8 +26,8 @@ export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const statusCard  = travel.status === "published" ? "" :  "opacity-50";
-  const statusButton = travel.status === "published" ? "" :  "bg-yellow-100 text-yellow-800";
-  const statusColor = travel.status === "published" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
+  const statusButton = travel.status === "published" ? "" :  "bg-accent/10 text-accent";
+  const statusColor = travel.status === "published" ? "bg-secondary/10 text-secondary" : "bg-accent/10 text-accent";
   const statusText = travel.status === "published" ? "Publicado" : "Borrador";
 
   const formatDate = (date: Date | null) => {
@@ -71,7 +71,7 @@ export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
             {formatDate(travel.startDate)}-{formatDate(travel.endDate)}
           </span>
           <span className="flex items-center">
-            <Users className="mr-1 h-3 w-3" />
+            <People className="mr-1 h-3 w-3" />
             {travel.travelers} viajero{travel.travelers !== 1 ? 's' : ''}
           </span>
         </div>
@@ -90,7 +90,7 @@ export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
               size="sm"
               className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
             >
-              <Trash2 className="w-4 h-4" />
+              <Delete className="w-4 h-4" />
             </Button>
           </div>
       </div>

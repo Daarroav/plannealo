@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="planeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#083B6F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#98C037;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="white" stroke="url(#planeGradient)" stroke-width="2"/>
+  
+  <!-- Airplane icon -->
+  <g filter="url(#shadow)">
+    <!-- Main body -->
+    <path d="M 100 40 L 105 85 L 160 100 L 105 115 L 100 160 L 95 115 L 40 100 L 95 85 Z" fill="url(#planeGradient)"/>
+    
+    <!-- Accent circle in center -->
+    <circle cx="100" cy="100" r="8" fill="#FDC311" opacity="0.8"/>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { StatsCard } from "@/components/ui/stats-card";
-import { Plane, Download, Loader2 } from "lucide-react";
+import { Airplane, Download, Loading } from "@icon-park/react";
 import type { Travel } from "@shared/schema";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as DateIcon } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ export default function ReportsPage() {
           stats?.cancelledTravels,
           stats?.completedTravels,
         ],
-        backgroundColor: ["#93c5fd", "#fde047", "#fca5a5", "#86efac"],
+        backgroundColor: ["#083B6F", "#98C037", "#FDC311", "#D8D9DC"],
         hoverOffset: 8,
       },
     ],
@@ -83,7 +83,7 @@ export default function ReportsPage() {
                     !startDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <DateIcon className="mr-2 h-4 w-4" />
                   {startDate ? format(startDate, "PPP", { locale: es }) : "Fecha inicio"}
                 </Button>
               </PopoverTrigger>
@@ -106,7 +106,7 @@ export default function ReportsPage() {
                     !endDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <DateIcon className="mr-2 h-4 w-4" />
                   {endDate ? format(endDate, "PPP", { locale: es }) : "Fecha fin"}
                 </Button>
               </PopoverTrigger>
@@ -131,7 +131,7 @@ export default function ReportsPage() {
         <StatsCard
             title="Viajes Publicados"
             value={stats?.publishedTravels || 0}
-            icon={Plane}
+            icon={Airplane}
             iconBgColor="bg-blue-100"
             iconTextColor="text-blue-600"
         />
@@ -139,14 +139,14 @@ export default function ReportsPage() {
         {/* <StatsCard
             title="Viajes Borradores"
             value={stats?.draftTravels || 0}
-            icon={Plane}
+            icon={Airplane}
             iconBgColor="bg-yellow-100"
             iconTextColor="text-yellow-600"
         /> */}
         <StatsCard
             title="Viajes Cancelados"
             value={stats?.cancelledTravels || 0}
-            icon={Plane}
+            icon={Airplane}
             iconBgColor="bg-red-100"
             iconTextColor="text-red-600"
         />
@@ -154,7 +154,7 @@ export default function ReportsPage() {
         <StatsCard
             title="Viajes Enviados"
             value={stats?.sentTravels || 0}
-            icon={Plane}
+            icon={Airplane}
             iconBgColor="bg-yellow-100"
             iconTextColor="text-yellow-600"
         />
@@ -162,7 +162,7 @@ export default function ReportsPage() {
         <StatsCard
             title="Viajes Concluidos"
             value={stats?.completedTravels || 0}
-            icon={Plane}
+            icon={Airplane}
             iconBgColor="bg-green-100"
             iconTextColor="text-green-600"
         />

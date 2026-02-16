@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { CheckOne, Up, Down, Plus } from "@icon-park/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -157,7 +157,7 @@ export function LocationCombobox({
             data-testid={`button-select-${type}`}
           >
             {selectedLocation ? selectedLocation.name : placeholder || getDefaultPlaceholder()}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Down className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">

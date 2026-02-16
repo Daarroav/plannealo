@@ -19,7 +19,7 @@ import { CoverImageUploader } from "@/components/ui/cover-image-uploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
-import { ArrowLeft, Bed, MapPin, Plane, Car, Ship, Shield, StickyNote, Plus, Edit, Share, Camera, Trash2, Clock } from "lucide-react";
+import { ToLeft, Hotel, Pin, Airplane, Car, Ship, Shield, Plus, Edit, Share, Camera, Delete, Time, Notepad } from "@icon-park/react";
 import { normalizeCostBreakdown, parseCostAmount } from "@/lib/cost";
 import type { Travel, Accommodation, Activity, Flight, Transport, Cruise, Insurance, Note } from "@shared/schema";
 
@@ -1036,7 +1036,7 @@ export default function TravelDetail() {
               El viaje que buscas no existe o no tienes permisos para verlo.
             </p>
             <Button onClick={() => setLocation("/")}> 
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ToLeft className="w-4 h-4 mr-2" />
               Volver
             </Button>
           </div>
@@ -1123,14 +1123,14 @@ export default function TravelDetail() {
   });
 
   const navigationItems = [
-    { id: "all", label: "Itinerario", icon: Clock, count: itineraryItems.length },
-    { id: "accommodation", label: "Alojamientos", icon: Bed, count: accommodations.length },
-    { id: "activity", label: "Actividades", icon: MapPin, count: activities.length },
-    { id: "flight", label: "Vuelos", icon: Plane, count: flights.length },
+    { id: "all", label: "Itinerario", icon: Time, count: itineraryItems.length },
+    { id: "accommodation", label: "Alojamientos", icon: Hotel, count: accommodations.length },
+    { id: "activity", label: "Actividades", icon: Pin, count: activities.length },
+    { id: "flight", label: "Vuelos", icon: Airplane, count: flights.length },
     { id: "transport", label: "Transporte", icon: Car, count: transports.length },
     { id: "cruise", label: "Cruceros", icon: Ship, count: cruises.length },
     { id: "insurance", label: "Seguro de Asistencia", icon: Shield, count: insurances.length },
-    { id: "note", label: "Notas", icon: StickyNote, count: notes.length },
+    { id: "note", label: "Notas", icon: Notepad, count: notes.length },
   ] as const;
 
   return (
@@ -1141,7 +1141,7 @@ export default function TravelDetail() {
           <div className="flex flex-col sm:flex-row justify-between h-auto gap-2 sm:h-16 pb-2 sm:pb-0">
             <div className="flex items-center space-x-4 w-full sm:w-auto">
               <Button variant="ghost" size="icon" onClick={() => setLocation("/")}> 
-                <ArrowLeft className="h-4 w-4" />
+                <ToLeft className="h-4 w-4" />
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-foreground">{travel.name}</h1>
@@ -1212,7 +1212,7 @@ export default function TravelDetail() {
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-lg opacity-90">Viajero: {travel.clientName}</p>
                   <div onClick={() => setIsNewTravelModalOpen(true)}>
-                    <Edit className="w-6 h-6 mr-2 hover:text-red-500 bg-red-500 hover:bg-white p-1 rounded-lg transition cursor-pointer" />
+                    <Edit className="w-6 h-6 mr-2 hover:text-accent bg-accent hover:bg-accent/80 p-1 rounded-lg transition cursor-pointer" />
                   </div>
                 </div>
                 <p className="text-sm opacity-75 mt-1">
@@ -1271,7 +1271,7 @@ export default function TravelDetail() {
               ) : accommodationsError ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <Time className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">Error al cargar el itinerario</h3>
                     <p className="text-muted-foreground mb-6">Ocurrió un error al cargar la informacion</p>
                     <Button
@@ -1285,7 +1285,7 @@ export default function TravelDetail() {
               ) : filteredItinerary.length === 0 ? (
                 <Card>
                   <CardContent className="p-8 text-center">
-                    <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <Time className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">No hay eventos en el itinerario</h3>
                     <p className="text-muted-foreground mb-6">
                       {activeSection === "all"
@@ -1314,7 +1314,7 @@ export default function TravelDetail() {
                           : "";
 
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-blue-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-primary">
                             <div className="flex justify-between items-start gap-4">
                               {thumbnailSrc && (
                                 <div className="flex-shrink-0">
@@ -1369,9 +1369,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("accommodation", accommodation.id, accommodation.name)}
                                   data-testid={`button-delete-accommodation-${accommodation.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1382,7 +1382,7 @@ export default function TravelDetail() {
                         const activity = item.data as Activity;
                         const activityCost = getItemCost(item);
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-green-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-secondary">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1442,9 +1442,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("activity", activity.id, activity.name)}
                                   data-testid={`button-delete-activity-${activity.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1459,7 +1459,7 @@ export default function TravelDetail() {
                           : `${flight.departureCity} → ${flight.arrivalCity}`;
                         
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-purple-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-accent">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1502,9 +1502,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("flight", flight.id)}
                                   data-testid={`button-delete-flight-${flight.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1515,7 +1515,7 @@ export default function TravelDetail() {
                         const transport = item.data as Transport;
                         const transportCost = getItemCost(item);
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-orange-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-accent/50">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1560,9 +1560,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("transport", transport.id)}
                                   data-testid={`button-delete-transport-${transport.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1573,7 +1573,7 @@ export default function TravelDetail() {
                         const cruise = item.data as Cruise;
                         const cruiseCost = getItemCost(item);
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-cyan-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-primary/50">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1614,9 +1614,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("cruise", cruise.id)}
                                   data-testid={`button-delete-cruise-${cruise.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1627,7 +1627,7 @@ export default function TravelDetail() {
                         const insurance = item.data as Insurance;
                         const insuranceCost = getItemCost(item);
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-red-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-destructive">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1666,9 +1666,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("insurance", insurance.id)}
                                   data-testid={`button-delete-insurance-${insurance.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1679,7 +1679,7 @@ export default function TravelDetail() {
                         const note = item.data as Note;
                         const noteCost = getItemCost(item);
                         return (
-                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-gray-500">
+                          <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-muted">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
@@ -1713,9 +1713,9 @@ export default function TravelDetail() {
                                   size="sm"
                                   onClick={() => handleDeleteClick("note", note.id)}
                                   data-testid={`button-delete-note-${note.id}`}
-                                  className="hover:bg-red-50 hover:text-red-600"
+                                  className="hover:bg-destructive/10 hover:text-destructive"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Delete className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
@@ -1739,7 +1739,7 @@ export default function TravelDetail() {
                   }}
                   className="justify-start"
                 >
-                  <Bed className="w-4 h-4 mr-2" />
+                  <Hotel className="w-4 h-4 mr-2" />
                   Alojamiento
                 </Button>
                 <Button
@@ -1750,7 +1750,7 @@ export default function TravelDetail() {
                   }}
                   className="justify-start"
                 >
-                  <MapPin className="w-4 h-4 mr-2" />
+                  <Pin className="w-4 h-4 mr-2" />
                   Actividad
                 </Button>
                 <Button
@@ -1761,7 +1761,7 @@ export default function TravelDetail() {
                   }}
                   className="justify-start"
                 >
-                  <Plane className="w-4 h-4 mr-2" />
+                  <Airplane className="w-4 h-4 mr-2" />
                   Vuelo
                 </Button>
                 <Button
@@ -1805,7 +1805,7 @@ export default function TravelDetail() {
                   }}
                   className="justify-start"
                 >
-                  <StickyNote className="w-4 h-4 mr-2" />
+                  <Notepad className="w-4 h-4 mr-2" />
                   Nota
                 </Button>
               </div>

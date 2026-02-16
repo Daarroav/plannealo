@@ -1,6 +1,6 @@
 # Overview
 
-PLANNEALO is a comprehensive travel itinerary management platform designed for travel agencies. The system allows agents to create, manage, and publish detailed travel itineraries for their clients. The platform features a modern web application with React frontend and Node.js/Express backend, including advanced calendar visualization, PDF generation with professional branding, object storage for cover images, and comprehensive travel component management with file upload capabilities.
+Itineralia is a comprehensive travel itinerary management platform designed for travel agencies. The system allows agents to create, manage, and publish detailed travel itineraries for their clients. The platform features a modern web application with React frontend and Node.js/Express backend, including advanced calendar visualization, PDF generation with professional branding, object storage for cover images, and comprehensive travel component management with file upload capabilities.
 
 # User Preferences
 
@@ -72,7 +72,7 @@ Preferred communication style: Simple, everyday language.
 - **Uppy**: File upload library with drag-and-drop interface for document management
 - **Google Cloud Storage**: Cloud storage service for cover images and travel document attachments
 - **Object Storage Service**: Custom service with ACL policies for public/private file management
-- **PDF Generation**: Professional travel itinerary PDFs with PLANNEALO branding and cover images
+- **PDF Generation**: Professional travel itinerary PDFs with Itineralia branding and cover images
 
 ## Development Tools
 - **Vite**: Fast build tool and development server

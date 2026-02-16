@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loading } from "@icon-park/react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CoverImageUploaderProps {
@@ -123,7 +123,7 @@ export function CoverImageUploader({
       >
         {isUploading ? (
           <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <Loading className="w-4 h-4 mr-2 animate-spin" />
             Subiendo...
           </>
         ) : (

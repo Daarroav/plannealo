@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Download, Eye, FileText } from "lucide-react";
+import { Mail, Download, OpenOne, Paperclip } from "@icon-park/react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -133,7 +133,7 @@ export function ShareTravelModal({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-accent" />
+            <Paperclip className="w-5 h-5 text-accent" />
             <span>Compartir Itinerario</span>
           </DialogTitle>
         </DialogHeader>
@@ -198,7 +198,7 @@ export function ShareTravelModal({
                   onClick={handlePreview}
                   className="flex items-center justify-center space-x-2"
                 >
-                  <Eye className="w-4 h-4" />
+                  <OpenOne className="w-4 h-4" />
                   <span>Vista Previa</span>
                 </Button>
 

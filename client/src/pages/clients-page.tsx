@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { NavigationHeader } from "@/components/ui/navigation-header";
 import { StatsCard } from "@/components/ui/stats-card";
 
-import { Plane, Users, Clock, Plus, Search, Grid3X3, Calendar } from "lucide-react";
+import { Airplane, People, Time, Plus, Search, Grid, Calendar } from "@icon-park/react";
 
 interface Client {
   id: string;
@@ -110,7 +110,7 @@ export default function ClientsPage() {
                 <StatsCard
                     title="Viajeros"
                     value={stats?.totalClients || 0}
-                    icon={Users}
+                    icon={People}
                     iconBgColor="bg-green-100"
                     iconTextColor="text-green-600"
                 />
@@ -118,14 +118,14 @@ export default function ClientsPage() {
                 <StatsCard
                     title="Viajes Totales"
                     value={stats?.totalTravels || 0}
-                    icon={Plane}
+                    icon={Airplane}
                     iconBgColor="bg-blue-100"
                     iconTextColor="text-blue-600"
                 />
                 <StatsCard
                     title="Viajes Activos"
                     value={stats?.publishedTravels || 0}
-                    icon={Plane}
+                    icon={Airplane}
                     iconBgColor="bg-green-100"
                     iconTextColor="text-green-600"
                 />
@@ -133,7 +133,7 @@ export default function ClientsPage() {
                 <StatsCard
                     title="Borradores"
                     value={stats?.draftTravels || 0}
-                    icon={Clock}
+                    icon={Time}
                     iconBgColor="bg-yellow-100"
                     iconTextColor="text-yellow-600"
                 />

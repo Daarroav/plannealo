@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Building2 } from "lucide-react";
+import { Plus, Edit, Delete, Search, Building } from "@icon-park/react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { ServiceProvider } from "@/../../shared/schema";

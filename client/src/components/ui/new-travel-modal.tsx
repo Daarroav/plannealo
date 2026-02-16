@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Image, Upload } from "lucide-react";
+import { Close, Picture, Upload } from "@icon-park/react";
 import type { Travel } from "@shared/schema";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";

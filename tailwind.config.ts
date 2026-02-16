@@ -79,10 +79,52 @@ export default {
             height: "0",
           },
         },
+        "gradient-shift": {
+          "0%": {
+            backgroundPosition: "0% 50%",
+          },
+          "50%": {
+            backgroundPosition: "100% 50%",
+          },
+          "100%": {
+            backgroundPosition: "0% 50%",
+          },
+        },
+        "gradient-flow": {
+          "0%": {
+            backgroundImage: "linear-gradient(90deg, #083B6F 0%, #98C037 100%)",
+          },
+          "50%": {
+            backgroundImage: "linear-gradient(90deg, #083B6F 0%, #98C037 100%)",
+          },
+          "100%": {
+            backgroundImage: "linear-gradient(90deg, #083B6F 0%, #98C037 100%)",
+          },
+        },
+        "plane-travel": {
+          "0%": {
+            transform: "translateX(0) scaleX(1)",
+          },
+          "25%": {
+            transform: "translateX(2px) scaleX(1)",
+          },
+          "50%": {
+            transform: "translateX(4px) scaleX(1)",
+          },
+          "75%": {
+            transform: "translateX(2px) scaleX(1)",
+          },
+          "100%": {
+            transform: "translateX(0) scaleX(1)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-shift": "gradient-shift 3s ease infinite",
+        "gradient-flow": "gradient-flow 4s ease-in-out infinite",
+        "plane-travel": "plane-travel 2s ease-in-out infinite",
       },
     },
   },

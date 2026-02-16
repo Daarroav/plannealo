@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 // import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Upload, FileText, X } from "lucide-react";
+import { Calendar as DateIcon, Upload, Paperclip, Close } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -425,7 +425,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                         !pickupDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {pickupDate ? format(pickupDate, "dd/MM/yyyy", { locale: es }) : "Seleccionar fecha"}
                     </Button>
                   </PopoverTrigger>
@@ -491,7 +491,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                         !endDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {endDate ? format(endDate, "dd/MM/yyyy", { locale: es }) : "Seleccionar fecha (opcional)"}
                     </Button>
                   </PopoverTrigger>
@@ -569,7 +569,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">

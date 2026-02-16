@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { NavigationHeader } from "@/components/ui/navigation-header";
-import { Download, Loader2, Database, Calendar as CalendarIcon } from "lucide-react";
+import { Download, Loading, DataServer, Calendar as DateIcon } from "@icon-park/react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
@@ -214,7 +214,7 @@ export default function BackupsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
+                <DataServer className="h-5 w-5" />
                 Respaldo de Archivos
               </CardTitle>
               <CardDescription>
@@ -234,7 +234,7 @@ export default function BackupsPage() {
                           !startDate && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <DateIcon className="mr-2 h-4 w-4" />
                         {startDate ? format(startDate, "PPP", { locale: es }) : "Seleccionar fecha"}
                       </Button>
                     </PopoverTrigger>
@@ -260,7 +260,7 @@ export default function BackupsPage() {
                           !endDate && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <DateIcon className="mr-2 h-4 w-4" />
                         {endDate ? format(endDate, "PPP", { locale: es }) : "Seleccionar fecha"}
                       </Button>
                     </PopoverTrigger>
@@ -278,7 +278,7 @@ export default function BackupsPage() {
 
               {(startDate || endDate) && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarIcon className="h-4 w-4" />
+                  <DateIcon className="h-4 w-4" />
                   <span>
                     Se descargarán solo los archivos subidos {startDate && `desde ${format(startDate, "PPP", { locale: es })}`}
                     {startDate && endDate && " "}
@@ -295,7 +295,7 @@ export default function BackupsPage() {
                 >
                   {isDownloading ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loading className="h-4 w-4 animate-spin" />
                       Creando respaldo...
                     </>
                   ) : (
@@ -319,9 +319,9 @@ export default function BackupsPage() {
                 )}
               </div>
 
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Información importante:</h4>
-                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+              <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <h4 className="font-medium text-primary mb-2">Información importante:</h4>
+                <ul className="text-sm text-primary/80 space-y-1 list-disc list-inside">
                   <li>El respaldo puede tardar varios minutos dependiendo del tamaño</li>
                   <li>Los archivos se organizarán por carpetas según su tipo</li>
                   <li>Si no seleccionas fechas, se descargarán TODOS los archivos</li>

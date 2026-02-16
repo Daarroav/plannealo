@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, Search, Plane, X } from "lucide-react";
+import { Plus, Edit, Delete, Search, Airplane, Close } from "@icon-park/react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { Airport } from "@/../../shared/schema";
@@ -285,12 +285,12 @@ export default function AirportsPage() {
                     )}
                     <div className="flex gap-2 pt-2">
                       {airport.iataCode && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                        <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs">
                           IATA: {airport.iataCode}
                         </span>
                       )}
                       {airport.icaoCode && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                        <span className="px-2 py-1 bg-secondary/10 text-secondary rounded text-xs">
                           ICAO: {airport.icaoCode}
                         </span>
                       )}

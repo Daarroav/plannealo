@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { CheckOne, Up, Down, Plus } from "@icon-park/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {

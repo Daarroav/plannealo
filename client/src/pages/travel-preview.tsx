@@ -5,23 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Calendar,
-  MapPin,
-  Users,
-  Bed,
+  Pin,
+  People,
+  Hotel,
   Camera,
-  Plane,
+  Airplane,
   Car,
   Ship,
   Shield,
-  StickyNote,
-  Eye,
-  EyeOff,
-  FileText,
-  ArrowLeft,
+  File,
+  ToLeft,
   Download,
   Mail,
-  Globe,
-} from "lucide-react";
+} from "@icon-park/react";
 import { AttachmentList } from "@/components/AttachmentLink";
 import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
@@ -604,7 +600,7 @@ export default function TravelPreview() {
                     LUGAR DE INICIO
                   </div>
                   <div className="text-gray-900 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1 text-gray-500" />
+                    <Pin className="w-3 h-3 mr-1 text-gray-500" />
                     {event.data.placeStart}
                   </div>
                 </div>
@@ -615,7 +611,7 @@ export default function TravelPreview() {
                     LUGAR DE FIN
                   </div>
                   <div className="text-gray-900 flex items-center">
-                    <MapPin className="w-3 h-3 mr-1 text-gray-500" />
+                    <Pin className="w-3 h-3 mr-1 text-gray-500" />
                     {event.data.placeEnd}
                   </div>
                 </div>
@@ -674,7 +670,7 @@ export default function TravelPreview() {
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
-                <Plane className="w-4 h-4 text-accent" />
+                <Airplane className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold w-fit">
                   Vuelo: {flightTitle}
                 </h3>
@@ -1056,11 +1052,11 @@ export default function TravelPreview() {
         return (
           <div
             key={event.id}
-            className="border border-border rounded-lg p-4  border-l-4 border-l-yellow-400"
+            className="border border-border rounded-lg p-4  border-l-4 border-l-accent"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
-                <StickyNote className="w-4 h-4 text-yellow-600" />
+                <StickyNote className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold w-fit">
                   {event.data.title}
                 </h3>
@@ -1135,7 +1131,7 @@ export default function TravelPreview() {
         style={{
           backgroundImage: travel.coverImage
             ? `url(${travel.coverImage.startsWith("/objects/") ? `/api${travel.coverImage}` : travel.coverImage})`
-            : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            : "linear-gradient(135deg, #083B6F 0%, #98C037 100%)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -1189,7 +1185,7 @@ export default function TravelPreview() {
             </h3>
             <div className="text-center space-y-2">
               <p className="text-sm opacity-90">
-                <strong>Email:</strong> plannealo@gmail.com
+                <strong>Email:</strong> itineralia@gmail.com
               </p>
               <p className="text-sm opacity-90">
                 <strong>Teléfono:</strong> +52 444 547 3471
@@ -1348,14 +1344,14 @@ export default function TravelPreview() {
               </h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>
-                  <strong>Email:</strong> plannealo@gmail.com
+                  <strong>Email:</strong> itineralia@gmail.com
                 </p>
                 <p>
                   <strong>WhatsApp:</strong> +52 444 547 3471
                 </p>
 
                 <p>
-                  <strong>Web:</strong> www.plannealo.com
+                  <strong>Web:</strong> www.itineralia.com
                 </p>
               </div>
             </div>
@@ -1366,7 +1362,7 @@ export default function TravelPreview() {
             <div className="flex flex-col items-center text-xs text-muted-foreground text-center">
               <div className="text-center">
                 <p>Powered by Arten Digital</p>
-                <p>© 2024 PLANNEALO. Todos los derechos reservados.</p>
+                <p>© 2024 Itineralia. Todos los derechos reservados.</p>
               </div>
             </div>
           </div>

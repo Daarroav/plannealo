@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronDown } from "lucide-react";
+import { CheckOne, Down } from "@icon-park/react";
 import { cn } from "@/lib/utils";
 
 interface AutocompleteOption {
@@ -78,7 +78,7 @@ export function AutocompleteInput({
             disabled={disabled}
             onFocus={() => setOpen(true)}
           />
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Down className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
@@ -94,7 +94,7 @@ export function AutocompleteInput({
                     onSelect={() => handleSelect(option)}
                     className="cursor-pointer"
                   >
-                    <Check
+                    <CheckOne
                       className={cn(
                         "mr-2 h-4 w-4",
                         searchValue === option.label ? "opacity-100" : "opacity-0"

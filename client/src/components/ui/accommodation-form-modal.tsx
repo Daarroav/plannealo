@@ -10,13 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X } from "lucide-react";
+import { Calendar as DateIcon, Upload, Close } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertAccommodationSchema, type Accommodation } from "@shared/schema";
 import { useRef } from "react";
-import { FileText } from "lucide-react";
+import { Paperclip } from "@icon-park/react";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
@@ -460,7 +460,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                         !checkInDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {checkInDate ? format(checkInDate, "dd/MM/yyyy", { locale: es }) : "Fecha"}
                     </Button>
                   </PopoverTrigger>
@@ -497,7 +497,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                         !checkOutDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {checkOutDate ? format(checkOutDate, "dd/MM/yyyy", { locale: es }) : "Fecha"}
                     </Button>
                   </PopoverTrigger>
@@ -696,7 +696,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                   ?.map((url, index, filteredArray) => (
                   <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Attachment className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">Archivo existente {index + 1}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -724,7 +724,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Attachment className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button

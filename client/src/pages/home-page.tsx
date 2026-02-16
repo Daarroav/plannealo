@@ -13,7 +13,7 @@ import { CalendarView } from "@/components/ui/calendar-view";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Plane, Users, Clock, Plus, Search, Grid3X3, Calendar } from "lucide-react";
+import { Airplane, People, Time, Plus, Search, AppStore, Calendar } from "@icon-park/react";
 import type { Travel } from "@shared/schema";
 
 interface Stats {
@@ -205,25 +205,25 @@ export default function HomePage() {
           <StatsCard
             title="Viajes Publicados"
             value={stats?.activeTrips || 0}
-            icon={Plane}
-            iconBgColor="bg-green-100"
-            iconTextColor="text-green-600"
+            icon={Airplane}
+            iconBgColor="bg-secondary/10"
+            iconTextColor="text-secondary"
           />
           {(user?.role === "admin" || user?.role === "master") && (
             <StatsCard
               title="Viajeros"
               value={stats?.clients || 0}
-              icon={Users}
-              iconBgColor="bg-blue-100"
-              iconTextColor="text-blue-600"
+              icon={People}
+              iconBgColor="bg-primary/10"
+              iconTextColor="text-primary"
             />
           )}
           <StatsCard
             title="Borradores"
             value={stats?.drafts || 0}
-            icon={Clock}
-            iconBgColor="bg-yellow-100"
-            iconTextColor="text-yellow-600"
+            icon={Time}
+            iconBgColor="bg-accent/10"
+            iconTextColor="text-accent"
           />
         </div>
 
@@ -236,7 +236,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold text-foreground">Gestión de Itinerarios</h3>
                   <TabsList className="grid w-fit grid-cols-2">
                     <TabsTrigger value="list" className="flex items-center gap-2">
-                      <Grid3X3 className="h-4 w-4" />
+                      <AppStore className="h-4 w-4" />
                       Lista
                     </TabsTrigger>
                     <TabsTrigger value="calendar" className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <Plane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <Airplane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
                     <p className="text-muted-foreground mb-6">
                       {searchTerm || statusFilter !== "current" 

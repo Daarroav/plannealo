@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Edit, Plus, Delete } from "@icon-park/react";
 
 interface User {
   id: string;
@@ -262,7 +262,7 @@ export default function UsersAdminPage() {
                             onClick={() => openEditDialog(user)}
                             className="hover:bg-accent/10 hover:text-accent"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -270,7 +270,7 @@ export default function UsersAdminPage() {
                             onClick={() => handleDelete(user)}
                             className="hover:bg-accent/10 hover:text-accent"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Delete className="h-4 w-4" />
                           </Button>
                         </div>
                       </td>

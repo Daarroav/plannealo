@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plane, Clock, MapPin, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import { Loading, Airplane, Time, Pin, CloseCircle, Info, Warning } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -189,7 +189,7 @@ export function FlightSearchModal({
                   {originAirport.municipalityName}
                 </div>
               </div>
-              <Plane className="w-6 h-6 text-blue-600" />
+              <Airplane className="w-6 h-6 text-blue-600" />
               <div className="text-center">
                 <div className="font-bold">{destinationAirport.iata || destinationAirport.icao}</div>
                 <div className="text-sm text-muted-foreground">
@@ -253,7 +253,7 @@ export function FlightSearchModal({
 
           {searched && !loading && flights.length === 0 && !searchMessage && (
             <div className="text-center py-8 text-muted-foreground">
-              <Plane className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <Airplane className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No se encontraron vuelos para esta ruta y fecha.</p>
               <p className="text-sm">Intenta con otra fecha o verifica los aeropuertos seleccionados.</p>
             </div>
@@ -291,7 +291,7 @@ export function FlightSearchModal({
                           {/* Salida */}
                           <div>
                             <div className="flex items-center space-x-2 mb-1">
-                              <MapPin className="w-4 h-4 text-blue-600" />
+                              <Pin className="w-4 h-4 text-blue-600" />
                               <span className="font-medium">Salida</span>
                             </div>
                             <div className="text-lg font-bold">
@@ -323,7 +323,7 @@ export function FlightSearchModal({
                           {/* Llegada */}
                           <div>
                             <div className="flex items-center space-x-2 mb-1">
-                              <MapPin className="w-4 h-4 text-green-600" />
+                              <Pin className="w-4 h-4 text-green-600" />
                               <span className="font-medium">Llegada</span>
                             </div>
                             <div className="text-lg font-bold">

@@ -56,10 +56,10 @@
   }
   
   .travel-section h2 {
-    color: #dc2626 !important;
+    color: hsl(208, 87%, 23%) !important;
     font-size: 16pt !important;
     margin-bottom: 12px !important;
-    border-bottom: 2px solid #dc2626 !important;
+    border-bottom: 2px solid hsl(208, 87%, 23%) !important;
     padding-bottom: 4px !important;
   }
   
@@ -67,12 +67,12 @@
     page-break-inside: avoid;
     margin-bottom: 15px !important;
     padding: 10px !important;
-    border: 1px solid #e5e7eb !important;
+    border: 1px solid hsl(220, 13%, 85%) !important;
     border-radius: 4px !important;
   }
   
   .travel-item h3 {
-    color: #374151 !important;
+    color: hsl(208, 15%, 20%) !important;
     font-size: 14pt !important;
     margin-bottom: 8px !important;
   }
@@ -86,15 +86,15 @@
   
   .travel-detail {
     font-size: 11pt !important;
-    color: #6b7280 !important;
+    color: hsl(217, 9%, 46%) !important;
   }
   
   .travel-notes {
     margin-top: 8px !important;
     padding-top: 8px !important;
-    border-top: 1px solid #e5e7eb !important;
+    border-top: 1px solid hsl(220, 13%, 85%) !important;
     font-size: 11pt !important;
-    color: #374151 !important;
+    color: hsl(208, 15%, 20%) !important;
     font-style: italic !important;
   }
   
@@ -127,24 +127,24 @@
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(210, 10%, 20%);
-  --muted: hsl(210, 10%, 96%);
-  --muted-foreground: hsl(210, 6%, 44%);
+  --foreground: hsl(208, 15%, 20%);
+  --muted: hsl(220, 13%, 91%);
+  --muted-foreground: hsl(217, 9%, 46%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(210, 10%, 20%);
+  --popover-foreground: hsl(208, 15%, 20%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(210, 10%, 20%);
-  --border: hsl(210, 10%, 88%);
-  --input: hsl(210, 10%, 88%);
-  --primary: hsl(210, 10%, 44%);
+  --card-foreground: hsl(208, 15%, 20%);
+  --border: hsl(220, 13%, 85%);
+  --input: hsl(220, 13%, 85%);
+  --primary: hsl(208, 87%, 23%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(210, 10%, 96%);
-  --secondary-foreground: hsl(210, 10%, 10%);
-  --accent: hsl(0, 84%, 60%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(80, 55%, 49%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(44, 99%, 53%);
+  --accent-foreground: hsl(208, 87%, 23%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --ring: hsl(210, 10%, 20%);
+  --ring: hsl(208, 87%, 23%);
   --radius: 0.5rem;
 }
 
@@ -159,15 +159,15 @@
   --card-foreground: hsl(0, 0%, 98%);
   --border: hsl(240, 3.7%, 15.9%);
   --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(210, 10%, 44%);
+  --primary: hsl(208, 87%, 35%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(240, 3.7%, 15.9%);
-  --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(0, 84%, 60%);
-  --accent-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(80, 55%, 55%);
+  --secondary-foreground: hsl(208, 87%, 23%);
+  --accent: hsl(44, 99%, 60%);
+  --accent-foreground: hsl(208, 87%, 23%);
   --destructive: hsl(0, 62.8%, 30.6%);
   --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(240, 4.9%, 83.9%);
+  --ring: hsl(208, 87%, 35%);
 }
 
 @layer base {
@@ -178,4 +178,48 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* Custom animations for auth page and other components */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }

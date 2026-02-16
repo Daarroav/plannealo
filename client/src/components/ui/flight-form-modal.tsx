@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Search, Plane, Upload, FileText, X } from "lucide-react";
+import { Calendar as DateIcon, Search, Airplane, Upload, Paperclip, Close } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -655,7 +655,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
         {!editingFlight && (
           <div className="border rounded-lg p-4 bg-blue-50 mb-6">
             <div className="flex items-center space-x-2 mb-3">
-              <Plane className="w-5 h-5 text-blue-600" />
+              <Airplane className="w-5 h-5 text-blue-600" />
               <h3 className="font-semibold text-blue-900">Búsqueda Automática de Vuelos</h3>
             </div>
             <p className="text-sm text-blue-700 mb-4">
@@ -802,7 +802,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                         !departureDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {departureDate ? format(departureDate, "dd/MM/yyyy", { locale: es }) : "FECHA DE SALIDA *"}
                     </Button>
                   </PopoverTrigger>
@@ -910,7 +910,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                         !arrivalDate && "text-muted-foreground"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                       {arrivalDate ? format(arrivalDate, "dd/MM/yyyy", { locale: es }) : "FECHA DE LLEGADA *"}
                     </Button>
                   </PopoverTrigger>
@@ -1028,7 +1028,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1050,7 +1050,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Document className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button

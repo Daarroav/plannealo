@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { insertCruiseSchema } from "@shared/schema";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, Paperclip, Close } from "@icon-park/react";
 import React from "react";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
@@ -375,7 +375,7 @@ export function CruiseFormModal({
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">

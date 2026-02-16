@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { Left, Right, Calendar as DateIcon } from "@icon-park/react";
 import { useLocation } from "wouter";
 import type { Travel } from "@shared/schema";
 
@@ -136,18 +136,18 @@ export function CalendarView({ travels }: CalendarViewProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
+              <DateIcon className="h-5 w-5" />
             Calendario de Mis viajes
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
+              <Left className="h-4 w-4" />
             </Button>
             <span className="text-lg font-semibold min-w-[140px] text-center">
               {MONTHS[currentMonth]} {currentYear}
             </span>
             <Button variant="outline" size="sm" onClick={goToNextMonth}>
-              <ChevronRight className="h-4 w-4" />
+              <Right className="h-4 w-4" />
             </Button>
           </div>
         </div>

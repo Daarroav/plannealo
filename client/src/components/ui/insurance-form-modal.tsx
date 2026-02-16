@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, Paperclip, Close } from "@icon-park/react";
 import { format, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { insertInsuranceSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
@@ -401,7 +401,7 @@ export function InsuranceFormModal({
                       return (
                         <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                           <div className="flex items-center">
-                            <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                            <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                             <span className="text-sm truncate">Documento existente {index + 1}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -426,7 +426,7 @@ export function InsuranceFormModal({
                     <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                       <div className="flex items-center space-x-2">
                         <a href={URL.createObjectURL(fileName)} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <Paperclip className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-foreground">{fileName.name}</span>
                         </a>
                       </div>

@@ -10,12 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X } from "lucide-react";
+import { Calendar as DateIcon, Upload, Close } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertActivitySchema } from "@shared/schema";
-import { FileText } from "lucide-react";
+import { Paperclip } from "@icon-park/react";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
@@ -388,7 +388,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                       !activityDate && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                      <DateIcon className="mr-2 h-4 w-4" />
                     {activityDate ? format(activityDate, "dd/MM/yyyy", { locale: es }) : "Seleccionar fecha"}
                   </Button>
                 </PopoverTrigger>
@@ -526,7 +526,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">

@@ -62,7 +62,7 @@ export class EmailService {
       },
       Message: {
         Subject: {
-          Data: "Tu itinerario de viaje con Plannealo",
+          Data: "Tu itinerario de viaje con Itineralia",
           Charset: "UTF-8",
         },
         Body: {
@@ -213,7 +213,7 @@ export class EmailService {
   <div class="email-container">
     <div class="header">
       <h1 style="margin:0 0 8px 0; font-size:28px; font-weight:700; color:#ffffff; mso-line-height-rule:exactly;">
-        Bienvenido a tu próximo viaje con Plannealo.
+        Bienvenido a tu próximo viaje con Itineralia.
       </h1>
     </div>
 
@@ -317,12 +317,12 @@ export class EmailService {
           <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás el botón en tu pantalla principal que abre el itinerario directo.</p>
         </div>
 
-        <p style="margin: 20px 0 0 0; font-weight: 600; color: #dc2626; text-align: center;">¡Prepárate para vivir una gran experiencia con PLANNEALO!</p>
+        <p style="margin: 20px 0 0 0; font-weight: 600; color: #dc2626; text-align: center;">¡Prepárate para vivir una gran experiencia con Itineralia!</p>
       </div>
     </div>
 
     <div class="footer">
-      <div class="footer-logo">PLANNEALO</div>
+      <div class="footer-logo">Itineralia</div>
       <p>Tu agencia de viajes de confianza</p>
       <p>
         <a href="mailto:itinerarios@plannealo.com" style="color: #dc2626; text-decoration: none;">
@@ -339,7 +339,7 @@ export class EmailService {
     return `
 ¡Tu itinerario está listo!
 
-PLANNEALO ha preparado todos los detalles de tu viaje.
+Itineralia ha preparado todos los detalles de tu viaje.
 
 --- DETALLES DEL VIAJE ---
 Nombre: ${travel.name}
@@ -354,8 +354,8 @@ ${itineraryUrl}
 Este enlace te permitirá acceder a tu itinerario sin necesidad de crear una cuenta.
 
 ---
-PLANNEALO - Tu agencia de viajes de confianza
-itinerarios@plannealo.com
+Itineralia - Tu agencia de viajes de confianza
+itinerarios@itineralia.com
 `;
   }
 

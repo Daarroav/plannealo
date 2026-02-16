@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { Plane, MapPin, Users, Calendar } from "lucide-react";
+import { Airplane, Pin, People, Calendar as DateIcon, Star, ToRight } from "@icon-park/react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El usuario es requerido"),
@@ -94,212 +94,238 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 grid grid-cols-1 lg:grid-cols-2">
-      {/* Left side - Forms */}
-      <div className="flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground">PLANNEALO</h1>
-            <p className="text-muted-foreground mt-2">
-              Gestión Profesional de Viajes
-            </p>
-          </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background Image - Full screen */}
+      {backgroundImage && backgroundImage !== "gradient" ? (
+        <img
+          src={backgroundImage}
+          alt="Travel background"
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => {
+            console.error("Error loading image:", backgroundImage);
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(90deg, #083B6F 0%, #FDC311 50%, #98C037 100%)",
+          }}
+        />
+      )}
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/40 to-black/30"></div>
 
-          <Card>
-            <CardHeader>
+      {/* Content Grid */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
+        {/* Left side - Welcome Section (Hidden on all sizes) */}
+        <div className="hidden"></div>
+
+        {/* Center - Form Section */}
+        <div className="flex items-center justify-center p-4 sm:p-8 w-full">
+          <div className="w-full max-w-md space-y-6">
+            {/* App Logo with Animation - Top */}
+            <div className="flex flex-col items-center gap-4 text-center mb-8 animate-fade-in justify-center">
+              <div className="w-32 h-32 flex items-center justify-center animate-plane-travel">
+                <img 
+                  src="/uploads/plane-world.png" 
+                  alt="Itineralia - Travel Around the World"
+                  className="w-full h-full object-contain drop-shadow-lg"
+                  onError={(e) => {
+                    console.error("Error loading plane image");
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white">
+                  Itineralia
+                </h1>
+                <p className="text-sm text-white/60 mt-1">Gestión de Viajes</p>
+              </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-8 border border-white/20 space-y-6">
+              {/* Encabezado de Inicio de Sesión */}
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-white">Iniciar Sesión</h2>
+              </div>
+
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                  <TabsTrigger value="register">Registrarse</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-white/10 border border-white/20 rounded-lg mb-6">
+                  <TabsTrigger 
+                    value="login"
+                    className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60"
+                  >
+                    Iniciar Sesión
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="register"
+                    className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60"
+                  >
+                    Registrarse
+                  </TabsTrigger>
                 </TabsList>
-              </Tabs>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsContent value="login" className="space-y-4">
-                  <form
-                    onSubmit={loginForm.handleSubmit(handleLogin)}
-                    className="space-y-4"
+
+              <TabsContent value="login" className="space-y-4 mt-0">
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                  <div>
+                    <Label htmlFor="login-username" className="text-sm font-medium text-white/90">
+                      Correo Electrónico
+                    </Label>
+                    <Input
+                      id="login-username"
+                      {...loginForm.register("username")}
+                      placeholder="tu@email.com"
+                      className="mt-2 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/20"
+                    />
+                    {loginForm.formState.errors.username && (
+                      <p className="text-sm text-red-400 mt-1">
+                        {loginForm.formState.errors.username.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="login-password" className="text-sm font-medium text-white/90">
+                      Contraseña
+                    </Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      {...loginForm.register("password")}
+                      placeholder="••••••••"
+                      className="mt-2 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/20"
+                    />
+                    {loginForm.formState.errors.password && (
+                      <p className="text-sm text-red-400 mt-1">
+                        {loginForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 py-2">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      className="w-4 h-4 rounded border-white/20 bg-white/10 text-primary cursor-pointer"
+                    />
+                    <label htmlFor="remember" className="text-sm text-white/70 cursor-pointer">
+                      Recuérdame
+                    </label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full text-white font-semibold mt-4 rounded-lg hover:opacity-90 transition-opacity animate-gradient-flow"
+                    disabled={loginMutation.isPending}
                   >
-                    <div>
-                      <Label htmlFor="login-username">Usuario</Label>
-                      <Input
-                        id="login-username"
-                        {...loginForm.register("username")}
-                        placeholder="Ingresa tu usuario"
-                      />
-                      {loginForm.formState.errors.username && (
-                        <p className="text-sm text-destructive mt-1">
-                          {loginForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="login-password">Contraseña</Label>
-                      <Input
-                        id="login-password"
-                        type="password"
-                        {...loginForm.register("password")}
-                        placeholder="Ingresa tu contraseña"
-                      />
-                      {loginForm.formState.errors.password && (
-                        <p className="text-sm text-destructive mt-1">
-                          {loginForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-accent hover:bg-accent/90"
-                      disabled={loginMutation.isPending}
-                    >
-                      {loginMutation.isPending
-                        ? "Iniciando sesión..."
-                        : "Iniciar Sesión"}
-                    </Button>
-                  </form>
-                </TabsContent>
+                    {loginMutation.isPending ? (
+                      <>
+                        <span className="animate-spin mr-2">⏳</span>
+                        Iniciando sesión...
+                      </>
+                    ) : (
+                      <>
+                        Iniciar Sesión
+                      </>
+                    )}
+                  </Button>
+                </form>
 
-                <TabsContent value="register" className="space-y-4">
-                  <form
-                    onSubmit={registerForm.handleSubmit(handleRegister)}
-                    className="space-y-4"
+                <div className="pt-2 text-center">
+                  <a href="#" className="text-sm text-white/60 hover:text-white/90 transition">
+                    ¿Olvidaste tu contraseña?
+                  </a>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="register" className="space-y-4 mt-0">
+                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+                  <div>
+                    <Label htmlFor="register-name" className="text-sm font-medium text-white/90">
+                      Nombre Completo
+                    </Label>
+                    <Input
+                      id="register-name"
+                      {...registerForm.register("name")}
+                      placeholder="Tu nombre completo"
+                      className="mt-2 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/20"
+                    />
+                    {registerForm.formState.errors.name && (
+                      <p className="text-sm text-red-400 mt-1">
+                        {registerForm.formState.errors.name.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="register-username" className="text-sm font-medium text-white/90">
+                      Correo electrónico
+                    </Label>
+                    <Input
+                      id="register-username"
+                      type="email"
+                      {...registerForm.register("username")}
+                      placeholder="tu@email.com"
+                      className="mt-2 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/20"
+                    />
+                    {registerForm.formState.errors.username && (
+                      <p className="text-sm text-red-400 mt-1">
+                        {registerForm.formState.errors.username.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="register-password" className="text-sm font-medium text-white/90">
+                      Contraseña
+                    </Label>
+                    <Input
+                      id="register-password"
+                      type="password"
+                      {...registerForm.register("password")}
+                      placeholder="••••••••"
+                      className="mt-2 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-white/40 focus:bg-white/20"
+                    />
+                    {registerForm.formState.errors.password && (
+                      <p className="text-sm text-red-400 mt-1">
+                        {registerForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full text-white font-semibold mt-4 rounded-lg hover:opacity-90 transition-opacity animate-gradient-flow"
+                    disabled={registerMutation.isPending}
                   >
-                    <div>
-                      <Label htmlFor="register-name">Nombre Completo</Label>
-                      <Input
-                        id="register-name"
-                        {...registerForm.register("name")}
-                        placeholder="Ingresa tu nombre completo"
-                      />
-                      {registerForm.formState.errors.name && (
-                        <p className="text-sm text-destructive mt-1">
-                          {registerForm.formState.errors.name.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="register-username">Correo electrónico</Label>
-                      <Input
-                        id="register-username"
-                        type="email"
-                        {...registerForm.register("username")}
-                        placeholder="Ingresa tu correo electrónico"
-                      />
-                      {registerForm.formState.errors.username && (
-                        <p className="text-sm text-destructive mt-1">
-                          {registerForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="register-password">Contraseña</Label>
-                      <Input
-                        id="register-password"
-                        type="password"
-                        {...registerForm.register("password")}
-                        placeholder="Crea una contraseña segura"
-                      />
-                      {registerForm.formState.errors.password && (
-                        <p className="text-sm text-destructive mt-1">
-                          {registerForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full bg-accent hover:bg-accent/90"
-                      disabled={registerMutation.isPending}
-                    >
-                      {registerMutation.isPending
-                        ? "Registrando..."
-                        : "Registrarse"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+                    {registerMutation.isPending ? (
+                      <>
+                        <span className="animate-spin mr-2">⏳</span>
+                        Registrando...
+                      </>
+                    ) : (
+                      <>
+                        Registrarse
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
 
-      {/* Right side - Hero */}
-      <div className="hidden lg:flex items-center justify-center p-8 relative overflow-hidden">
-        {/* Background Image or Gradient */}
-        {backgroundImage && backgroundImage !== "gradient" ? (
-          <img
-            src={backgroundImage}
-            alt="Travel background"
-            className="absolute inset-0 w-full h-full object-cover"
-            onError={(e) => {
-              console.error("Error loading image:", backgroundImage);
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        ) : (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          />
-        )}
-        {/* Overlay oscuro para mejorar legibilidad */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        <div className="max-w-md text-center space-y-8 relative z-10">
-          <div className="space-y-4">
-            <div className="w-16 h-16 mx-auto bg-accent/10 rounded-full flex items-center justify-center">
-              <Plane className="w-8 h-8 text-accent" />
+            {/* Footer */}
+            <div className="pt-4 border-t border-white/10 text-center text-xs text-white/60 space-y-1">
+              <p>
+                <a href="#" className="hover:text-white/90 transition">Términos de Servicio</a>
+                {' '}| {' '}
+                <a href="#" className="hover:text-white/90 transition">Política de Privacidad</a>
+              </p>
             </div>
-            <h2 className="text-2xl font-bold text-white">
-              Gestiona Viajes Como Un Profesional
-            </h2>
-            <p className="text-white text-opacity-90">
-              PLANNEALO te permite crear, organizar y administrar itinerarios de
-              viaje completos para tus viajeros de manera eficiente y
-              profesional.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 text-left">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <MapPin className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-white">
-                  Itinerarios Completos
-                </h3>
-                <p className="text-sm text-white text-opacity-80">
-                  Alojamientos, vuelos, actividades y transporte en un solo
-                  lugar
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 text-left">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-white">Gestión de Viajeros</h3>
-                <p className="text-sm text-white text-opacity-80">
-                  Organiza y administra las reservas de múltiples viajeros
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 text-left">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <h3 className="font-medium text-white">Seguimiento Total</h3>
-                <p className="text-sm text-white text-opacity-80">
-                  Mantén el control de fechas, confirmaciones y detalles
-                  importantes
-                </p>
-              </div>
             </div>
           </div>
         </div>

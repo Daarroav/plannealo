@@ -1,4 +1,4 @@
-import { FileText, File, Image, Download } from "lucide-react";
+import { Paperclip, Download, Picture } from "@icon-park/react";
 import { useFileMetadata } from "@/hooks/useFileMetadata";
 
 interface AttachmentLinkProps {
@@ -22,7 +22,7 @@ export function AttachmentLink({ filePath, fallbackName = "Documento", className
   // Determine file type and appropriate icon
   const getFileIcon = () => {
     if (!metadata?.contentType && !displayName) {
-      return <FileText className="h-4 w-4 flex-shrink-0" />;
+      return <Paperclip className="h-4 w-4 flex-shrink-0" />;
     }
     
     const contentType = metadata?.contentType || '';
@@ -30,17 +30,17 @@ export function AttachmentLink({ filePath, fallbackName = "Documento", className
     
     // PDF files
     if (contentType === 'application/pdf' || fileName.endsWith('.pdf')) {
-      return <FileText className="h-4 w-4 flex-shrink-0 text-red-600" />;
+      return <Paperclip className="h-4 w-4 flex-shrink-0 text-red-600" />;
     }
     
     // Image files
     if (contentType.startsWith('image/') || 
         ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].some(ext => fileName.endsWith(ext))) {
-      return <Image className="h-4 w-4 flex-shrink-0 text-green-600" />;
+      return <Picture className="h-4 w-4 flex-shrink-0 text-green-600" />;
     }
     
     // Other files
-    return <File className="h-4 w-4 flex-shrink-0" />;
+    return <Paperclip className="h-4 w-4 flex-shrink-0" />;
   };
   
   // Special handling for PDF files
