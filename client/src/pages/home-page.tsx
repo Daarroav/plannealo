@@ -188,10 +188,44 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold text-foreground mb-2">Mis viajes</h2>
               <p className="text-muted-foreground">Crea y administra los itinerarios de tus viajes</p>
             </div>
-            <div className="mt-4 md:mt-0">
-              <Button 
+            <div className="mt-4 md:mt-0 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="grid grid-cols-2 gap-3 order-2 sm:order-1 w-full sm:flex sm:flex-wrap sm:justify-start">
+                <div className="w-full sm:w-52">
+                  <StatsCard
+                    title="Mis viajes publicados"
+                    value={stats?.activeTrips || 0}
+                    icon={Airplane}
+                    iconBgColor="bg-secondary/10"
+                    iconTextColor="text-secondary"
+                    size="compact"
+                  />
+                </div>
+                {(user?.role === "admin" || user?.role === "master") && (
+                  <div className="w-full sm:w-52">
+                    <StatsCard
+                      title="Viajeros"
+                      value={stats?.clients || 0}
+                      icon={People}
+                      iconBgColor="bg-primary/10"
+                      iconTextColor="text-primary"
+                      size="compact"
+                    />
+                  </div>
+                )}
+                <div className="w-full sm:w-52">
+                  <StatsCard
+                    title="Mis viajes en borrador"
+                    value={stats?.drafts || 0}
+                    icon={Time}
+                    iconBgColor="bg-accent/10"
+                    iconTextColor="text-accent"
+                    size="compact"
+                  />
+                </div>
+              </div>
+              <Button
                 onClick={() => setIsNewTravelModalOpen(true)}
-                className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
+                className="bg-accent hover:bg-accent/90 text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2 order-1 sm:order-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Nuevo Viaje</span>
@@ -200,39 +234,12 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <StatsCard
-            title="Viajes Publicados"
-            value={stats?.activeTrips || 0}
-            icon={Airplane}
-            iconBgColor="bg-secondary/10"
-            iconTextColor="text-secondary"
-          />
-          {(user?.role === "admin" || user?.role === "master") && (
-            <StatsCard
-              title="Viajeros"
-              value={stats?.clients || 0}
-              icon={People}
-              iconBgColor="bg-primary/10"
-              iconTextColor="text-primary"
-            />
-          )}
-          <StatsCard
-            title="Borradores"
-            value={stats?.drafts || 0}
-            icon={Time}
-            iconBgColor="bg-accent/10"
-            iconTextColor="text-accent"
-          />
-        </div>
-
         {/* Travels Content with Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="bg-background rounded-lg border border-border">
             <div className="p-6 border-b border-border">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <h3 className="text-lg font-semibold text-foreground">Gestión de Itinerarios</h3>
                   <TabsList className="grid w-fit grid-cols-2">
                     <TabsTrigger value="list" className="flex items-center gap-2">
@@ -247,18 +254,18 @@ export default function HomePage() {
                 </div>
 
                 {activeTab === "list" && (
-                  <div className="flex space-x-3">
-                    <div className="relative">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1 sm:flex-initial">
                       <Input
                         placeholder="Buscar viajes..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2"
+                        className="pl-10 pr-4 py-2 w-full"
                       />
                       <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     </div>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-[140px]">
+                      <SelectTrigger className="w-full sm:w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -301,10 +308,10 @@ export default function HomePage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <Airplane className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
-                    <p className="text-muted-foreground mb-6">
+                  <div className="flex flex-col items-center text-center py-8 sm:py-12 px-4">
+                    <Airplane className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-3 sm:mb-4" />
+                    <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No se encontraron viajes</h3>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-5 sm:mb-6 max-w-sm">
                       {searchTerm || statusFilter !== "current" 
                         ? "Prueba con diferentes filtros de búsqueda" 
                         : "Comienza creando tu primer itinerario de viaje"}

@@ -184,7 +184,7 @@ export function LocationCombobox({
                       onSelect={() => handleSelect(location.id)}
                       data-testid={`item-${type}-${location.id}`}
                     >
-                      <Check
+                      <CheckOne
                         className={cn(
                           "mr-2 h-4 w-4",
                           value === location.id ? "opacity-100" : "opacity-0"

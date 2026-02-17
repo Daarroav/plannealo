@@ -1114,7 +1114,7 @@ export default function TravelPreview() {
       <div className="no-print bg-white border-b border-border p-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button variant="outline" onClick={handleGoBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ToLeft className="w-4 h-4 mr-2" />
             Cerrar
           </Button>
           <h1 className="text-xl font-semibold">Vista Previa del Itinerario</h1>
@@ -1170,7 +1170,7 @@ export default function TravelPreview() {
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <Users className="w-6 h-6" />
+              <People className="w-6 h-6" />
               <span>
                 {travel.travelers}{" "}
                 {travel.travelers === 1 ? "viajero" : "viajeros"}
@@ -1216,7 +1216,7 @@ export default function TravelPreview() {
               </span>
             </div>
             <div className="flex items-center space-x-1">
-              <Users className="w-4 h-4" />
+              <People className="w-4 h-4" />
               <span>
                 {travel.clientName} ({travel.travelers}{" "}
                 {travel.travelers === 1 ? "viajero" : "viajeros"})

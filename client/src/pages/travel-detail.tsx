@@ -17,6 +17,7 @@ import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-di
 import { CoverImageUploader } from "@/components/ui/cover-image-uploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { NewTravelModal } from "@/components/ui/new-travel-modal";
 import { ToLeft, Hotel, Pin, Airplane, Car, Ship, Shield, Plus, Edit, Share, Camera, Delete, Time, Notepad } from "@icon-park/react";
 import { normalizeCostBreakdown, parseCostAmount } from "@/lib/cost";
@@ -65,6 +66,7 @@ const invalidateTravelQueries = (travelId: string) => {
 export default function TravelDetail() {
   const [, params] = useRoute("/travel/:id");
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<"all" | ItineraryItemType>("all");
   const [showEventMenu, setShowEventMenu] = useState(false);
   const [showAccommodationModal, setShowAccommodationModal] = useState(false);
@@ -149,6 +151,8 @@ export default function TravelDetail() {
   });
 
   const travel = travelData?.travel;
+  const displayClientName =
+    user?.role === "traveler" && user?.name ? user.name : travel?.clientName;
   const accommodations = travelData?.accommodations || [];
   const activities = travelData?.activities || [];
   const flights = travelData?.flights || [];
@@ -1144,20 +1148,21 @@ export default function TravelDetail() {
               </Button>
               <div>
                 <h1 className="text-xl font-bold text-foreground">{travel.name}</h1>
-                <p className="text-sm text-muted-foreground">Viajero: {travel.clientName}</p>
+                <p className="text-sm text-muted-foreground">Viajero: {displayClientName}</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end px-4 sm:px-0">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
               <Badge variant={travel.status === "published" ? "default" : "secondary"}>
                 {travel.status === "published" ? "Publicado" : "Borrador"}
               </Badge>
-              <Button variant="outline" onClick={() => setShowShareModal(true)}>
-                <Share className="w-4 h-4 mr-2" />
-                Compartir
+              <Button variant="outline" size="sm" onClick={() => setShowShareModal(true)}>
+                <Share className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Compartir</span>
               </Button>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => saveDraftMutation.mutate()}
                 disabled={saveDraftMutation.isPending}
               >
@@ -1206,13 +1211,19 @@ export default function TravelDetail() {
               }}
             />
             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-end">
-              <div className="p-6 text-white">
-                <h3 className="text-2xl font-bold mb-2">{travel.name}</h3>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-lg opacity-90">Viajero: {travel.clientName}</p>
-                  <div className="flex items-center justify-center" onClick={() => setIsNewTravelModalOpen(true)}>
-                    <Edit className="w-6 h-6 hover:text-accent bg-accent hover:bg-accent/80 p-1 rounded-lg transition cursor-pointer" />
-                  </div>
+              <div className="p-4 sm:p-6 text-white w-full">
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">{travel.name}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                  <p className="text-base sm:text-lg opacity-90">Viajero: {displayClientName}</p>
+                  <button
+                    type="button"
+                    className="inline-flex sm:flex items-center gap-0 sm:gap-1.5 text-xs sm:text-sm p-1 sm:px-2 sm:py-1 rounded-md bg-accent hover:bg-accent/90 text-white transition w-fit"
+                    onClick={() => setIsNewTravelModalOpen(true)}
+                    title="Editar información de viaje"
+                  >
+                    <Edit className="w-4 h-4 text-white" />
+                    <span className="hidden sm:inline">Editar informacion de viaje</span>
+                  </button>
                 </div>
                 <p className="text-sm opacity-75 mt-1">
                   {formatDateTime(travel.startDate)} - {formatDateTime(travel.endDate)} • {travel.travelers} viajero
@@ -1226,7 +1237,7 @@ export default function TravelDetail() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[240px_minmax(0,1fr)_320px]">
-          <div>
+          <div className="hidden lg:block">
             <nav className="space-y-2 sticky top-32">
               {navigationItems.map((item) => (
                 <button
@@ -1334,7 +1345,7 @@ export default function TravelDetail() {
                                   <h4 className="font-semibold text-foreground">{accommodation.name}</h4>
                                 </div>
                                 <p className="text-sm text-muted-foreground mb-2">{accommodation.location}</p>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                     <span className="font-medium">Check-in:</span> {formatDateTime(accommodation.checkIn, true)}
                                   </div>
@@ -1389,7 +1400,7 @@ export default function TravelDetail() {
                                   <Badge variant="outline">{activity.type}</Badge>
                                   <h4 className="font-semibold text-foreground">{activity.name}</h4>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                   {activityCost.amount > 0 && (
                                     <div>
@@ -1467,7 +1478,7 @@ export default function TravelDetail() {
                                     {flightTitle}
                                   </h4>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                     <span className="font-medium">Aerolínea:</span> {flight.airline} {flight.flightNumber}
                                   </div>
@@ -1522,7 +1533,7 @@ export default function TravelDetail() {
                                   <Badge variant="outline">{transport.type}</Badge>
                                   <h4 className="font-semibold text-foreground">{transport.name || transport.type}</h4>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                     <span className="font-medium">Origen:</span> {transport.pickupLocation}
                                   </div>
@@ -1579,7 +1590,7 @@ export default function TravelDetail() {
                                   <Badge variant="secondary">Crucero</Badge>
                                   <h4 className="font-semibold text-foreground">{cruise.cruiseLine}</h4>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                     <span className="font-medium">Naviera:</span> {cruise.cruiseLine}
                                   </div>
@@ -1634,7 +1645,7 @@ export default function TravelDetail() {
                                   <Badge variant="outline">{insurance.policyType}</Badge>
                                   <h4 className="font-semibold text-foreground">{insurance.provider}</h4>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                                   <div>
                                     <span className="font-medium">Poliza:</span> {insurance.policyNumber}
                                   </div>
@@ -1728,15 +1739,15 @@ export default function TravelDetail() {
                 </div>
               )}
             </section>
-            <div className="fixed bottom-6 right-6 z-50">
-              <div className={`mb-3 flex flex-col gap-2 transition-all ${showEventMenu ? "opacity-100" : "pointer-events-none opacity-0"}`}>
+            <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
+              <div className={`mb-3 flex flex-col items-stretch gap-2 transition-all ${showEventMenu ? "opacity-100" : "pointer-events-none opacity-0"}`}>
                 <Button
                   variant="secondary"
                   onClick={() => {
                     setShowEventMenu(false);
                     openEventModal("accommodation");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Hotel className="w-4 h-4 mr-2" />
                   Alojamiento
@@ -1747,7 +1758,7 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("activity");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Pin className="w-4 h-4 mr-2" />
                   Actividad
@@ -1758,7 +1769,7 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("flight");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Airplane className="w-4 h-4 mr-2" />
                   Vuelo
@@ -1769,7 +1780,7 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("transport");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Car className="w-4 h-4 mr-2" />
                   Transporte
@@ -1780,7 +1791,7 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("cruise");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Ship className="w-4 h-4 mr-2" />
                   Crucero
@@ -1791,7 +1802,7 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("insurance");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Seguro
@@ -1802,14 +1813,14 @@ export default function TravelDetail() {
                     setShowEventMenu(false);
                     openEventModal("note");
                   }}
-                  className="justify-start"
+                  className="justify-start whitespace-nowrap"
                 >
                   <Notepad className="w-4 h-4 mr-2" />
                   Nota
                 </Button>
               </div>
               <Button
-                className="h-14 w-14 rounded-full bg-accent hover:bg-accent/90 shadow-lg"
+                className="h-14 w-14 rounded-full bg-accent hover:bg-accent/90 shadow-lg flex-shrink-0 flex items-center justify-center p-0"
                 size="icon"
                 onClick={() => setShowEventMenu((prev) => !prev)}
               >

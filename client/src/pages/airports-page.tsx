@@ -266,7 +266,7 @@ export default function AirportsPage() {
               <Card key={airport.id}>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Plane className="w-5 h-5" />
+                    <Airplane className="w-5 h-5" />
                     {airport.airportName}
                   </CardTitle>
                 </CardHeader>
@@ -297,7 +297,7 @@ export default function AirportsPage() {
                     </div>
                     {airport.timezones &&
                       Array.isArray(airport.timezones) &&
-                      airport.timezones.length > 0 && (
+                      airport.timezones.length > 0 ? (
                         <div className="pt-2 border-t">
                           <p className="font-semibold text-xs mb-1">
                             Zonas horarias:
@@ -313,7 +313,7 @@ export default function AirportsPage() {
                             ),
                           )}
                         </div>
-                      )}
+                      ) : null}
                   </div>
                   <div className="flex gap-2 mt-4">
                     <Button
@@ -321,14 +321,14 @@ export default function AirportsPage() {
                       size="sm"
                       onClick={() => handleEdit(airport)}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(airport.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Delete className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -461,7 +461,7 @@ export default function AirportsPage() {
                           size="sm"
                           onClick={() => removeTimezone(index)}
                         >
-                          <X className="w-4 h-4" />
+                          <Close className="w-4 h-4" />
                         </Button>
                       )}
                     </div>

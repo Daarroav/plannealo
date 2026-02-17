@@ -107,7 +107,7 @@ export function AirportCombobox({
             data-testid="button-select-airport"
           >
             {value || placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Down className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[500px] p-0" align="start">
@@ -139,7 +139,7 @@ export function AirportCombobox({
                         onSelect={() => handleSelect(airport)}
                         data-testid={`item-airport-${airport.id}`}
                       >
-                        <Check
+                        <CheckOne
                           className={cn(
                             "mr-2 h-4 w-4",
                             value === airportValue ? "opacity-100" : "opacity-0"

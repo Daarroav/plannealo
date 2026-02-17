@@ -107,7 +107,7 @@ export function ServiceProviderCombobox({
             disabled={disabled}
           >
             {value || placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <Down className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0" align="start">
@@ -132,7 +132,7 @@ export function ServiceProviderCombobox({
                       value={provider.name}
                       onSelect={() => handleSelect(provider.name)}
                     >
-                      <Check
+                      <CheckOne
                         className={cn(
                           "mr-2 h-4 w-4",
                           value === provider.name ? "opacity-100" : "opacity-0"

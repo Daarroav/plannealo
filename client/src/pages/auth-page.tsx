@@ -103,7 +103,7 @@ export default function AuthPage() {
   };
 
   const handleRegister = (data: RegisterForm) => {
-    registerMutation.mutate(data, {
+    registerMutation.mutate({ ...data, role: "traveler" }, {
       onError: (error: any) => {
         alert(error?.message || "No se pudo registrar. Verifica los datos.");
       },

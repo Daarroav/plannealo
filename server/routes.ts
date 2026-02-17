@@ -3,7 +3,7 @@ import { requireAuth, requireRole } from "./middleware/roles";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema } from "@shared/schema";
+import { insertTravelSchema, insertAccommodationSchema, insertActivitySchema, insertFlightSchema, insertTransportSchema, insertCruiseSchema, insertInsuranceSchema, insertNoteSchema, travels } from "@shared/schema";
 import { ObjectStorageService, objectStorageClient as storageClient } from "./objectStorage";
 import { EmailService } from "./emailService";
 import { AeroDataBoxService } from "./aeroDataBoxService";
@@ -13,7 +13,7 @@ import path from 'path';
 import fs from "fs";  // Para crear carpetas
 import { Buffer } from 'buffer';
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { airports, insertAirportSchema } from "../shared/schema";
 import { db } from "./db";
 
@@ -138,6 +138,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Editar perfil del usuario autenticado
+  app.put('/api/profile', requireAuth, async (req, res) => {
+    try {
+      const { name, username } = req.body;
+
+      if (!name && !username) {
+        return res.status(400).json({ error: 'No hay datos para actualizar' });
+      }
+
+      if (username) {
+        const existing = await storage.getUserByUsername(username);
+        if (existing && existing.id !== req.user!.id) {
+          return res.status(400).json({ error: 'El correo ya está en uso' });
+        }
+      }
+
+      const currentUser = await storage.getUser(req.user!.id);
+      const updates: { name?: string; username?: string } = {};
+      if (name) updates.name = name;
+      if (username) updates.username = username;
+
+      const user = await storage.updateUser(req.user!.id, updates);
+
+      // Update traveler info in related travels to reflect profile changes
+      await db
+        .update(travels)
+        .set({
+          clientName: user.name,
+          clientEmail: user.username,
+        })
+        .where(
+          or(
+            eq(travels.clientId, user.id),
+            eq(travels.clientEmail, currentUser?.username || ""),
+            eq(travels.clientEmail, user.username)
+          )
+        );
+
+      res.json(user);
+    } catch (error) {
+      console.error('Error al editar perfil:', error);
+      res.status(500).json({ error: 'Error al editar perfil' });
+    }
+  });
+
   // Eliminar usuario (solo master)
   app.delete('/api/users/:id', requireAuth, requireRole(['master']), async (req, res) => {
     try {
@@ -166,7 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multerStorage, // Configuración de multer para subir archivos
     limits: {
-      fileSize: 5 * 1024 * 1024 // Límite de 5MB
+      fileSize: 10 * 1024 * 1024 // Límite de 10MB
     }
   }); // Configuración de multer para subir archivos
   app.use('/uploads', express.static('uploads')); // Configuración de archivos estáticos
@@ -340,6 +385,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Get statistics for home page
+      app.get("/api/stats", async (req, res) => {
+        if (!req.isAuthenticated()) {
+          console.log("❌ /api/stats: Usuario no autenticado");
+          return res.sendStatus(401);
+        }
+
+        console.log("✅ /api/stats: Consultando estadísticas para usuario:", req.user?.id, "Role:", req.user?.role);
+
+        try {
+          let userTravels;
+          
+          // Get travels based on user role
+          if (req.user && req.user.role === "admin") {
+            userTravels = await storage.getTravels();
+          } else if (req.user) {
+            userTravels = await storage.getTravelsByUser(req.user.id);
+          } else {
+            return res.sendStatus(401);
+          }
+
+          console.log("📊 Total viajes encontrados:", userTravels.length);
+          console.log("📊 Viajes por status:", userTravels.map((t: any) => ({ id: t.id, status: t.status })));
+
+          // Calculate stats
+          const activeTrips = userTravels.filter((t: any) => t.status === 'published').length;
+          const drafts = userTravels.filter((t: any) => t.status === 'draft').length;
+          
+          // Get unique clients count from these travels
+          const uniqueClientIds = new Set(userTravels.map((t: any) => t.clientId).filter(Boolean));
+          const clients = uniqueClientIds.size;
+
+          const stats = {
+            activeTrips,
+            drafts,
+            clients
+          };
+
+          console.log("✅ Estadísticas calculadas:", stats);
+
+          res.json(stats);
+        } catch (error) {
+          console.error("❌ Error fetching stats:", error);
+          res.status(500).json({ message: "Error fetching statistics" });
+        }
+      });
 
       app.post("/api/travels", upload.single('coverImage'), async (req, res) => {
         if (!req.isAuthenticated()) {
@@ -401,22 +492,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const objectPath = await uploadFileToObjectStorage(req.file, 'travel-covers');
               console.log("Archivo subido exitosamente. Object Path:", objectPath);
               
-              // Set ACL policy for public access
-              console.log("Configurando permisos públicos...");
-              const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-              await objectFile.setMetadata({
-                metadata: {
-                  visibility: "public",
-                  owner: "system",
-                }
-              });
-              console.log("Permisos configurados correctamente");
+              if (objectPath.startsWith("/objects/uploads/")) {
+                // Local storage: skip object storage metadata
+                console.log("Actualizando viaje con coverImage (local):", objectPath);
+                await storage.updateTravel(travel.id, { coverImage: objectPath });
+                travel.coverImage = objectPath;
+                console.log("Viaje actualizado exitosamente con coverImage");
+              } else {
+                // Set ACL policy for public access
+                console.log("Configurando permisos públicos...");
+                const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+                await objectFile.setMetadata({
+                  metadata: {
+                    visibility: "public",
+                    owner: "system",
+                  }
+                });
+                console.log("Permisos configurados correctamente");
 
-              // Update travel with cover image path
-              console.log("Actualizando viaje con coverImage:", objectPath);
-              await storage.updateTravel(travel.id, { ...travel, coverImage: objectPath });
-              travel.coverImage = objectPath;
-              console.log("Viaje actualizado exitosamente con coverImage");
+                // Update travel with cover image path
+                console.log("Actualizando viaje con coverImage:", objectPath);
+                await storage.updateTravel(travel.id, { coverImage: objectPath });
+                travel.coverImage = objectPath;
+                console.log("Viaje actualizado exitosamente con coverImage");
+              }
             } catch (error) {
               console.error("❌ ERROR al procesar imagen de portada:", error);
               console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack available');
@@ -488,22 +587,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const objectPath = await uploadFileToObjectStorage(req.file, 'travel-covers');
               console.log("Archivo subido exitosamente. Object Path:", objectPath);
               
-              // Set ACL policy for public access
-              console.log("Configurando permisos públicos...");
-              const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
-              await objectFile.setMetadata({
-                metadata: {
-                  visibility: "public",
-                  owner: "system",
-                }
-              });
-              console.log("Permisos configurados correctamente");
+              if (objectPath.startsWith("/objects/uploads/")) {
+                // Local storage: skip object storage metadata
+                console.log("Actualizando viaje con coverImage (local):", objectPath);
+                await storage.updateTravel(req.params.id, { coverImage: objectPath });
+                updated.coverImage = objectPath;
+                console.log("Viaje actualizado exitosamente con coverImage");
+              } else {
+                // Set ACL policy for public access
+                console.log("Configurando permisos públicos...");
+                const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+                await objectFile.setMetadata({
+                  metadata: {
+                    visibility: "public",
+                    owner: "system",
+                  }
+                });
+                console.log("Permisos configurados correctamente");
 
-              // Update travel with cover image path
-              console.log("Actualizando viaje con coverImage:", objectPath);
-              await storage.updateTravel(req.params.id, { ...updated, coverImage: objectPath });
-              updated.coverImage = objectPath;
-              console.log("Viaje actualizado exitosamente con coverImage");
+                // Update travel with cover image path
+                console.log("Actualizando viaje con coverImage:", objectPath);
+                await storage.updateTravel(req.params.id, { coverImage: objectPath });
+                updated.coverImage = objectPath;
+                console.log("Viaje actualizado exitosamente con coverImage");
+              }
             } catch (error) {
               console.error("❌ ERROR al procesar imagen de portada:", error);
               console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack available');

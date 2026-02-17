@@ -88,11 +88,15 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
       if (travel.clientId && !travelInfoUser && isLoadingUser) {
         return; // Esperamos a que cargue la información del usuario
       }
+
+      const shouldUseProfileClient = user?.role === "traveler";
       
       const initialValues = {
         name: travel.name,
-        clientName: travel.clientName,
-        clientEmail: travelInfoUser?.username || "", // Usamos el username del usuario como email
+        clientName: shouldUseProfileClient ? user?.name || "" : travel.clientName,
+        clientEmail: shouldUseProfileClient
+          ? user?.username || ""
+          : travelInfoUser?.username || "", // Usamos el username del usuario como email
         startDate: travel.startDate
           ? new Date(travel.startDate).toISOString().substring(0, 10)
           : "",
@@ -323,7 +327,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
                     onClick={handleRemoveImage}
                     className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
                   >
-                    <X className="w-4 h-4" />
+                    <Close className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -343,7 +347,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
                 className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-accent transition-colors duration-200 cursor-pointer"
                 onClick={handleImageSelect}
               >
-                <Image className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <Picture className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-2">Arrastra una imagen o haz clic para seleccionar</p>
                 <p className="text-sm text-muted-foreground">PNG, JPG hasta 10MB</p>
                 <Button type="button" variant="outline" className="mt-3" onClick={handleImageSelect}>

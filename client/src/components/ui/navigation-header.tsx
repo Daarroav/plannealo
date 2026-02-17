@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { User, Hamburger as MenuIcon, DataServer, Down, Airplane, People, Airplane as PlaneTicket, Shop, TakeOff } from "@icon-park/react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { User, HamburgerButton, DataServer, Down, Airplane, People, Airplane as PlaneTicket, Shop, TakeOff } from "@icon-park/react";
 import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
 import {
@@ -9,10 +13,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function NavigationHeader() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const { toast } = useToast();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    username: "",
+  });
   const roleLabels: Record<string, string> = {
     master: "Maestro",
     admin: "Administrador",
@@ -54,16 +75,99 @@ export function NavigationHeader() {
     catalogItems = [];
   }
 
+  useEffect(() => {
+    if (user && isProfileOpen) {
+      setProfileForm({
+        name: user.name || "",
+        username: user.username || "",
+      });
+    }
+  }, [user, isProfileOpen]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: { name: string; username: string }) => {
+      const response = await apiRequest("PUT", "/api/profile", data);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "Error al actualizar perfil");
+      }
+      return response.json();
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ["/api/travels"], exact: false });
+      toast({
+        title: "Perfil actualizado",
+        description: "Tus datos se guardaron correctamente.",
+      });
+      setIsProfileOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "No se pudo actualizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <img src={logoPng} alt="Logo" className="h-10 w-auto" />
-              <div className="flex-shrink-0">
-                <p className="text-sm text-muted-foreground">Gestión de Viajes</p>
-              </div>
+        <div className="flex justify-between items-center h-16 relative">
+          
+          {/* Menú hamburguesa móvil - Izquierda */}
+          <nav className="lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <HamburgerButton className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {navItems.map((item) => (
+                  <DropdownMenuItem key={item.path} asChild>
+                    <Link
+                      to={item.path}
+                      className={`cursor-pointer flex items-center gap-2 ${
+                        location === item.path ? "bg-accent text-accent-foreground" : ""
+                      }`}
+                    >
+                      {item.icon && <item.icon className="h-4 w-4" />}
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                {/* Mostrar menú de catálogos solo si hay items (no para traveler) */}
+                {catalogItems.length > 0 && (
+                  <>
+                    <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground">
+                      Catálogos
+                    </DropdownMenuItem>
+                    {catalogItems.map((item) => (
+                      <DropdownMenuItem key={item.path} asChild>
+                        <Link
+                          to={item.path}
+                          className={`cursor-pointer pl-6 flex items-center gap-2 ${
+                            location === item.path ? "bg-accent text-accent-foreground" : ""
+                          }`}
+                        >
+                          {item.icon && <item.icon className="h-4 w-4" />}
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </nav>
+
+          {/* Logo y título - Centro (absoluto en móvil, izquierda en desktop) */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-0 lg:transform-none flex items-center space-x-3">
+            <img src={logoPng} alt="Logo" className="h-10 w-auto" />
+            <div className="flex-shrink-0 hidden sm:block">
+              <p className="text-sm text-muted-foreground">Gestión de Viajes</p>
             </div>
           </div>
 
@@ -113,73 +217,85 @@ export function NavigationHeader() {
             )}
           </nav>
 
-          {/* Menú dropdown para pantallas medianas y pequeñas */}
-          <nav className="lg:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {navItems.map((item) => (
-                  <DropdownMenuItem key={item.path} asChild>
-                    <Link
-                      to={item.path}
-                      className={`cursor-pointer flex items-center gap-2 ${
-                        location === item.path ? "bg-accent text-accent-foreground" : ""
-                      }`}
+          {/* Usuario - Derecha */}
+          <div className="flex items-center space-x-3 z-10">
+            <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="w-8 h-8 bg-muted rounded-full flex items-center justify-center ring-1 ring-border/60 hover:ring-accent/60 hover:bg-muted/70 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-label="Editar perfil"
+                  title="Editar perfil"
+                >
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Editar perfil</DialogTitle>
+                  <DialogDescription>
+                    Actualiza tu nombre y correo asociado a tu cuenta.
+                  </DialogDescription>
+                </DialogHeader>
+                <form
+                  className="space-y-4"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    updateProfileMutation.mutate(profileForm);
+                  }}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-name">Nombre</Label>
+                    <Input
+                      id="profile-name"
+                      value={profileForm.name}
+                      onChange={(event) =>
+                        setProfileForm((prev) => ({ ...prev, name: event.target.value }))
+                      }
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profile-email">Correo</Label>
+                    <Input
+                      id="profile-email"
+                      type="email"
+                      value={profileForm.username}
+                      onChange={(event) =>
+                        setProfileForm((prev) => ({ ...prev, username: event.target.value }))
+                      }
+                      placeholder="tu@correo.com"
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsProfileOpen(false)}
                     >
-                      {item.icon && <item.icon className="h-4 w-4" />}
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-                {/* Mostrar menú de catálogos solo si hay items (no para traveler) */}
-                {catalogItems.length > 0 && (
-                  <>
-                    <DropdownMenuItem disabled className="font-semibold text-xs text-muted-foreground">
-                      Catálogos
-                    </DropdownMenuItem>
-                    {catalogItems.map((item) => (
-                      <DropdownMenuItem key={item.path} asChild>
-                        <Link
-                          to={item.path}
-                          className={`cursor-pointer pl-6 flex items-center gap-2 ${
-                            location === item.path ? "bg-accent text-accent-foreground" : ""
-                          }`}
-                        >
-                          {item.icon && <item.icon className="h-4 w-4" />}
-                          {item.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </nav>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {roleLabels[user?.role ?? ""] || "Usuario"}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => logoutMutation.mutate()}
-                disabled={logoutMutation.isPending}
-              >
-                {logoutMutation.isPending ? "..." : "Salir"}
-              </Button>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={updateProfileMutation.isPending}>
+                      {updateProfileMutation.isPending ? "Guardando..." : "Guardar cambios"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <div className="hidden md:block">
+              <p className="text-sm font-medium text-foreground">{user?.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {roleLabels[user?.role ?? ""] || "Usuario"}
+              </p>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => logoutMutation.mutate()}
+              disabled={logoutMutation.isPending}
+            >
+              {logoutMutation.isPending ? "..." : "Salir"}
+            </Button>
           </div>
         </div>
       </div>

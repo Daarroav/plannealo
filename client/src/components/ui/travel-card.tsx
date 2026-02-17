@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import type { Travel } from "@shared/schema";
 
 interface TravelCardProps {
@@ -23,7 +24,10 @@ interface TravelCardProps {
 }
 
 export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
+  const { user } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const displayClientName =
+    user?.role === "traveler" && user?.name ? user.name : travel.clientName;
 
   const statusCard  = travel.status === "published" ? "" :  "opacity-50";
   const statusButton = travel.status === "published" ? "" :  "bg-accent/10 text-accent";
@@ -58,13 +62,13 @@ export function TravelCard({ travel, onEdit, onDelete }: TravelCardProps) {
         }}
       />
       <div className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-semibold text-foreground">{travel.name}</h4>
-          <Badge className={`px-2 py-1 text-xs font-medium rounded-full ${statusColor}`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <h4 className="font-semibold text-foreground truncate">{travel.name}</h4>
+          <Badge className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${statusColor}`}>
             {statusText}
           </Badge>
         </div>
-        <p className="text-sm text-muted-foreground mb-3">Viajero: {travel.clientName}</p>
+        <p className="text-sm text-muted-foreground mb-3">Viajero: {displayClientName}</p>
         <div className="flex items-center text-xs text-muted-foreground space-x-4 mb-3">
           <span className="flex items-center">
             <Calendar className="mr-1 h-3 w-3" />
