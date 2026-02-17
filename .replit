@@ -44,7 +44,9 @@ waitForPort = 5000
 [objectStorage]
 defaultBucketID = "replit-objstore-63d3f435-c8e1-4860-b636-8a86ee5d0992"
 
-[userenv]
-
-[userenv.development]
-DATABASE_URL_DEV = "postgresql://neondb_owner:npg_1aVRIK2DvyLu@ep-sweet-water-ah2mks3e-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# ⚠️ IMPORTANTE: No coloques credenciales aquí
+# Usa Replit Secrets (pestaña 🔐) para variables sensibles como:
+# - DATABASE_URL_DEV
+# - DATABASE_URL  
+# - SESSION_SECRET
+# - AERODATABOX_API_KEY

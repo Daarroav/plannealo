@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { Airplane, Pin, People, Calendar as DateIcon, Star, ToRight } from "@icon-park/react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "El usuario es requerido"),
   password: z.string().min(1, "La contraseña es requerida"),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 const registerSchema = z.object({
@@ -29,12 +31,17 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      username: localStorage.getItem("savedUsername") || "",
       password: "",
+      rememberMe: localStorage.getItem("rememberMe") === "true",
     },
   });
 
@@ -82,7 +89,17 @@ export default function AuthPage() {
   }
 
   const handleLogin = (data: LoginForm) => {
-    loginMutation.mutate(data);
+    const { rememberMe, ...loginData } = data;
+    
+    if (rememberMe) {
+      localStorage.setItem("savedUsername", data.username);
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("savedUsername");
+      localStorage.removeItem("rememberMe");
+    }
+    
+    loginMutation.mutate(loginData);
   };
 
   const handleRegister = (data: RegisterForm) => {
@@ -91,6 +108,49 @@ export default function AuthPage() {
         alert(error?.message || "No se pudo registrar. Verifica los datos.");
       },
     });
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordEmail) {
+      setForgotPasswordMessage("Por favor ingresa tu correo electrónico");
+      return;
+    }
+    
+    setForgotPasswordLoading(true);
+    setForgotPasswordMessage("");
+    
+    try {
+      const response = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setForgotPasswordMessage("Se ha enviado un enlace de recuperación a tu correo. Revisa tu bandeja de entrada.");
+        setTimeout(() => {
+          setShowForgotPasswordModal(false);
+          setForgotPasswordEmail("");
+          setForgotPasswordMessage("");
+        }, 3000);
+      } else {
+        setForgotPasswordMessage(data.message || "No se pudo enviar el enlace de recuperación. Intenta de nuevo.");
+      }
+    } catch (error) {
+      setForgotPasswordMessage("Error al procesar la solicitud");
+    } finally {
+      setForgotPasswordLoading(false);
+    }
+  };
+
+  const closeForgotPasswordModal = () => {
+    setShowForgotPasswordModal(false);
+    setForgotPasswordEmail("");
+    setForgotPasswordMessage("");
   };
 
   return (
@@ -128,10 +188,10 @@ export default function AuthPage() {
           <div className="w-full max-w-md space-y-6">
             {/* App Logo with Animation - Top */}
             <div className="flex flex-col items-center gap-4 text-center mb-8 animate-fade-in justify-center">
-              <div className="w-32 h-32 flex items-center justify-center animate-plane-travel">
+              <div className="w-52 h-52 sm:w-64 sm:h-64 flex items-center justify-center">
                 <img 
-                  src="/uploads/plane-world.png" 
-                  alt="Itineralia - Travel Around the World"
+                  src="/uploads/itineralia-logo.png" 
+                  alt="Itineralia"
                   className="w-full h-full object-contain drop-shadow-lg"
                   onError={(e) => {
                     console.error("Error loading plane image");
@@ -139,12 +199,7 @@ export default function AuthPage() {
                   }}
                 />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-white">
-                  Itineralia
-                </h1>
-                <p className="text-sm text-white/60 mt-1">Gestión de Viajes</p>
-              </div>
+              <p className="text-base sm:text-lg font-semibold text-white/85">Gestión Profesional de Viajes</p>
             </div>
 
             {/* Form Card */}
@@ -211,6 +266,7 @@ export default function AuthPage() {
                     <input
                       type="checkbox"
                       id="remember"
+                      {...loginForm.register("rememberMe")}
                       className="w-4 h-4 rounded border-white/20 bg-white/10 text-primary cursor-pointer"
                     />
                     <label htmlFor="remember" className="text-sm text-white/70 cursor-pointer">
@@ -235,12 +291,6 @@ export default function AuthPage() {
                     )}
                   </Button>
                 </form>
-
-                <div className="pt-2 text-center">
-                  <a href="#" className="text-sm text-white/60 hover:text-white/90 transition">
-                    ¿Olvidaste tu contraseña?
-                  </a>
-                </div>
               </TabsContent>
 
               <TabsContent value="register" className="space-y-4 mt-0">

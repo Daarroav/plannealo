@@ -1,3 +1,24 @@
 node_modules
 .env
-uploads/
+dist/
+.replit
+*.log
+.DS_Store
+.local/
+.vscode/
+*.swp
+*.swo
+*~
+package-lock.json
+.cache/
+
+# Uploads folder - ignore everything
+uploads/*
+
+# But include these specific files/folders
+!uploads/itineraria-logo.png
+!uploads/covers/
+uploads/covers/*
+!uploads/covers/*.jpg
+!uploads/covers/*.png
+!uploads/covers/*.jpeg

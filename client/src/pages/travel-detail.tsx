@@ -14,7 +14,6 @@ import { InsuranceFormModal } from "@/components/ui/insurance-form-modal";
 import { NoteFormModal } from "@/components/ui/note-form-modal";
 import { ShareTravelModal } from "@/components/ui/share-travel-modal";
 import { DeleteConfirmationDialog } from "@/components/ui/delete-confirmation-dialog";
-import { ObjectUploader } from "@/components/ObjectUploader";
 import { CoverImageUploader } from "@/components/ui/cover-image-uploader";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -1211,8 +1210,8 @@ export default function TravelDetail() {
                 <h3 className="text-2xl font-bold mb-2">{travel.name}</h3>
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-lg opacity-90">Viajero: {travel.clientName}</p>
-                  <div onClick={() => setIsNewTravelModalOpen(true)}>
-                    <Edit className="w-6 h-6 mr-2 hover:text-accent bg-accent hover:bg-accent/80 p-1 rounded-lg transition cursor-pointer" />
+                  <div className="flex items-center justify-center" onClick={() => setIsNewTravelModalOpen(true)}>
+                    <Edit className="w-6 h-6 hover:text-accent bg-accent hover:bg-accent/80 p-1 rounded-lg transition cursor-pointer" />
                   </div>
                 </div>
                 <p className="text-sm opacity-75 mt-1">

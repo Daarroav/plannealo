@@ -111,6 +111,39 @@ export function setupAuth(app: Express) {
     });
   });
 
+  app.post("/api/forgot-password", async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "El correo electrónico es requerido" });
+    }
+
+    try {
+      const user = await storage.getUserByUsername(email);
+
+      if (!user) {
+        // No revelar si el email existe o no (por seguridad)
+        // Pero en desarrollo, puede ser útil saber
+        if (process.env.NODE_ENV === 'development') {
+          return res.status(404).json({ message: "No existe cuenta con este correo electrónico" });
+        }
+        // En producción, responder exitosamente aunque no exista
+        return res.status(200).json({ message: "Si el correo existe, recibirás instrucciones de recuperación" });
+      }
+
+      // TODO: Implementar envío de email con enlace de recuperación
+      // Por ahora, solo confirmamos que el usuario existe
+      console.log(`Password reset requested for user: ${email}`);
+
+      return res.status(200).json({ 
+        message: "Se ha enviado un enlace de recuperación a tu correo electrónico. Por favor revisa tu bandeja de entrada." 
+      });
+    } catch (error) {
+      console.error("Error in forgot-password:", error);
+      return res.status(500).json({ message: "Error al procesar la solicitud" });
+    }
+  });
+
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
