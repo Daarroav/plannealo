@@ -185,9 +185,9 @@ export default function AuthPage() {
 
         {/* Center - Form Section */}
         <div className="flex items-center justify-center p-4 sm:p-8 w-full">
-          <div className="w-full max-w-md space-y-6">
+          <div className="w-full max-w-md space-y-4">
             {/* App Logo with Animation - Top */}
-            <div className="flex flex-col items-center gap-4 text-center mb-8 animate-fade-in justify-center">
+            <div className="flex flex-col items-center gap-4 text-center mb-0 animate-fade-in justify-center">
               <div className="w-52 h-52 sm:w-64 sm:h-64 flex items-center justify-center">
                 <img 
                   src="/uploads/itineralia-logo.png" 
