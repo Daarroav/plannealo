@@ -10,8 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Upload, Paperclip, Close } from "@icon-park/react";
 import { insertNoteSchema } from "@shared/schema";
-import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
-import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
@@ -30,6 +28,7 @@ interface NoteFormModalProps {
   onSubmit: (data: any) => void;
   isPending?: boolean;
   editingNote?: any;
+  isTraveler?: boolean;
 }
 
 export function NoteFormModal({ 
@@ -37,15 +36,11 @@ export function NoteFormModal({
   onOpenChange, 
   onSubmit, 
   isPending = false,
-  editingNote
+  editingNote,
+  isTraveler = false,
 }: NoteFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
-  const [costValue, setCostValue] = useState<CostValue>({
-    currency: "MXN",
-    total: "",
-    breakdown: [],
-  });
 
   const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
@@ -86,13 +81,8 @@ export function NoteFormModal({
           noteDate: mexicoDateStr,
           noteTime: mexicoTimeStr,
           content: editingNote.content || "",
-          visibleToTravelers: editingNote.visibleToTravelers ?? true,
+          visibleToTravelers: isTraveler ? true : (editingNote.visibleToTravelers ?? true),
           attachments: editingNote.attachments || [],
-        });
-        setCostValue({
-          currency: editingNote.costCurrency || "MXN",
-          total: editingNote.costAmount || "",
-          breakdown: normalizeCostBreakdown(editingNote.costBreakdown),
         });
       } else {
         form.reset({
@@ -100,13 +90,8 @@ export function NoteFormModal({
           noteDate: "",
           noteTime: "06:00",
           content: editingNote.content || "",
-          visibleToTravelers: editingNote.visibleToTravelers ?? true,
+          visibleToTravelers: isTraveler ? true : (editingNote.visibleToTravelers ?? true),
           attachments: editingNote.attachments || [],
-        });
-        setCostValue({
-          currency: editingNote.costCurrency || "MXN",
-          total: editingNote.costAmount || "",
-          breakdown: normalizeCostBreakdown(editingNote.costBreakdown),
         });
       }
 
@@ -121,15 +106,10 @@ export function NoteFormModal({
         visibleToTravelers: true,
         attachments: [],
       });
-      setCostValue({
-        currency: "MXN",
-        total: "",
-        breakdown: [],
-      });
       setAttachedFiles([]);
       setRemovedExistingAttachments([]);
     }
-  }, [editingNote, form]);
+  }, [editingNote, form, isTraveler]);
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
@@ -190,12 +170,7 @@ export function NoteFormModal({
     }
 
     formData.append('content', currentValues.content);
-    formData.append('visibleToTravelers', (currentValues.visibleToTravelers ?? true).toString());
-    formData.append('costAmount', costValue.total || '');
-    formData.append('costCurrency', costValue.currency || 'MXN');
-    if (costValue.breakdown.length > 0) {
-      formData.append('costBreakdown', JSON.stringify(costValue.breakdown));
-    }
+    formData.append('visibleToTravelers', (isTraveler ? true : (currentValues.visibleToTravelers ?? true)).toString());
 
     // Add attached files
     attachedFiles.forEach((file) => {
@@ -222,11 +197,6 @@ export function NoteFormModal({
     form.reset();
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
-    setCostValue({
-      currency: "MXN",
-      total: "",
-      breakdown: [],
-    });
   };
 
   const handleClose = () => {
@@ -240,11 +210,6 @@ export function NoteFormModal({
     });
     setAttachedFiles([]);
     setRemovedExistingAttachments([]);
-    setCostValue({
-      currency: "MXN",
-      total: "",
-      breakdown: [],
-    });
 
     // Force a small delay to ensure any pending mutations complete
     setTimeout(() => {
@@ -315,40 +280,38 @@ export function NoteFormModal({
             )}
           </div>
 
-          {/* Toggle de Visibilidad para Viajeros */}
-          <div className="space-y-4">
-            <div className="border border-border rounded-lg p-4 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">Visibilidad para Viajeros</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Controla si esta nota será visible para los viajeros
-                  </p>
+          {!isTraveler && (
+            <div className="space-y-4">
+              <div className="border border-border rounded-lg p-4 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Visibilidad para viajeros</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Controla si esta nota será visible para los viajeros
+                    </p>
+                  </div>
+                  <Switch
+                    checked={visibleToTravelers}
+                    onCheckedChange={(checked) => form.setValue("visibleToTravelers", checked)}
+                  />
                 </div>
-                <Switch
-                  checked={visibleToTravelers}
-                  onCheckedChange={(checked) => form.setValue("visibleToTravelers", checked)}
-                />
-              </div>
 
-              {/* Indicador visual del estado */}
-              <div className="mt-3 flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${visibleToTravelers ? 'bg-green-500' : 'bg-gray-400'}`} />
-                <span className="text-sm font-medium text-foreground">
-                  {visibleToTravelers ? "Visible para viajeros" : "Solo visible para agentes"}
-                </span>
-              </div>
+                <div className="mt-3 flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${visibleToTravelers ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  <span className="text-sm font-medium text-foreground">
+                    {visibleToTravelers ? "Visible para viajeros" : "Solo visible para agentes"}
+                  </span>
+                </div>
 
-              <p className="text-xs text-muted-foreground mt-2">
-                {visibleToTravelers 
-                  ? "Los viajeros podrán ver esta nota en su itinerario"
-                  : "Esta nota solo será visible para agentes de la agencia"
-                }
-              </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {visibleToTravelers 
+                    ? "Los viajeros podrán ver esta nota en su itinerario"
+                    : "Esta nota solo será visible para agentes de la agencia"
+                  }
+                </p>
+              </div>
             </div>
-          </div>
-
-          <CostBreakdownFields value={costValue} onChange={setCostValue} />
+          )}
 
           {/* Documentos Adjuntos */}
           <div className="space-y-4">

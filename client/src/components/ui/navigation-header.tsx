@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, HamburgerButton, DataServer, Down, Airplane, People, Airplane as PlaneTicket, Shop, TakeOff } from "@icon-park/react";
-import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 import { Link, useLocation } from "wouter";
 import {
   DropdownMenu,
@@ -165,10 +164,7 @@ export function NavigationHeader() {
 
           {/* Logo y título - Centro (absoluto en móvil, izquierda en desktop) */}
           <div className="absolute left-1/2 transform -translate-x-1/2 lg:relative lg:left-0 lg:transform-none flex items-center space-x-3">
-            <img src={logoPng} alt="Logo" className="h-10 w-auto" />
-            <div className="flex-shrink-0 hidden sm:block">
-              <p className="text-sm text-muted-foreground">Gestión de Viajes</p>
-            </div>
+            <img src="/uploads/itineralia-logo.png" alt="Itineralia" className="h-12 sm:h-14 w-auto object-contain" />
           </div>
 
           {/* Navegación desktop (pantallas grandes) */}
@@ -256,7 +252,7 @@ export function NavigationHeader() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="profile-email">Correo</Label>
+                    <Label htmlFor="profile-email">Correo electrónico</Label>
                     <Input
                       id="profile-email"
                       type="email"

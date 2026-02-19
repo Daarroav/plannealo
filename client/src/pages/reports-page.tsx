@@ -71,7 +71,7 @@ export default function ReportsPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-3xl font-bold text-foreground mb-2">Reportes</h2>
-            <p className="text-muted-foreground">Visualiza y administra los viajeros de tus viajes</p>
+            <p className="text-muted-foreground">Visualiza y analiza el desempeño de tus viajes</p>
           </div>
           <div className="mt-4 md:mt-0 flex flex-col md:flex-row gap-2">
             <Popover>
@@ -84,7 +84,7 @@ export default function ReportsPage() {
                   )}
                 >
                   <DateIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP", { locale: es }) : "Fecha inicio"}
+                  {startDate ? format(startDate, "PPP", { locale: es }) : "Fecha de inicio"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -107,7 +107,7 @@ export default function ReportsPage() {
                   )}
                 >
                   <DateIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP", { locale: es }) : "Fecha fin"}
+                  {endDate ? format(endDate, "PPP", { locale: es }) : "Fecha de fin"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">

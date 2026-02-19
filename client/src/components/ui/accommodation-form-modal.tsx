@@ -607,7 +607,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
 
             {(thumbnail || (editingAccommodation?.thumbnail && !thumbnailRemoved)) && (
               <div className="mt-4 space-y-2">
-                <p className="text-sm font-medium">Vista Previa de la Imagen:</p>
+                <p className="text-sm font-medium">Vista previa de la imagen:</p>
                 <div className="w-fit relative">
                   <img 
                     src={

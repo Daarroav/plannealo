@@ -24,6 +24,7 @@ import { AirportCombobox } from "./airport-combobox";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
 import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { AirportCreateDialog } from "@/components/ui/airport-create-dialog";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
@@ -106,6 +107,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
   const [departureDate, setDepartureDate] = useState<Date>();
   const [arrivalDate, setArrivalDate] = useState<Date>();
   const [flightSearchOpen, setFlightSearchOpen] = useState(false);
+  const [createAirportOpen, setCreateAirportOpen] = useState(false);
+  const [createAirportTarget, setCreateAirportTarget] = useState<"departure" | "arrival">("departure");
   const [originAirport, setOriginAirport] = useState<Airport | null>(null);
   const [destinationAirport, setDestinationAirport] = useState<Airport | null>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
@@ -491,6 +494,29 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     }
   };
 
+  const handleAirportCreated = (airport: any) => {
+    const valueForCity = airport?.iataCode
+      ? `${airport.iataCode} - ${airport.airportName}`
+      : airport?.airportName || "";
+
+    if (createAirportTarget === "departure") {
+      form.setValue("departureCity", valueForCity);
+      form.setValue("departureAirport", airport?.airportName || "");
+      const firstTimezone = Array.isArray(airport?.timezones) ? airport.timezones[0]?.timezone : undefined;
+      if (firstTimezone) {
+        setManualDepartureTimezone(firstTimezone);
+      }
+      return;
+    }
+
+    form.setValue("arrivalCity", valueForCity);
+    form.setValue("arrivalAirport", airport?.airportName || "");
+    const firstTimezone = Array.isArray(airport?.timezones) ? airport.timezones[0]?.timezone : undefined;
+    if (firstTimezone) {
+      setManualArrivalTimezone(firstTimezone);
+    }
+  };
+
   const handleSubmit = async (data: FlightForm) => {
     const activeElement = document.activeElement as HTMLElement;
     if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
@@ -565,6 +591,8 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
     formData.append('reservationNumber', currentValues.reservationNumber || '');
     formData.append('departureCity', currentValues.departureCity || '');
     formData.append('arrivalCity', currentValues.arrivalCity || '');
+    formData.append('departureAirport', currentValues.departureAirport || '');
+    formData.append('arrivalAirport', currentValues.arrivalAirport || '');
     formData.append('departureDate', departureUTC.toISOString()); // Save as UTC
     formData.append('departureTime', currentValues.departureTimeField); // Keep original time string for clarity if needed elsewhere
     formData.append('arrivalDate', arrivalUTC.toISOString()); // Save as UTC
@@ -744,6 +772,18 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 onChange={(value) => form.setValue("departureCity", value || "")}
                 placeholder="Buscar Aeropuerto de salida..."
               />
+              <Button
+                type="button"
+                variant="link"
+                className="px-0 h-auto mt-1"
+                onClick={() => {
+                  setCreateAirportTarget("departure");
+                  setCreateAirportOpen(true);
+                }}
+              >
+                <Airplane className="w-4 h-4 mr-1" />
+                + Agregar nuevo aeropuerto
+              </Button>
               {form.formState.errors.departureCity && (
                 <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.departureCity.message}
@@ -852,6 +892,18 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 onChange={(value) => form.setValue("arrivalCity", value || "")}
                 placeholder="Buscar Aeropuerto de llegada..."
               />
+              <Button
+                type="button"
+                variant="link"
+                className="px-0 h-auto mt-1"
+                onClick={() => {
+                  setCreateAirportTarget("arrival");
+                  setCreateAirportOpen(true);
+                }}
+              >
+                <Airplane className="w-4 h-4 mr-1" />
+                + Agregar nuevo aeropuerto
+              </Button>
               {form.formState.errors.arrivalCity && (
                 <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.arrivalCity.message}
@@ -1092,6 +1144,12 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
           onSelectFlight={handleSelectFlight}
           originAirport={originAirport}
           destinationAirport={destinationAirport}
+        />
+
+        <AirportCreateDialog
+          open={createAirportOpen}
+          onOpenChange={setCreateAirportOpen}
+          onCreated={handleAirportCreated}
         />
       </DialogContent>
     </Dialog>

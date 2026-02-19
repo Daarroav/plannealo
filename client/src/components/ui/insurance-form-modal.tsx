@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Paperclip, Close } from "@icon-park/react";
+import { Upload, Paperclip, Close, People } from "@icon-park/react";
 import { format, fromZonedTime, toZonedTime } from "date-fns-tz";
 import { insertInsuranceSchema } from "@shared/schema";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
+import { ServiceProviderCreateDialog } from "@/components/ui/service-provider-create-dialog";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
 import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
@@ -56,6 +57,7 @@ export function InsuranceFormModal({
 }: InsuranceFormModalProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [createProviderOpen, setCreateProviderOpen] = useState(false);
   const [costValue, setCostValue] = useState<CostValue>({
     currency: "MXN",
     total: "",
@@ -247,8 +249,17 @@ export function InsuranceFormModal({
                   onChange={(value) => {
                     form.setValue("provider", value || "");
                   }}
-                  placeholder="Seleccionar o crear proveedor..."
+                  placeholder="Seleccionar proveedor..."
                 />
+                <Button
+                  type="button"
+                  variant="link"
+                  className="px-0 h-auto"
+                  onClick={() => setCreateProviderOpen(true)}
+                >
+                  <People className="w-4 h-4 mr-1" />
+                  + Agregar nuevo proveedor
+                </Button>
                 {form.formState.errors.provider && (
                   <p className="text-sm text-red-500">{form.formState.errors.provider.message}</p>
                 )}
@@ -477,6 +488,14 @@ export function InsuranceFormModal({
             </Button>
           </div>
         </form>
+
+        <ServiceProviderCreateDialog
+          open={createProviderOpen}
+          onOpenChange={setCreateProviderOpen}
+          onCreated={(provider) => {
+            form.setValue("provider", provider?.name || "");
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

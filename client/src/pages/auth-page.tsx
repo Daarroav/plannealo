@@ -188,7 +188,7 @@ export default function AuthPage() {
           <div className="w-full max-w-md space-y-4">
             {/* App Logo with Animation - Top */}
             <div className="flex flex-col items-center gap-4 text-center mb-0 animate-fade-in justify-center">
-              <div className="w-52 h-52 sm:w-64 sm:h-64 flex items-center justify-center">
+              <div className="w-22 h-22 sm:w-34 sm:h-34 flex items-center justify-center">
                 <img 
                   src="/uploads/itineralia-logo.png" 
                   alt="Itineralia"
@@ -206,7 +206,7 @@ export default function AuthPage() {
             <div className="backdrop-blur-sm bg-black/50 rounded-2xl p-8 border border-white/20 space-y-6">
               {/* Encabezado de Inicio de Sesión */}
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-white">Iniciar Sesión</h2>
+                <h2 className="text-3xl font-bold text-white">Iniciar sesión</h2>
               </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -215,7 +215,7 @@ export default function AuthPage() {
                     value="login"
                     className="data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60"
                   >
-                    Iniciar Sesión
+                    Iniciar sesión
                   </TabsTrigger>
                   <TabsTrigger 
                     value="register"
@@ -229,7 +229,7 @@ export default function AuthPage() {
                 <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                   <div>
                     <Label htmlFor="login-username" className="text-sm font-medium text-white/90">
-                      Correo Electrónico
+                      Correo electrónico
                     </Label>
                     <Input
                       id="login-username"
@@ -286,7 +286,7 @@ export default function AuthPage() {
                       </>
                     ) : (
                       <>
-                        Iniciar Sesión
+                        Iniciar sesión
                       </>
                     )}
                   </Button>

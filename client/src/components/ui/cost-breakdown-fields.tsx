@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CostValue } from "@/lib/cost";
+import { parseCostAmount, type CostValue } from "@/lib/cost";
 
 interface CostBreakdownFieldsProps {
   value: CostValue;
@@ -13,7 +13,7 @@ const currencyOptions = ["MXN", "USD"] as const;
 
 export function CostBreakdownFields({ value, onChange, title = "Costo" }: CostBreakdownFieldsProps) {
   const subtotal = value.breakdown.reduce((total, item) => {
-    const amount = Number.parseFloat(item.amount || "0");
+    const amount = parseCostAmount(item.amount || "0");
     return Number.isFinite(amount) ? total + amount : total;
   }, 0);
 
@@ -57,7 +57,7 @@ export function CostBreakdownFields({ value, onChange, title = "Costo" }: CostBr
         <Label htmlFor="cost-total">Costo total</Label>
         <Input
           id="cost-total"
-          type="number"
+          type="text"
           inputMode="decimal"
           placeholder="0.00"
           value={value.total}
@@ -87,7 +87,7 @@ export function CostBreakdownFields({ value, onChange, title = "Costo" }: CostBr
                   onChange={(event) => handleItemChange(index, "label", event.target.value)}
                 />
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
                   placeholder="0.00"
                   value={item.amount}

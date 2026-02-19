@@ -29,6 +29,7 @@ export class EmailService {
     travelData: any,
     recipientEmail: string,
     publicToken: string,
+    recipientName?: string,
   ) {
     // Priority order: Production domain > Development domain > localhost
     const baseUrl = process.env.PRODUCTION_DOMAIN
@@ -39,8 +40,8 @@ export class EmailService {
 
     const itineraryUrl = `${baseUrl}/travel/${travelData.id}/preview?token=${publicToken}`;
 
-    const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl);
-    const textContent = this.generatePlainTextEmail(travelData, itineraryUrl);
+    const htmlContent = this.generateEmailTemplate(travelData, itineraryUrl, recipientName);
+    const textContent = this.generatePlainTextEmail(travelData, itineraryUrl, recipientName);
 
     try {
       return await this.sendWithSES(recipientEmail, htmlContent, textContent);
@@ -62,7 +63,7 @@ export class EmailService {
       },
       Message: {
         Subject: {
-          Data: "Tu itinerario de viaje con Itineralia",
+          Data: "Te compartieron un itinerario de viaje en Itineralia",
           Charset: "UTF-8",
         },
         Body: {
@@ -82,7 +83,7 @@ export class EmailService {
     return await this.sesClient.send(command);
   }
 
-  private generateEmailTemplate(travel: any, itineraryUrl: string): string {
+  private generateEmailTemplate(travel: any, itineraryUrl: string, recipientName?: string): string {
     return `
 <!DOCTYPE html>
 <html lang="es">
@@ -213,11 +214,13 @@ export class EmailService {
   <div class="email-container">
     <div class="header">
       <h1 style="margin:0 0 8px 0; font-size:28px; font-weight:700; color:#ffffff; mso-line-height-rule:exactly;">
-        Bienvenido a tu próximo viaje con Itineralia.
+        Te compartieron un itinerario con Itineralia.
       </h1>
     </div>
 
     <div class="content">
+      <p style="margin-top:0; color:#374151;">Hola${recipientName ? ` ${recipientName}` : ""},</p>
+      <p style="color:#374151;">Tu amigo o familiar te compartió este itinerario para que puedas consultarlo fácilmente.</p>
       <div class="travel-info">
         <h3>${travel.name}</h3>
         <div class="travel-details">
@@ -260,7 +263,7 @@ export class EmailService {
       </div>
 
       <div class="cta-section">
-        <p>Ya tienes disponible la información de tu próximo destino y aquí te compartimos tu itinerario:</p>
+        <p>Consulta aquí el itinerario compartido:</p>
         <!-- Botón seguro para email con degradado -->
           <table role="presentation" border="0" cellspacing="0" cellpadding="0" align="center">
             <tr>
@@ -278,7 +281,7 @@ export class EmailService {
                         background: linear-gradient(135deg, rgb(220, 38, 38) 0%, rgb(185, 28, 28) 100%);
                         background-color:#DC2626;
                         mso-style-priority:100 !important;">
-                Ver Mi Itinerario
+                Ver mi itinerario
               </a>
               </td>
             </tr>
@@ -286,11 +289,11 @@ export class EmailService {
       </div>
 
       <div style="margin: 32px 0; padding: 24px; background-color: #f8fafc; border-radius: 8px; border-left: 4px solid #dc2626;">
-        <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">📌 Opciones para consultar tu itinerario:</h3>
+        <h3 style="margin: 0 0 16px 0; color: #1f2937; font-size: 18px;">📌 Opciones para consultar el itinerario:</h3>
         <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
-          <li>Visualizar desde el botón "Ver Mi itinerario"</li>
+          <li>Visualizar desde el botón "Ver mi itinerario".</li>
           <li>Descargar el documento y almacenarlo en tu dispositivo.</li>
-          <li>Añadir tu itinerario a la pantalla de inicio del celular. A continuación te explicamos cómo hacerlo:</li>
+          <li>Añadir el itinerario a la pantalla de inicio del celular. A continuación, te explicamos cómo hacerlo:</li>
         </ul>
 
         <div style="margin-top: 20px;">
@@ -299,7 +302,7 @@ export class EmailService {
             <li>Abre el enlace en Google Chrome.</li>
             <li>Toca el botón de menú ⋮ (arriba a la derecha).</li>
             <li>Elige "Agregar a la pantalla principal".</li>
-            <li>Escribe un nombre (ejemplo: Itinerario de Viaje).</li>
+            <li>Escribe un nombre (ejemplo: Itinerario de viaje).</li>
             <li>Confirma en Añadir.</li>
           </ol>
           <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás un ícono en tu pantalla como si fuera una app.</p>
@@ -311,7 +314,7 @@ export class EmailService {
             <li>Abre el enlace en Safari.</li>
             <li>Toca el botón de Compartir (cuadro con flecha hacia arriba).</li>
             <li>Selecciona "Añadir a pantalla de inicio" o "Agregar a Inicio".</li>
-            <li>Cambia el nombre si quieres (ejemplo: Itinerario de Viaje).</li>
+            <li>Cambia el nombre si quieres (ejemplo: Itinerario de viaje).</li>
             <li>Toca Añadir (arriba a la derecha).</li>
           </ol>
           <p style="margin: 8px 0; color: #059669; font-weight: 500;">✅ Verás el botón en tu pantalla principal que abre el itinerario directo.</p>
@@ -335,20 +338,21 @@ export class EmailService {
 </html>`;
   }
 
-  private generatePlainTextEmail(travel: any, itineraryUrl: string): string {
+  private generatePlainTextEmail(travel: any, itineraryUrl: string, recipientName?: string): string {
     return `
-¡Tu itinerario está listo!
+Te compartieron un itinerario de viaje.
 
-Itineralia ha preparado todos los detalles de tu viaje.
+Hola${recipientName ? ` ${recipientName}` : ""},
+tu amigo o familiar te compartió este itinerario para que puedas consultarlo fácilmente.
 
 --- DETALLES DEL VIAJE ---
 Nombre: ${travel.name}
 Viajero: ${travel.clientName}
-Fecha de Inicio: ${new Date(travel.startDate).toLocaleDateString("es-ES")}
-Fecha de Fin: ${new Date(travel.endDate).toLocaleDateString("es-ES")}
+Fecha de inicio: ${new Date(travel.startDate).toLocaleDateString("es-ES")}
+Fecha de fin: ${new Date(travel.endDate).toLocaleDateString("es-ES")}
 ${travel.destination ? `Destino: ${travel.destination}` : ""}
 
-Para ver tu itinerario completo, visita:
+Para ver el itinerario completo, visita:
 ${itineraryUrl}
 
 Este enlace te permitirá acceder a tu itinerario sin necesidad de crear una cuenta.

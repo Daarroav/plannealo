@@ -13,7 +13,7 @@ import path from 'path';
 import fs from "fs";  // Para crear carpetas
 import { Buffer } from 'buffer';
 import { randomUUID } from "crypto";
-import { eq, or } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { airports, insertAirportSchema } from "../shared/schema";
 import { db } from "./db";
 
@@ -101,6 +101,98 @@ async function uploadFileToObjectStorage(file: Express.Multer.File, folder: stri
   }
 
   return normalizedPath;
+}
+
+const DEFAULT_AIRPORT_TIMEZONE = "America/Mexico_City";
+
+function normalizeCatalogText(value?: string | null): string {
+  if (!value) return "";
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalizeCatalogComparison(value?: string | null): string {
+  const normalized = normalizeCatalogText(value);
+  if (!normalized) return "";
+  return normalized
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function parseAirportCityValue(value?: string | null): { code?: string; city?: string } {
+  const normalized = normalizeCatalogText(value);
+  if (!normalized) return {};
+
+  const match = normalized.match(/^([A-Za-z]{3,4})\s*-\s*(.+)$/);
+  if (!match) {
+    return { city: normalized };
+  }
+
+  return {
+    code: match[1].toUpperCase(),
+    city: normalizeCatalogText(match[2]),
+  };
+}
+
+async function ensureServiceProviderInCatalog(providerName: string | undefined, userId: string) {
+  const normalizedProviderName = normalizeCatalogText(providerName);
+  if (!normalizedProviderName) return;
+
+  const { serviceProviders, insertServiceProviderSchema } = await import("../shared/schema");
+
+  const normalizedProviderComparison = normalizeCatalogComparison(normalizedProviderName);
+  const providers = await db
+    .select({ id: serviceProviders.id, name: serviceProviders.name })
+    .from(serviceProviders);
+
+  const existingProvider = providers.find((provider) => {
+    return normalizeCatalogComparison(provider.name) === normalizedProviderComparison;
+  });
+
+  if (existingProvider) return;
+
+  const validatedProvider = insertServiceProviderSchema.parse({
+    name: normalizedProviderName,
+    active: true,
+    createdBy: userId,
+  });
+
+  await db.insert(serviceProviders).values(validatedProvider);
+}
+
+async function ensureAirportInCatalog(
+  airportName: string | undefined,
+  cityValue: string | undefined,
+  timezone: string | undefined,
+  userId: string,
+) {
+  const parsedCity = parseAirportCityValue(cityValue);
+  const normalizedAirportName = normalizeCatalogText(airportName) || parsedCity.city || normalizeCatalogText(cityValue);
+  if (!normalizedAirportName) return;
+  const resolvedCity = parsedCity.city || normalizedAirportName;
+
+  const normalizedAirportComparison = normalizeCatalogComparison(normalizedAirportName);
+  const airportsList = await db
+    .select({ id: airports.id, airportName: airports.airportName })
+    .from(airports);
+
+  const existingAirport = airportsList.find((airport) => {
+    return normalizeCatalogComparison(airport.airportName) === normalizedAirportComparison;
+  });
+
+  if (existingAirport) return;
+
+  const validatedAirport = insertAirportSchema.parse({
+    country: "No especificado",
+    city: resolvedCity,
+    airportName: normalizedAirportName,
+    iataCode: parsedCity.code && parsedCity.code.length === 3 ? parsedCity.code : null,
+    icaoCode: parsedCity.code && parsedCity.code.length === 4 ? parsedCity.code : null,
+    timezones: [{ timezone: normalizeCatalogText(timezone) || DEFAULT_AIRPORT_TIMEZONE }],
+    createdBy: userId,
+  });
+
+  await db.insert(airports).values(validatedAirport);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1022,6 +1114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             attachments: attachments,
           });
 
+          await ensureServiceProviderInCatalog(validated.provider || undefined, req.user!.id);
+
           const activity = await storage.createActivity(validated);
           res.status(201).json(activity);
         } catch (error) {
@@ -1075,6 +1169,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...updateData,
             date: updateData.date ? new Date(updateData.date) : undefined,
           });
+
+          await ensureServiceProviderInCatalog(updateData.provider, req.user!.id);
+
           res.json(activity);
         } catch (error) {
           console.error("Error updating activity:", error);
@@ -1113,6 +1210,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             arrivalDate: new Date(req.body.arrivalDate),
             attachments: attachments,
           });
+
+          await Promise.all([
+            ensureAirportInCatalog(
+              validated.departureAirport || undefined,
+              validated.departureCity,
+              validated.departureTimezone || undefined,
+              req.user!.id,
+            ),
+            ensureAirportInCatalog(
+              validated.arrivalAirport || undefined,
+              validated.arrivalCity,
+              validated.arrivalTimezone || undefined,
+              req.user!.id,
+            ),
+          ]);
 
           const flight = await storage.createFlight(validated);
           res.status(201).json(flight);
@@ -1168,6 +1280,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             departureDate: updateData.departureDate ? new Date(updateData.departureDate) : undefined,
             arrivalDate: updateData.arrivalDate ? new Date(updateData.arrivalDate) : undefined,
           });
+
+          await Promise.all([
+            ensureAirportInCatalog(
+              updateData.departureAirport,
+              updateData.departureCity,
+              updateData.departureTimezone,
+              req.user!.id,
+            ),
+            ensureAirportInCatalog(
+              updateData.arrivalAirport,
+              updateData.arrivalCity,
+              updateData.arrivalTimezone,
+              req.user!.id,
+            ),
+          ]);
+
           res.json(flight);
         } catch (error) {
           console.error("Error updating flight:", error);
@@ -1206,6 +1334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...(req.body.endDate && { endDate: new Date(req.body.endDate) }),
             attachments: attachments,
           });
+
+          await ensureServiceProviderInCatalog(validated.provider || undefined, req.user!.id);
 
           const transport = await storage.createTransport(validated);
           res.status(201).json(transport);
@@ -1261,6 +1391,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             pickupDate: updateData.pickupDate ? new Date(updateData.pickupDate) : undefined,
             endDate: updateData.endDate ? new Date(updateData.endDate) : undefined,
           });
+
+          await ensureServiceProviderInCatalog(updateData.provider, req.user!.id);
+
           res.json(transport);
         } catch (error) {
           console.error("Error updating transport:", error);
@@ -1417,6 +1550,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const validated = insertInsuranceSchema.parse(insuranceData);
 
+          await ensureServiceProviderInCatalog(validated.provider, req.user!.id);
+
           const insurance = await storage.createInsurance(validated);
           res.status(201).json(insurance);
         } catch (error: any) {
@@ -1476,6 +1611,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...updateData,
             effectiveDate: updateData.effectiveDate ? new Date(updateData.effectiveDate) : undefined,
           });
+
+          await ensureServiceProviderInCatalog(updateData.provider, req.user!.id);
+
           res.json(insurance);
         } catch (error) {
           console.error("Error updating insurance:", error);
@@ -1521,6 +1659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Ensure all required fields are present
           const { title, noteDate, content, visibleToTravelers } = req.body;
+          const user = (req as any).user;
 
           if (!title || !noteDate || !content) {
             return res.status(400).json({
@@ -1539,7 +1678,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             title: title,
             noteDate: parsedDate, // Use the parsed Date object
             content: content,
-            visibleToTravelers: visibleToTravelers === 'true',
+            visibleToTravelers: user?.role === 'traveler' ? true : visibleToTravelers === 'true',
+            costAmount: null,
+            costCurrency: null,
+            costBreakdown: null,
             attachments: attachments,
           };
 
@@ -1576,6 +1718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         try {
           const updateData = { ...req.body };
+          const user = (req as any).user;
           const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
           // Handle attachments update with proper deletion support
@@ -1609,6 +1752,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Clean up form data fields that shouldn't be in the database
           delete updateData.existingAttachments;
           delete updateData.removedExistingAttachments;
+
+          if (user?.role === 'traveler') {
+            updateData.visibleToTravelers = true;
+          } else if (typeof updateData.visibleToTravelers === 'string') {
+            updateData.visibleToTravelers = updateData.visibleToTravelers === 'true';
+          }
+
+          updateData.costAmount = null;
+          updateData.costCurrency = null;
+          updateData.costBreakdown = null;
 
           // Convert date if provided - preserve the exact UTC timestamp
           if (updateData.noteDate) {
@@ -2121,9 +2274,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           countryId: airports.countryId,
           stateId: airports.stateId,
           cityId: airports.cityId,
-          country: countries.name,
-          state: states.name,
-          city: cities.name,
+          country: sql<string | null>`COALESCE(${countries.name}, ${airports.country})`,
+          state: sql<string | null>`COALESCE(${states.name}, ${airports.state})`,
+          city: sql<string | null>`COALESCE(${cities.name}, ${airports.city})`,
           createdBy: airports.createdBy,
           createdAt: airports.createdAt,
           updatedAt: airports.updatedAt,
@@ -2683,7 +2836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         try {
           const travelId = req.params.id;
-          const { recipientEmail, clientName } = req.body;
+          const { recipientEmail, recipientName } = req.body;
 
           if (!recipientEmail) {
             return res.status(400).json({ error: "Recipient email is required" });
@@ -2718,9 +2871,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Enviar el correo
           await emailService.sendTravelShareEmail(
-            { ...travel, clientName: clientName || travel.clientName },
+            travel,
             recipientEmail,
-            publicToken
+            publicToken,
+            recipientName
           );
 
           res.json({

@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Delete, Search, Building } from "@icon-park/react";
+import { Plus, Edit, Delete, Search, People } from "@icon-park/react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import type { ServiceProvider } from "@/../../shared/schema";
@@ -174,7 +174,7 @@ export default function ServiceProvidersPage() {
               <Card key={provider.id}>
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Building2 className="w-5 h-5" />
+                    <People className="w-5 h-5" />
                     {provider.name}
                   </CardTitle>
                 </CardHeader>

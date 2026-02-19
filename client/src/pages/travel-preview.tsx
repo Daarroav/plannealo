@@ -1117,7 +1117,7 @@ export default function TravelPreview() {
             <ToLeft className="w-4 h-4 mr-2" />
             Cerrar
           </Button>
-          <h1 className="text-xl font-semibold">Vista Previa del Itinerario</h1>
+          <h1 className="text-xl font-semibold">Vista previa del itinerario</h1>
         </div>
         <Button onClick={handlePrint} className="bg-accent hover:bg-accent/90">
           <Download className="w-4 h-4 mr-2" />
@@ -1185,7 +1185,7 @@ export default function TravelPreview() {
             </h3>
             <div className="text-center space-y-2">
               <p className="text-sm opacity-90">
-                <strong>Email:</strong> itineralia@gmail.com
+                <strong>Correo electrónico:</strong> itineralia@gmail.com
               </p>
               <p className="text-sm opacity-90">
                 <strong>Teléfono:</strong> +52 444 547 3471
@@ -1203,7 +1203,7 @@ export default function TravelPreview() {
         {/* Encabezado del itinerario en páginas siguientes */}
         <div className="text-center mb-8 print:mb-4">
           <h1 className="text-4xl font-bold text-foreground mb-4 print:text-3xl">
-            Itinerario Detallado
+            Itinerario detallado
           </h1>
           <h2 className="text-2xl text-muted-foreground mb-4 print:text-xl">
             {travel.name}
@@ -1340,11 +1340,11 @@ export default function TravelPreview() {
             {/* Información de contacto */}
             <div className="text-center lg:text-right">
               <h4 className="font-semibold text-foreground mb-2">
-                Información de Contacto
+                Información de contacto
               </h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>
-                  <strong>Email:</strong> itineralia@gmail.com
+                  <strong>Correo electrónico:</strong> itineralia@gmail.com
                 </p>
                 <p>
                   <strong>WhatsApp:</strong> +52 444 547 3471

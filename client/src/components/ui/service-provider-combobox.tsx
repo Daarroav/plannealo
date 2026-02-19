@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { CheckOne, Up, Down, Plus } from "@icon-park/react";
+import { CheckOne, Up, Down } from "@icon-park/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,13 +16,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 interface ServiceProvider {
   id: string;
   name: string;
   active: boolean;
+  contactName?: string | null;
+  contactPhone?: string | null;
 }
 
 interface ServiceProviderComboboxProps {
@@ -49,49 +50,16 @@ export function ServiceProviderCombobox({
     enabled: !disabled,
   });
 
-  // Create service provider mutation
-  const createMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const response = await fetch("/api/service-providers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name, active: true }),
-      });
-      if (!response.ok) throw new Error("Failed to create service provider");
-      return response.json();
-    },
-    onSuccess: (newProvider) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/service-providers"] });
-      onChange(newProvider.name, newProvider);
-      setSearchValue("");
-      setOpen(false);
-    },
-  });
-
   // Filter providers based on search
   const filteredProviders = providers.filter((provider) =>
     provider.name.toLowerCase().includes(searchValue.toLowerCase())
   );
-
-  // Check if search value is a new provider
-  const isNewProvider =
-    searchValue.trim() !== "" &&
-    !filteredProviders.some(
-      (p) => p.name.toLowerCase() === searchValue.toLowerCase()
-    );
 
   const handleSelect = (providerName: string) => {
     const selectedProvider = providers.find(p => p.name === providerName);
     onChange(providerName === value ? undefined : providerName, selectedProvider);
     setOpen(false);
     setSearchValue("");
-  };
-
-  const handleCreate = () => {
-    if (searchValue.trim()) {
-      createMutation.mutate(searchValue.trim());
-    }
   };
 
   return (
@@ -113,14 +81,14 @@ export function ServiceProviderCombobox({
         <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput
-              placeholder="Buscar o crear proveedor..."
+              placeholder="Buscar proveedor..."
               value={searchValue}
               onValueChange={setSearchValue}
             />
             <CommandList>
               {isLoading ? (
                 <CommandEmpty>Cargando...</CommandEmpty>
-              ) : filteredProviders.length === 0 && !isNewProvider ? (
+              ) : filteredProviders.length === 0 ? (
                 <CommandEmpty>No se encontraron proveedores.</CommandEmpty>
               ) : null}
 
@@ -141,15 +109,6 @@ export function ServiceProviderCombobox({
                       {provider.name}
                     </CommandItem>
                   ))}
-                </CommandGroup>
-              )}
-
-              {isNewProvider && (
-                <CommandGroup heading="Crear nuevo">
-                  <CommandItem onSelect={handleCreate}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Crear "{searchValue}"
-                  </CommandItem>
                 </CommandGroup>
               )}
             </CommandList>

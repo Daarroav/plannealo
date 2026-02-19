@@ -1010,7 +1010,7 @@ export default function TravelDetail() {
                 </div>
 
                 <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-                  Aun no has agregado costos al itinerario.
+                  Aún no has agregado costos al itinerario.
                 </div>
 
                 <div className="border-t border-border pt-4">
@@ -1103,6 +1103,7 @@ export default function TravelDetail() {
       : sortedItinerary.filter((item) => item.type === activeSection);
 
   const costItems = sortedItinerary
+    .filter((item) => item.type !== "note")
     .map((item) => {
       const cost = getItemCost(item);
       return { item, ...cost };
@@ -1222,7 +1223,7 @@ export default function TravelDetail() {
                     title="Editar información de viaje"
                   >
                     <Edit className="w-4 h-4 text-white" />
-                    <span className="hidden sm:inline">Editar informacion de viaje</span>
+                    <span className="hidden sm:inline">Editar información de viaje</span>
                   </button>
                 </div>
                 <p className="text-sm opacity-75 mt-1">
@@ -1266,9 +1267,9 @@ export default function TravelDetail() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Itinerario</h2>
-                  <p className="text-sm text-muted-foreground">Orden cronologico del viaje</p>
+                  <p className="text-sm text-muted-foreground">Orden cronológico del viaje</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Usa el boton flotante para agregar eventos</p>
+                <p className="text-sm text-muted-foreground">Usa el botón flotante para agregar eventos</p>
               </div>
 
               {accommodationsLoading ? (
@@ -1283,7 +1284,7 @@ export default function TravelDetail() {
                   <CardContent className="p-8 text-center">
                     <Time className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-foreground mb-2">Error al cargar el itinerario</h3>
-                    <p className="text-muted-foreground mb-6">Ocurrió un error al cargar la informacion</p>
+                    <p className="text-muted-foreground mb-6">Ocurrió un error al cargar la información</p>
                     <Button
                       variant="outline"
                       onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/travels", travelId, "full"] })}
@@ -1428,7 +1429,7 @@ export default function TravelDetail() {
                                     <span className="font-medium">Contacto:</span> {activity.contactName || "N/A"}
                                   </div>
                                   <div>
-                                    <span className="font-medium">Telefono contacto:</span> {activity.contactPhone || "N/A"}
+                                    <span className="font-medium">Teléfono de contacto:</span> {activity.contactPhone || "N/A"}
                                   </div>
                                 </div>
 
@@ -1687,7 +1688,6 @@ export default function TravelDetail() {
                       }
                       case "note": {
                         const note = item.data as Note;
-                        const noteCost = getItemCost(item);
                         return (
                           <Card key={`${item.type}-${item.id}`} className="p-4 border-l-4 border-l-muted">
                             <div className="flex justify-between items-start">
@@ -1702,11 +1702,6 @@ export default function TravelDetail() {
                                 <p className="text-sm text-muted-foreground mb-2">
                                   Fecha: {formatDateTime(note.noteDate, true)}
                                 </p>
-                                {noteCost.amount > 0 && (
-                                  <p className="text-sm text-muted-foreground mb-2">
-                                    <span className="font-medium">Costo:</span> {formatCurrency(noteCost.amount, noteCost.currency)}
-                                  </p>
-                                )}
                                 <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                               </div>
                               <div className="flex gap-1">
@@ -1839,7 +1834,7 @@ export default function TravelDetail() {
 
                 {costItems.length === 0 ? (
                   <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-                    Aun no has agregado costos al itinerario.
+                    Aún no has agregado costos al itinerario.
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1963,6 +1958,7 @@ export default function TravelDetail() {
         onSubmit={createNoteMutation.mutate}
         isPending={createNoteMutation.isPending}
         editingNote={editingNote}
+        isTraveler={user?.role === "traveler"}
       />
 
       <ShareTravelModal

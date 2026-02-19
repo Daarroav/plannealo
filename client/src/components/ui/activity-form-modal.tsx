@@ -10,13 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as DateIcon, Upload, Close } from "@icon-park/react";
+import { Calendar as DateIcon, Upload, Close, People } from "@icon-park/react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { insertActivitySchema } from "@shared/schema";
 import { Paperclip } from "@icon-park/react";
 import { ServiceProviderCombobox } from "@/components/ui/service-provider-combobox";
+import { ServiceProviderCreateDialog } from "@/components/ui/service-provider-create-dialog";
 import { utcToMexicoComponents, mexicoComponentsToUTC } from "@/lib/timezones";
 import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { CostBreakdownFields } from "@/components/ui/cost-breakdown-fields";
@@ -50,6 +51,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
   const [activityDate, setActivityDate] = useState<Date>();
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [removedExistingAttachments, setRemovedExistingAttachments] = useState<number[]>([]);
+  const [createProviderOpen, setCreateProviderOpen] = useState(false);
   const [costValue, setCostValue] = useState<CostValue>({
     currency: "MXN",
     total: "",
@@ -349,8 +351,17 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                     }
                   }
                 }}
-                placeholder="Seleccionar o crear proveedor..."
+                placeholder="Seleccionar proveedor..."
               />
+              <Button
+                type="button"
+                variant="link"
+                className="px-0 h-auto mt-1"
+                onClick={() => setCreateProviderOpen(true)}
+              >
+                <People className="w-4 h-4 mr-1" />
+                + Agregar nuevo proveedor
+              </Button>
             </div>
           </div>
 
@@ -585,6 +596,20 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
             </Button>
           </div>
         </form>
+
+        <ServiceProviderCreateDialog
+          open={createProviderOpen}
+          onOpenChange={setCreateProviderOpen}
+          onCreated={(provider) => {
+            form.setValue("provider", provider?.name || "");
+            if (provider?.contactName) {
+              form.setValue("contactName", provider.contactName);
+            }
+            if (provider?.contactPhone) {
+              form.setValue("contactPhone", provider.contactPhone);
+            }
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

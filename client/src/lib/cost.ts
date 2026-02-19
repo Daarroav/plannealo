@@ -39,19 +39,45 @@ export const parseCostAmount = (value: unknown): number => {
     const cleaned = value.replace(/[^0-9,.-]/g, "").trim();
     if (!cleaned) return 0;
 
+    const commaCount = (cleaned.match(/,/g) || []).length;
+    const dotCount = (cleaned.match(/\./g) || []).length;
     const lastComma = cleaned.lastIndexOf(",");
     const lastDot = cleaned.lastIndexOf(".");
 
     let normalized = cleaned;
 
-    if (lastComma !== -1 && lastDot !== -1) {
+    if (commaCount > 0 && dotCount > 0) {
       if (lastComma > lastDot) {
         normalized = cleaned.replace(/\./g, "").replace(/,/g, ".");
       } else {
         normalized = cleaned.replace(/,/g, "");
       }
-    } else if (lastComma !== -1) {
-      normalized = cleaned.replace(/,/g, ".");
+    } else if (commaCount > 0) {
+      if (commaCount > 1) {
+        const parts = cleaned.split(",");
+        const lastPart = parts[parts.length - 1] || "";
+        if (lastPart.length === 3) {
+          normalized = parts.join("");
+        } else {
+          normalized = `${parts.slice(0, -1).join("")}.${lastPart}`;
+        }
+      } else {
+        const [intPart = "", decPart = ""] = cleaned.split(",");
+        normalized = decPart.length === 3 ? `${intPart}${decPart}` : `${intPart}.${decPart}`;
+      }
+    } else if (dotCount > 0) {
+      if (dotCount > 1) {
+        const parts = cleaned.split(".");
+        const lastPart = parts[parts.length - 1] || "";
+        if (lastPart.length === 3) {
+          normalized = parts.join("");
+        } else {
+          normalized = `${parts.slice(0, -1).join("")}.${lastPart}`;
+        }
+      } else {
+        const [intPart = "", decPart = ""] = cleaned.split(".");
+        normalized = decPart.length === 3 ? `${intPart}${decPart}` : `${intPart}.${decPart}`;
+      }
     }
 
     const parsed = Number.parseFloat(normalized);

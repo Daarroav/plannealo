@@ -216,7 +216,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="clientEmail">Correo Electrónico del Viajero *</Label>
+                <Label htmlFor="clientEmail">Correo electrónico del viajero *</Label>
                 <Input 
                   id="clientEmail" 
                   type="email" 
@@ -232,7 +232,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
             
       
               <div className="space-y-2">
-                <Label htmlFor="clientName">Nombre del Viajero *</Label>
+                <Label htmlFor="clientName">Nombre del viajero *</Label>
                 <Input id="clientName" {...form.register("clientName")} placeholder="Ej: Juan Pérez" />
                 {form.formState.errors.clientName && (
                   <p className="text-sm text-destructive mt-1">
@@ -242,7 +242,7 @@ export function NewTravelModal({ travel = null, isOpen, onClose, onSubmit, isLoa
               </div>
 
               <div className="space-y-2"> 
-                <Label htmlFor="travelers">Número de Viajeros *</Label>
+                <Label htmlFor="travelers">Número de viajeros *</Label>
                 <Select
                   value={travelers.toString()}
                   onValueChange={(value) => {

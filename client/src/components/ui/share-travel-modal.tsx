@@ -12,8 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 const shareFormSchema = z.object({
-  recipientEmail: z.string().email("Debe ser un email válido"),
-  clientName: z.string().min(1, "El nombre del viajero es requerido"),
+  recipientEmail: z.string().email("Debe ser un correo electrónico válido"),
+  recipientName: z.string().min(1, "El nombre de tu amigo o familiar es requerido"),
 });
 
 type ShareFormData = z.infer<typeof shareFormSchema>;
@@ -40,7 +40,7 @@ export function ShareTravelModal({
     resolver: zodResolver(shareFormSchema),
     defaultValues: {
       recipientEmail: "",
-      clientName: "",
+      recipientName: "",
     },
   });
 
@@ -55,7 +55,7 @@ export function ShareTravelModal({
         },
         body: JSON.stringify({
           recipientEmail: data.recipientEmail,
-          clientName: data.clientName,
+          recipientName: data.recipientName,
         }),
       });
 
@@ -63,7 +63,7 @@ export function ShareTravelModal({
         const result = await response.json();
         toast({
           title: "¡Itinerario enviado!",
-          description: `El itinerario ha sido enviado a ${data.recipientEmail} con acceso hasta ${new Date(result.tokenExpiry).toLocaleDateString('es-ES')}`,
+          description: `Tu amigo o familiar (${data.recipientEmail}) recibirá el itinerario con acceso hasta ${new Date(result.tokenExpiry).toLocaleDateString('es-ES')}`,
         });
         form.reset();
         onOpenChange(false);
@@ -134,7 +134,7 @@ export function ShareTravelModal({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Paperclip className="w-5 h-5 text-accent" />
-            <span>Compartir Itinerario</span>
+            <span>Compartir itinerario</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -144,31 +144,43 @@ export function ShareTravelModal({
               <strong>Viaje:</strong> {travelTitle}
             </div>
 
-            {/* Información del Viajero */}
+            <div className="space-y-2 border-t border-border pt-4">
+              <h3 className="text-lg font-semibold text-foreground">Vista previa</h3>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePreview}
+                className="w-full flex items-center justify-center space-x-2"
+              >
+                <OpenOne className="w-4 h-4" />
+                <span>Vista previa</span>
+              </Button>
+            </div>
+
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-foreground">Datos del Viajero</h3>
+              <h3 className="text-lg font-semibold text-foreground">Compartir viaje con un amigo o familiar</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="clientName">Nombre del Viajero</Label>
+                <Label htmlFor="recipientName">Nombre del amigo o familiar</Label>
                 <Input
-                  id="clientName"
-                  {...form.register("clientName")}
-                  placeholder="Nombre completo del viajero"
+                  id="recipientName"
+                  {...form.register("recipientName")}
+                  placeholder="Nombre completo"
                 />
-                {form.formState.errors.clientName && (
+                {form.formState.errors.recipientName && (
                   <p className="text-sm text-red-500">
-                    {form.formState.errors.clientName.message}
+                    {form.formState.errors.recipientName.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="recipientEmail">Correo Electrónico</Label>
+                <Label htmlFor="recipientEmail">Correo electrónico</Label>
                 <Input
                   id="recipientEmail"
                   type="email"
                   {...form.register("recipientEmail")}
-                  placeholder="viajero@ejemplo.com"
+                  placeholder="amigo@ejemplo.com"
                 />
                 {form.formState.errors.recipientEmail && (
                   <p className="text-sm text-red-500">
@@ -180,29 +192,9 @@ export function ShareTravelModal({
               <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border">
                 <h4 className="font-medium text-sm text-blue-800 dark:text-blue-200">📧 Información del envío</h4>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
-                  El viajero recibirá un correo con un enlace seguro para ver el itinerario. 
-                  El enlace será válido por 90 días aprox. y no requiere crear una cuenta.
+                  Tu amigo o familiar recibirá un correo con un enlace seguro para ver el itinerario.
+                  El enlace será válido por aproximadamente 90 días y no requiere crear una cuenta.
                 </p>
-              </div>
-            </div>
-
-            {/* Opciones de Compartir */}
-            <div className="space-y-4 border-t border-border pt-4">
-              <h3 className="text-lg font-semibold text-foreground">Opciones</h3>
-              
-              <div className="grid grid-cols-1 gap-3">
-                {/* Vista Previa */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePreview}
-                  className="flex items-center justify-center space-x-2"
-                >
-                  <OpenOne className="w-4 h-4" />
-                  <span>Vista Previa</span>
-                </Button>
-
-             
               </div>
             </div>
           </div>
@@ -218,7 +210,7 @@ export function ShareTravelModal({
               className="flex-1 bg-accent hover:bg-accent/90"
             >
               <Mail className="w-4 h-4 mr-2" />
-              {isSendingEmail ? "Enviando..." : "Enviar por Email"}
+              {isSendingEmail ? "Enviando..." : "Enviar por correo electrónico"}
             </Button>
           </div>
         </form>
