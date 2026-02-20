@@ -1,10 +1,20 @@
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+
+const serviceProviderSchema = z.object({
+  name: z.string().min(1, "El nombre del proveedor es requerido"),
+  contactName: z.string().optional(),
+  contactPhone: z.string().optional(),
+});
+
+type ServiceProviderForm = z.infer<typeof serviceProviderSchema>;
 
 interface ServiceProviderCreateDialogProps {
   open: boolean;
@@ -20,7 +30,8 @@ export function ServiceProviderCreateDialog({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const form = useForm({
+  const form = useForm<ServiceProviderForm>({
+    resolver: zodResolver(serviceProviderSchema),
     defaultValues: {
       name: "",
       contactName: "",
@@ -90,13 +101,17 @@ export function ServiceProviderCreateDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="provider-name">Nombre del Proveedor *</Label>
             <Input
               id="provider-name"
-              {...form.register("name", { required: true })}
+              {...form.register("name")}
               placeholder="Ej: Viajes Internacionales SA"
+              className={form.formState.errors.name ? "border-red-500" : ""}
             />
+            {form.formState.errors.name && (
+              <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
+            )}
           </div>
 
           <div>

@@ -102,7 +102,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 size="sm"
                 onClick={() => removeFile(index)}
               >
-                <X className="w-4 h-4" />
+                <Close className="w-4 h-4" />
               </Button>
             </div>
           ))}

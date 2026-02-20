@@ -272,6 +272,7 @@ export default function TravelDetail() {
       });
 
       invalidateTravelQueries(travelId!);
+      queryClient.invalidateQueries({ queryKey: ["/api/catalog/accommodations"] });
       setShowAccommodationModal(false);
       setEditingAccommodation(null);
       toast({
@@ -1819,7 +1820,7 @@ export default function TravelDetail() {
                 size="icon"
                 onClick={() => setShowEventMenu((prev) => !prev)}
               >
-                <Plus className={`h-6 w-6 transition-transform ${showEventMenu ? "rotate-45" : ""}`} />
+                <Plus className={`h-5 w-5 transition-transform ${showEventMenu ? "rotate-45" : ""}`} />
               </Button>
             </div>
           </div>

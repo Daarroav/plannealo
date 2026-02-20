@@ -13,6 +13,8 @@ import { insertNoteSchema } from "@shared/schema";
 
 // Form validation schema - extends the base schema with date string handling
 const noteFormSchema = insertNoteSchema.extend({
+  title: z.string().min(1, "El título es requerido"),
+  content: z.string().min(1, "El contenido es requerido"),
   noteDate: z.string().min(1, "La fecha es requerida"),
   noteTime: z.string().optional(),
   attachments: z.array(z.string()).optional(),
@@ -353,7 +355,7 @@ export function NoteFormModal({
                       return (
                         <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                           <div className="flex items-center">
-                            <Archive className="w-4 h-4 text-muted-foreground mr-2" />
+                            <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                             <span className="text-sm truncate">Documento existente {index + 1}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -365,7 +367,7 @@ export function NoteFormModal({
                               onClick={() => removeExistingAttachment(originalIndex)}
                               className="text-red-500 hover:text-red-700"
                             >
-                              <X className="w-4 h-4" />
+                              <Close className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -387,7 +389,7 @@ export function NoteFormModal({
                         size="sm"
                         onClick={() => removeFile(index)}
                       >
-                        <X className="w-4 h-4" />
+                        <Close className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}

@@ -199,14 +199,14 @@ export default function ServiceProvidersPage() {
                       size="sm"
                       onClick={() => handleEdit(provider)}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(provider.id)}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Delete className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>

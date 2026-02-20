@@ -28,6 +28,12 @@ import { AirportCreateDialog } from "@/components/ui/airport-create-dialog";
 
 // Extend the schema with additional fields for the form
 const flightFormSchema = insertFlightSchema.extend({
+  airline: z.string().min(1, "La aerolínea es requerida"),
+  flightNumber: z.string().min(1, "El número de vuelo es requerido"),
+  departureCity: z.string().min(1, "La ciudad de salida es requerida"),
+  arrivalCity: z.string().min(1, "La ciudad de llegada es requerida"),
+  class: z.string().min(1, "La clase es requerida"),
+  reservationNumber: z.string().min(1, "El número de reservación es requerido"),
   departureDateField: z.string().min(1, "La fecha de salida es requerida"),
   departureTimeField: z.string().min(1, "La hora de salida es requerida"),
   arrivalDateField: z.string().min(1, "La fecha de llegada es requerida"),
@@ -1080,7 +1086,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1092,7 +1098,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                             onClick={() => removeExistingAttachment(originalIndex)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <X className="w-4 h-4" />
+                            <Close className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -1102,7 +1108,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <Document className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button
@@ -1111,7 +1117,7 @@ export function FlightFormModal({ isOpen, onClose, onSubmit, isLoading, travelId
                       size="sm"
                       onClick={() => removeFile(index)}
                     >
-                      <X className="w-4 h-4" />
+                      <Close className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}

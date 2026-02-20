@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, HamburgerButton, DataServer, Down, Airplane, People, Airplane as PlaneTicket, Shop, TakeOff } from "@icon-park/react";
+import { User, Down, Airplane, People } from "@icon-park/react";
 import { Link, useLocation } from "wouter";
 import {
   DropdownMenu,
@@ -120,7 +120,9 @@ export function NavigationHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <HamburgerButton className="h-5 w-5" />
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">

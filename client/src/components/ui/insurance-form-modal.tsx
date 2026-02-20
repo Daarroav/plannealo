@@ -20,6 +20,9 @@ import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Form validation schema - extends the base schema with date string handling
 const insuranceFormSchema = insertInsuranceSchema.extend({
+  provider: z.string().min(1, "El proveedor es requerido"),
+  policyNumber: z.string().min(1, "El número de póliza es requerido"),
+  policyType: z.string().min(1, "El tipo de póliza es requerido"),
   effectiveDate: z.string().min(1, "La fecha y hora es requerida"),
   effectiveTime: z.string().optional(),
   attachments: z.array(z.string()).optional(),
@@ -425,7 +428,7 @@ export function InsuranceFormModal({
                               className="text-red-500 hover:text-red-700"
                               data-testid={`button-remove-existing-${index}`}
                             >
-                              <X className="w-4 h-4" />
+                              <Close className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -448,7 +451,7 @@ export function InsuranceFormModal({
                         onClick={() => removeFile(index)}
                         data-testid={`button-remove-file-${index}`}
                       >
-                        <X className="w-4 h-4" />
+                        <Close className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}

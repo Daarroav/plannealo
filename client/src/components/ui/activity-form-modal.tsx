@@ -25,6 +25,8 @@ import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const activityFormSchema = insertActivitySchema.extend({
+  name: z.string().min(1, "El nombre de la actividad es requerido"),
+  type: z.string().min(1, "El tipo de actividad es requerido"),
   activityDate: z.string().min(1, "La fecha es requerida"),
   startTime: z.string().min(1, "La hora de inicio es requerida"),
   endTime: z.string().min(1, "La hora de finalización es requerida"),
@@ -537,7 +539,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -549,7 +551,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                             onClick={() => removeExistingAttachment(originalIndex)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <X className="w-4 h-4" />
+                            <Close className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -560,7 +562,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button
@@ -569,7 +571,7 @@ export function ActivityFormModal({ isOpen, onClose, onSubmit, isLoading, travel
                       size="sm"
                       onClick={() => removeFile(index)}
                     >
-                      <X className="w-4 h-4" />
+                      <Close className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}

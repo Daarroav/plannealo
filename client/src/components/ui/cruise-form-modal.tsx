@@ -16,6 +16,9 @@ import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Form validation schema - extends the base schema with date string handling
 const cruiseFormSchema = insertCruiseSchema.extend({
+  cruiseLine: z.string().min(1, "La línea de crucero es requerida"),
+  departurePort: z.string().min(1, "El puerto de salida es requerido"),
+  arrivalPort: z.string().min(1, "El puerto de llegada es requerido"),
   departureDate: z.string().min(1, "La fecha de salida es requerida"),
   departureTime: z.string().optional(),
   arrivalDate: z.string().min(1, "La fecha de llegada es requerida"), 
@@ -375,7 +378,7 @@ export function CruiseFormModal({
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -387,7 +390,7 @@ export function CruiseFormModal({
                             onClick={() => removeExistingAttachment(originalIndex)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <X className="w-4 h-4" />
+                            <Close className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -398,7 +401,7 @@ export function CruiseFormModal({
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button
@@ -407,7 +410,7 @@ export function CruiseFormModal({
                       size="sm"
                       onClick={() => removeFile(index)}
                     >
-                      <X className="w-4 h-4" />
+                      <Close className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}

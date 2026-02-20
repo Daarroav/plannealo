@@ -13,14 +13,14 @@ import {
   Car,
   Ship,
   Shield,
-  File,
+  Paperclip,
   ToLeft,
   Download,
   Mail,
+  Notepad,
 } from "@icon-park/react";
 import { AttachmentList } from "@/components/AttachmentLink";
 import { extractIataCode, getTimezoneForAirport } from "@/lib/timezones";
-import logoPng from "@assets/LOGO_PNG_NEGRO-min_1755552589565.png";
 
 interface TravelData {
   travel: any;
@@ -936,7 +936,7 @@ export default function TravelPreview() {
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
-                <Bed className="w-4 h-4 text-accent" />
+                <Hotel className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold w-fit">
                   {event.data.name}
                 </h3>
@@ -1056,7 +1056,7 @@ export default function TravelPreview() {
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center space-x-2">
-                <StickyNote className="w-4 h-4 text-accent" />
+                <Notepad className="w-4 h-4 text-accent" />
                 <h3 className="text-lg font-semibold w-fit">
                   {event.data.title}
                 </h3>
@@ -1145,7 +1145,7 @@ export default function TravelPreview() {
           <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
             <div className="flex items-center space-x-3">
               <div className="w-auto  rounded-full flex items-center justify-center">
-                <img src={logoPng} alt="Logo" className="h-14" />
+                <img src="/uploads/itineralia-logo.png" alt="Itineralia" className="h-14" />
               </div>
               <div>
                 <div className="text-gray-600 text-sm">Agencia de Viajes</div>
@@ -1185,10 +1185,10 @@ export default function TravelPreview() {
             </h3>
             <div className="text-center space-y-2">
               <p className="text-sm opacity-90">
-                <strong>Correo electrónico:</strong> itineralia@gmail.com
+                <strong>Correo electrónico:</strong> itineralia@ejemplo.com
               </p>
               <p className="text-sm opacity-90">
-                <strong>Teléfono:</strong> +52 444 547 3471
+                <strong>Teléfono:</strong> +52 444 4XX XXXX
               </p>
               <p className="text-xs opacity-75 mt-3">
                 Estamos aquí para hacer de tu viaje una experiencia inolvidable
@@ -1321,7 +1321,7 @@ export default function TravelPreview() {
             {/* Logo y información de la agencia */}
             <div className="flex items-center space-x-4">
               <div className=" h-16 bg-white rounded-full flex items-center justify-center ">
-                <img src={logoPng} alt="Logo" className="w-auto h-14" />
+                <img src="/uploads/itineralia-logo.png" alt="Itineralia" className="w-auto h-14" />
               </div>
               <div>
                 {/*<h3 className="text-lg font-bold text-foreground">PLANNEALO</h3>*/}
@@ -1332,7 +1332,7 @@ export default function TravelPreview() {
                   Especialistas en experiencias únicas
                 </p>
                 <p className="text-sm text-muted-foreground font-semibold">
-                  Registro: RNT-04240280502
+                  Registro: xxxx-xxxx-xxxx
                 </p>
               </div>
             </div>
@@ -1344,10 +1344,10 @@ export default function TravelPreview() {
               </h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>
-                  <strong>Correo electrónico:</strong> itineralia@gmail.com
+                  <strong>Correo electrónico:</strong> itineralia@ejemplo.com
                 </p>
                 <p>
-                  <strong>WhatsApp:</strong> +52 444 547 3471
+                  <strong>WhatsApp:</strong> +52 444 4XX XXXX
                 </p>
 
                 <p>

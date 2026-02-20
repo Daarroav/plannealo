@@ -13,7 +13,7 @@ import { CalendarView } from "@/components/ui/calendar-view";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Airplane, People, Time, Plus, Search, AppStore, Calendar } from "@icon-park/react";
+import { Airplane, People, Time, Plus, Search, Calendar } from "@icon-park/react";
 import type { Travel } from "@shared/schema";
 
 interface Stats {
@@ -243,7 +243,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold text-foreground">Gestión de Itinerarios</h3>
                   <TabsList className="grid w-fit grid-cols-2">
                     <TabsTrigger value="list" className="flex items-center gap-2">
-                      <AppStore className="h-4 w-4" />
+                      <Calendar className="h-4 w-4" />
                       Lista
                     </TabsTrigger>
                     <TabsTrigger value="calendar" className="flex items-center gap-2">

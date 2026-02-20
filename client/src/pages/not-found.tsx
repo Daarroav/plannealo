@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { CloseCircle } from "@icon-park/react";
+import { Close } from "@icon-park/react";
 
 export default function NotFound() {
   return (
@@ -7,7 +7,9 @@ export default function NotFound() {
       <Card className="w-full max-w-md mx-4">
         <CardContent className="pt-6">
           <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-destructive" />
+            <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+              <Close className="h-5 w-5 text-destructive" />
+            </div>
             <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
           </div>
 

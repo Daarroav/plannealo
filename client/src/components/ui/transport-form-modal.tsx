@@ -24,6 +24,9 @@ import { normalizeCostBreakdown, type CostValue } from "@/lib/cost";
 
 // Extend the schema with additional fields for the form
 const transportFormSchema = insertTransportSchema.extend({
+  type: z.string().min(1, "El tipo de transporte es requerido"),
+  name: z.string().min(1, "El nombre es requerido"),
+  pickupLocation: z.string().min(1, "La ubicación de recogida es requerida"),
   pickupDateField: z.string().min(1, "La fecha de recogida es requerida"),
   pickupTimeField: z.string().min(1, "La hora de recogida es requerida"),
   endDateField: z.string().optional(),
@@ -580,7 +583,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                     return (
                       <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                         <div className="flex items-center">
-                          <Archive className="w-4 h-4 text-muted-foreground mr-2" />
+                          <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                           <span className="text-sm truncate">Documento existente {index + 1}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -592,7 +595,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                             onClick={() => removeExistingAttachment(originalIndex)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            <X className="w-4 h-4" />
+                            <Close className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
@@ -603,7 +606,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <FileText className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button
@@ -612,7 +615,7 @@ export function TransportFormModal({ isOpen, onClose, onSubmit, isLoading, trave
                       size="sm"
                       onClick={() => removeFile(index)}
                     >
-                      <X className="w-4 h-4" />
+                      <Close className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}

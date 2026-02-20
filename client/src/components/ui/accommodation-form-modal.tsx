@@ -652,7 +652,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                     onClick={() => removeThumbnail()}
                     className="absolute top-0 right-0 bg-red-500 text-white opacity-80 hover:opacity-100"
                   >
-                    <X className="w-4 h-4" />
+                    <Close className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -696,7 +696,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                   ?.map((url, index, filteredArray) => (
                   <div key={`existing-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <Attachment className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">Archivo existente {index + 1}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -714,7 +714,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                         }}
                         className="text-red-500 hover:text-red-700"
                       >
-                        <X className="w-4 h-4" />
+                        <Close className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -724,7 +724,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                 {attachedFiles.map((file, index) => (
                   <div key={`new-${index}`} className="flex items-center justify-between bg-muted p-2 rounded">
                     <div className="flex items-center">
-                      <Attachment className="w-4 h-4 text-muted-foreground mr-2" />
+                      <Paperclip className="w-4 h-4 text-muted-foreground mr-2" />
                       <span className="text-sm truncate">{file.name}</span>
                     </div>
                     <Button
@@ -733,7 +733,7 @@ export function AccommodationFormModal({ isOpen, onClose, onSubmit, isLoading, t
                       size="sm"
                       onClick={() => removeFile(index)}
                     >
-                      <X className="w-4 h-4" />
+                      <Close className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}

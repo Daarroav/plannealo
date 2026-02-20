@@ -59,33 +59,49 @@ export function AutocompleteInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchValue(newValue);
-    onChange(newValue);
-    if (!open && newValue) {
-      setOpen(true);
+    onChange(newValue); // Permitir cualquier valor escrito
+    // No abrir automáticamente el dropdown al escribir
+  };
+
+  const handleBlur = () => {
+    // Cerrar el dropdown al perder foco
+    setTimeout(() => setOpen(false), 200);
+  };
+
+  const handleIconClick = () => {
+    // Toggle dropdown al hacer clic en el icono
+    if (!disabled) {
+      setOpen(!open);
     }
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative">
-          <Input
-            id={id}
-            value={searchValue}
-            onChange={handleInputChange}
-            placeholder={placeholder}
-            className={cn("pr-8", className)}
-            disabled={disabled}
-            onFocus={() => setOpen(true)}
-          />
-          <Down className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+    <div className="relative">
+      <Input
+        id={id}
+        value={searchValue}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        className={cn("pr-8", className)}
+        disabled={disabled}
+      />
+      <Down 
+        className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" 
+        onClick={handleIconClick}
+      />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverContent className="w-full p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
         <Command>
           <CommandList>
             {filteredOptions.length === 0 ? (
-              <CommandEmpty>Sin resultados en el catálogo</CommandEmpty>
+              <CommandEmpty>
+                <div className="text-sm text-muted-foreground p-2">
+                  No hay resultados en el catálogo.
+                  <br />
+                  <span className="text-xs">Puedes escribir un nombre personalizado.</span>
+                </div>
+              </CommandEmpty>
             ) : (
               <CommandGroup>
                 {filteredOptions.map((option) => (
@@ -108,6 +124,7 @@ export function AutocompleteInput({
           </CommandList>
         </Command>
       </PopoverContent>
-    </Popover>
+      </Popover>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { GripOne } from "@icon-park/react";
+// import { GripOne } from "@icon-park/react";
 import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
@@ -36,7 +36,14 @@ const ResizableHandle = ({
   >
     {withHandle && (
       <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border">
-        <GripVertical className="h-2.5 w-2.5" />
+        <svg className="h-2.5 w-2.5" viewBox="0 0 15 15" fill="currentColor">
+          <circle cx="3" cy="3" r="1" />
+          <circle cx="3" cy="8" r="1" />
+          <circle cx="3" cy="13" r="1" />
+          <circle cx="8" cy="3" r="1" />
+          <circle cx="8" cy="8" r="1" />
+          <circle cx="8" cy="13" r="1" />
+        </svg>
       </div>
     )}
   </ResizablePrimitive.PanelResizeHandle>
